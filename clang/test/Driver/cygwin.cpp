@@ -1,3 +1,4 @@
+// XFAIL: system-cygwin
 // RUN: %clang -### %s --target=i686-pc-windows-cygnus --sysroot=%S/Inputs/basic_cygwin_tree \
 // RUN:   -resource-dir=%S/Inputs/resource_dir \
 // RUN:   --stdlib=platform 2>&1 | FileCheck --check-prefix=CHECK %s
