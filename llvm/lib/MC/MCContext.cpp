@@ -740,6 +740,8 @@ MCSectionCOFF *MCContext::getCOFFSection(StringRef Section,
   Iter->second = Result;
   auto *F = allocInitialFragment(*Result);
   Begin->setFragment(F);
+  if (Characteristics & COFF::IMAGE_SCN_LNK_COMDAT)
+    Result->ensureMinAlignment(Align(16));
   return Result;
 }
 

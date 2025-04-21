@@ -25,12 +25,9 @@ class MCSymbol;
 
 /// This represents a section on Windows
 class MCSectionCOFF final : public MCSection {
-  // FIXME: The following fields should not be mutable, but are for now so the
-  // asm parser can honor the .linkonce directive.
-
   /// This is the Characteristics field of a section, drawn from the enums
   /// below.
-  mutable unsigned Characteristics;
+  unsigned Characteristics;
 
   /// The unique IDs used with the .pdata and .xdata sections created internally
   /// by the assembler. This ID is used to ensure that for every .text section,
@@ -45,7 +42,7 @@ class MCSectionCOFF final : public MCSection {
 
   /// This is the Selection field for the section symbol, if it is a COMDAT
   /// section (Characteristics & IMAGE_SCN_LNK_COMDAT) != 0
-  mutable int Selection;
+  int Selection;
 
   unsigned UniqueID;
 
@@ -73,7 +70,7 @@ public:
   MCSymbol *getCOMDATSymbol() const { return COMDATSymbol; }
   int getSelection() const { return Selection; }
 
-  void setSelection(int Selection) const;
+  void setSelection(int Selection);
 
   bool isUnique() const { return UniqueID != NonUniqueID; }
   unsigned getUniqueID() const { return UniqueID; }
