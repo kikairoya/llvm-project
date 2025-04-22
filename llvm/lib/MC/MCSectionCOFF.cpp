@@ -28,11 +28,10 @@ bool MCSectionCOFF::shouldOmitSectionDirective(StringRef Name,
   return false;
 }
 
-void MCSectionCOFF::setSelection(int Selection) {
+void MCSectionCOFF::setSelection(int Selection) const {
   assert(Selection != 0 && "invalid COMDAT selection type");
   this->Selection = Selection;
   Characteristics |= COFF::IMAGE_SCN_LNK_COMDAT;
-  ensureMinAlignment(Align(16));
 }
 
 void MCSectionCOFF::printSwitchToSection(const MCAsmInfo &MAI, const Triple &T,

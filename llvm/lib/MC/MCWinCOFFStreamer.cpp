@@ -171,11 +171,6 @@ void MCWinCOFFStreamer::initSections(bool NoExecStack,
 }
 
 void MCWinCOFFStreamer::changeSection(MCSection *Section, uint32_t Subsection) {
-  MCSection *CurSec = getCurrentFragment() ? getCurrentSectionOnly() : nullptr;
-  MCSectionCOFF *CurSecCOFF = CurSec ? dyn_cast<MCSectionCOFF>(CurSec) : nullptr;
-  if (CurSecCOFF && CurSec != Section && (CurSecCOFF->getCharacteristics() & COFF::IMAGE_SCN_LNK_COMDAT)) {
-    insert(getContext().allocFragment<MCAlignFragment>(CurSec->getAlign(), 0, 1, CurSec->getAlign().value()));
-  }
   changeSectionImpl(Section, Subsection);
   // Ensure that the first and the second symbols relative to the section are
   // the section symbol and the COMDAT symbol.

@@ -660,8 +660,8 @@ bool COFFAsmParser::parseDirectiveLinkOnce(StringRef, SMLoc Loc) {
     if (parseCOMDATType(Type))
       return true;
 
-  MCSectionCOFF *Current =
-      static_cast<MCSectionCOFF *>(getStreamer().getCurrentSectionOnly());
+  const MCSectionCOFF *Current =
+      static_cast<const MCSectionCOFF *>(getStreamer().getCurrentSectionOnly());
 
   if (Type == COFF::IMAGE_COMDAT_SELECT_ASSOCIATIVE)
     return Error(Loc, "cannot make section associative with .linkonce");
