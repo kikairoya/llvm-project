@@ -163,6 +163,8 @@ static constexpr uint32_t get_max_thread_name_length_impl() {
   return 16;
 #elif defined(__OpenBSD__)
   return 24;
+#elif defined(__CYGWIN__)
+  return 16;
 #else
   return 0;
 #endif
