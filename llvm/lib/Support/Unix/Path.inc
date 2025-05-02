@@ -52,6 +52,12 @@ extern char **environ;
 #include <sys/ps.h>
 #endif
 
+#if defined(__CYGWIN__)
+#include <windows.h>
+#include <io.h>
+#include <sys/cygwin.h>
+#endif
+
 // Both stdio.h and cstdio are included via different paths and
 // stdcxx's cstdio doesn't include stdio.h, so it doesn't #undef the macros
 // either.
@@ -959,7 +965,7 @@ ErrorOr<basic_file_status> directory_entry::status() const {
 #define TRY_PROC_SELF_FD
 #endif
 
-#if !defined(F_GETPATH) && defined(TRY_PROC_SELF_FD)
+#if !defined(F_GETPATH) && defined(TRY_PROC_SELF_FD) && !defined(__CYGWIN__)
 static bool hasProcSelfFD() {
   // If we have a /proc filesystem mounted, we can quickly establish the
   // real name of the file with readlink
@@ -1138,6 +1144,8 @@ std::error_code openFileForRead(const Twine &Name, int &ResultFD,
   if (!RealPath)
     return std::error_code();
   RealPath->clear();
+  // ::realpath on Cygwin does not canonicalise case, so use Win32API
+#if !defined(__CYGWIN__)
 #if defined(F_GETPATH)
   // When F_GETPATH is availble, it is the quickest way to get
   // the real path name.
@@ -1164,6 +1172,34 @@ std::error_code openFileForRead(const Twine &Name, int &ResultFD,
 #if defined(TRY_PROC_SELF_FD)
   }
 #endif
+#endif
+#else
+  // FIXME: this block is copied from Windows/Path.inc, but pathes of Win32
+  //        may be longer than PATH_MAX.
+  SmallVector<wchar_t, PATH_MAX> BufferW;
+  BufferW.resize_for_overwrite(BufferW.capacity());
+  const auto H = reinterpret_cast<HANDLE>(::_get_osfhandle(ResultFD));
+  ssize_t CountChars = ::GetFinalPathNameByHandleW(
+    H, BufferW.begin(), BufferW.capacity(), FILE_NAME_NORMALIZED);
+  if (CountChars > 0 && (size_t)CountChars >= BufferW.capacity()) {
+    BufferW.resize_for_overwrite(CountChars);
+    CountChars = ::GetFinalPathNameByHandleW(
+      H, BufferW.begin(), BufferW.size(), FILE_NAME_NORMALIZED);
+  }
+  if (CountChars > 0) {
+    BufferW.truncate(CountChars);
+    CountChars = ::cygwin_conv_path(
+      CCP_WIN_W_TO_POSIX, BufferW.begin(), nullptr, 0);
+    if (CountChars > 0) {
+      RealPath->resize_for_overwrite(CountChars);
+      if (::cygwin_conv_path(
+            CCP_WIN_W_TO_POSIX, BufferW.begin(),
+            RealPath->begin(), RealPath->size()) < 0)
+        RealPath->clear();
+      else
+        RealPath->truncate(RealPath->size() - 1);
+    }
+  }
 #endif
   return std::error_code();
 }
