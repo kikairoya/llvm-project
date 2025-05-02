@@ -4361,6 +4361,8 @@ class Config:
             file = "libclang.dylib"
         elif name == "Windows":
             file = "libclang.dll"
+        elif name.startswith("CYGWIN"):
+            file = "cygclang.dll"
         else:
             file = "libclang.so"
 

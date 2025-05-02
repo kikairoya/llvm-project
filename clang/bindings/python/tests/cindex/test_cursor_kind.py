@@ -2,8 +2,8 @@ import os
 
 from clang.cindex import Config, CursorKind
 
-if "CLANG_LIBRARY_PATH" in os.environ:
-    Config.set_library_path(os.environ["CLANG_LIBRARY_PATH"])
+if "CLANG_LIBRARY_FILE" in os.environ:
+    Config.set_library_file(os.environ["CLANG_LIBRARY_FILE"])
 
 import unittest
 
