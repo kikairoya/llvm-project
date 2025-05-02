@@ -21,6 +21,8 @@ if platform.system() == "Darwin":
     shlibpath_var = "DYLD_LIBRARY_PATH"
 elif platform.system() == "Windows":
     shlibpath_var = "PATH"
+elif platform.system().startswith("CYGWIN"):
+    shlibpath_var = "PATH"
 else:
     shlibpath_var = "LD_LIBRARY_PATH"
 config.environment[shlibpath_var] = os.path.pathsep.join(

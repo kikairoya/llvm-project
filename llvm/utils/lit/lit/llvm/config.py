@@ -107,6 +107,8 @@ class LLVMConfig(object):
             features.add("system-solaris")
         elif platform.system() == "OS/390":
             features.add("system-zos")
+        elif platform.system().startswith("CYGWIN"):
+            features.add("system-cygwin")
 
         # Native compilation: host arch == default triple arch
         # Both of these values should probably be in every site config (e.g. as
@@ -369,7 +371,7 @@ class LLVMConfig(object):
             self.lit_config.fatal(
                 "Could not turn '%s' into Itanium ABI triple" % triple
             )
-        if m.group(3).lower() != "windows":
+        if m.group(3).lower() != "windows" and m.group(3).lower() != "cygwin":
             # All non-windows triples use the Itanium ABI.
             return triple
         return m.group(1) + "-" + m.group(2) + "-" + m.group(3) + "-gnu"

@@ -138,5 +138,5 @@ class Run(object):
                 )
         except Exception as ex:
             # Warn, unless this is Windows or z/OS, in which case this is expected.
-            if os.name != "nt" and platform.system() != "OS/390":
+            if os.name != "nt" and platform.system() != "OS/390" and not platform.system().startswith("CYGWIN"):
                 self.lit_config.warning("Failed to raise process limit: %s" % ex)
