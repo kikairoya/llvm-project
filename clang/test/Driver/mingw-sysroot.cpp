@@ -1,6 +1,9 @@
 // REQUIRES: shell
 // UNSUPPORTED: system-windows
 
+// FIXME: Should between Cygwin and MinGW be treated as cross-compile?
+// UNSUPPORTED: system-cygwin
+
 // RUN: rm -rf %T/testroot-gcc
 // RUN: mkdir -p %T/testroot-gcc/bin
 // RUN: ln -s %clang %T/testroot-gcc/bin/x86_64-w64-mingw32-gcc

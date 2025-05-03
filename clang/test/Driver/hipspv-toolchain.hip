@@ -1,5 +1,8 @@
 // UNSUPPORTED: system-windows
 
+// The original PATH must be preserved for cygwin1.dll
+// UNSUPPORTED: system-cygwin
+
 // RUN: %clang -### -target x86_64-linux-gnu --offload=spirv64 \
 // RUN:   --no-offload-new-driver --hip-path=%S/Inputs/hipspv -nohipwrapperinc %s \
 // RUN: 2>&1 | FileCheck %s

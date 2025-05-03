@@ -1,6 +1,9 @@
 /// Don't create symlinks on Windows
 // UNSUPPORTED: system-windows
 
+// The original PATH must be preserved for cygwin1.dll
+// UNSUPPORTED: system-cygwin
+
 /// Check the priority used when searching for tools
 /// Names and locations are usually in this order:
 /// <triple>-tool, tool, program path, PATH

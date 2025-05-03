@@ -28,3 +28,7 @@ void test(void) {
 // CHECK-CXX-ONLY-NEXT:     #1 Calling test()
 //
 // CHECK-NEXT:           3. {{.*}}crash-trace.c:{{[0-9]+}}:3: Error evaluating statement
+
+// The crashing behavior on Cygwin environment has uncontrollable instability.
+// Test fails randomly.
+// UNSUPPORTED: windows-cygwin
