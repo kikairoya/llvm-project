@@ -177,7 +177,7 @@ void DependencyCollector::maybeAddDependency(StringRef Filename,
 
 bool DependencyCollector::addDependency(StringRef Filename) {
   StringRef SearchPath;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
   // Make the search insensitive to case and separators.
   llvm::SmallString<256> TmpPath = Filename;
   llvm::sys::path::native(TmpPath);
