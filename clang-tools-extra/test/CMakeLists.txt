@@ -62,11 +62,12 @@ foreach(dep ${LLVM_UTILS_DEPS})
   endif()
 endforeach()
 
-if (NOT WIN32 OR NOT LLVM_LINK_LLVM_DYLIB)
+if (NOT (WIN32 OR CYGWIN) OR NOT LLVM_LINK_LLVM_DYLIB)
   llvm_add_library(
       CTTestTidyModule
       MODULE clang-tidy/CTTestTidyModule.cpp
-      PLUGIN_TOOL clang-tidy)
+      PLUGIN_TOOL clang-tidy
+      LINK_LIBS PRIVATE clangTidy clangAST clangASTMatchers clangBasic)
 endif()
 
 if(TARGET CTTestTidyModule)
