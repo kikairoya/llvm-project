@@ -161,6 +161,7 @@
 #endif
 #define WEAK_SYMBOL(name) .weak name
 
+// clang-format off
 #if defined(__hexagon__)
 #define WEAK_ALIAS(name, aliasname)                                            \
   EXPORT_SYMBOL(SYMBOL_NAME(aliasname)) SEPARATOR                              \
@@ -172,6 +173,7 @@
   WEAK_SYMBOL(SYMBOL_NAME(aliasname)) SEPARATOR                                \
   SYMBOL_NAME(aliasname) = SYMBOL_NAME(name)
 #endif
+// clang-format on
 
 #if defined(__GNU__) || defined(__FreeBSD__) || defined(__Fuchsia__) || \
     defined(__linux__)
@@ -180,8 +182,9 @@
 #define NO_EXEC_STACK_DIRECTIVE
 #endif
 
-#elif defined(_WIN32)
+#elif defined(_WIN32) || defined(__CYGWIN__)
 
+// clang-format off
 #define SYMBOL_IS_FUNC(name)                                                   \
   .def name SEPARATOR                                                          \
     .scl 2 SEPARATOR                                                           \
@@ -197,8 +200,10 @@
 #define EXPORT_SYMBOL(name) EXPORT_SYMBOL2(name)
 #endif
 #define HIDDEN_SYMBOL(name)
+// clang-format off
 
-#if defined(__MINGW32__)
+// clang-format off
+#if defined(__MINGW32__) || defined(__CYGWIN__)
 #define WEAK_ALIAS(name, aliasname)                                            \
   .globl SYMBOL_NAME(aliasname) SEPARATOR                                      \
   EXPORT_SYMBOL(aliasname) SEPARATOR                                           \
@@ -214,6 +219,7 @@
   EXPORT_SYMBOL(SYMBOL_NAME(aliasname)) SEPARATOR                              \
   WEAK_ALIAS2(SYMBOL_NAME(name), SYMBOL_NAME(aliasname))
 #endif
+// clang-format on
 
 #define NO_EXEC_STACK_DIRECTIVE
 

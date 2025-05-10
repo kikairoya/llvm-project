@@ -148,7 +148,7 @@ using ::wcstombs _LIBCPP_USING_IF_EXISTS;
 using ::at_quick_exit _LIBCPP_USING_IF_EXISTS;
 using ::quick_exit _LIBCPP_USING_IF_EXISTS;
 #  endif
-#  if _LIBCPP_STD_VER >= 17
+#  if _LIBCPP_STD_VER >= 17 && !defined(__WIN32__) && !defined(__CYGWIN__)
 using ::aligned_alloc _LIBCPP_USING_IF_EXISTS;
 #  endif
 

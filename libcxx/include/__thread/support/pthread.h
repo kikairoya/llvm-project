@@ -41,13 +41,78 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 
 using __libcpp_timespec_t _LIBCPP_NODEBUG = ::timespec;
 
+#ifdef __CYGWIN__
+template <typename __bare_pthread_t, uintptr_t __init_value>
+struct _LIBCPP_HIDE_FROM_ABI __libcpp_cygwin_pthread_wrapper_t {
+  uintptr_t __opaque_value                                                                       = __init_value;
+  constexpr __libcpp_cygwin_pthread_wrapper_t() noexcept                                         = default;
+  constexpr __libcpp_cygwin_pthread_wrapper_t(const __libcpp_cygwin_pthread_wrapper_t&) noexcept = default;
+  __libcpp_cygwin_pthread_wrapper_t(__bare_pthread_t __m) noexcept : __opaque_value(reinterpret_cast<uintptr_t>(__m)) {}
+  constexpr __libcpp_cygwin_pthread_wrapper_t& operator=(const __libcpp_cygwin_pthread_wrapper_t&) noexcept = default;
+  __libcpp_cygwin_pthread_wrapper_t& operator=(__bare_pthread_t __m) noexcept {
+    return operator=(__libcpp_cygwin_pthread_wrapper_t(__m));
+  }
+  // operator __bare_pthread_t &() noexcept { return *operator &(); }
+  // operator const __bare_pthread_t &() const noexcept { return *operator &(); }
+  //__bare_pthread_t *operator &() noexcept { return reinterpret_cast<__bare_pthread_t *>(&__opaque_value); }
+  // const __bare_pthread_t *operator &() const noexcept { return reinterpret_cast<const __bare_pthread_t
+  // *>(&__opaque_value); }
+  constexpr bool operator==(const __libcpp_cygwin_pthread_wrapper_t& __m) const noexcept = default;
+  constexpr friend bool
+  operator<(const __libcpp_cygwin_pthread_wrapper_t& __l, const __libcpp_cygwin_pthread_wrapper_t& __r) noexcept {
+    return __l.__opaque_value < __r.__opaque_value;
+  }
+  constexpr friend bool operator<(const __libcpp_cygwin_pthread_wrapper_t& __l, const __bare_pthread_t& __r) noexcept {
+    return __l < __libcpp_cygwin_pthread_wrapper_t(__r);
+  }
+  constexpr friend bool operator<(const __bare_pthread_t& __l, const __libcpp_cygwin_pthread_wrapper_t& __r) noexcept {
+    return __libcpp_cygwin_pthread_wrapper_t(__l) < __r;
+  }
+};
+template <typename __T>
+inline _LIBCPP_HIDE_FROM_ABI auto __libcpp_maybe_cast_to_bare_pthread(__T __t) {
+  return __t;
+}
+template <typename __bare_pthread_t, uintptr_t __init_value>
+inline _LIBCPP_HIDE_FROM_ABI __bare_pthread_t*
+__libcpp_maybe_cast_to_bare_pthread(__libcpp_cygwin_pthread_wrapper_t<__bare_pthread_t, __init_value>* __m) {
+  return reinterpret_cast<__bare_pthread_t*>(__m);
+}
+template <typename __bare_pthread_t, uintptr_t __init_value>
+inline _LIBCPP_HIDE_FROM_ABI __bare_pthread_t&
+__libcpp_maybe_cast_to_bare_pthread(__libcpp_cygwin_pthread_wrapper_t<__bare_pthread_t, __init_value>& __m) {
+  return *reinterpret_cast<__bare_pthread_t*>(&__m);
+}
+#  define __WRAP_CYGPTHR_API(name)                                                                                     \
+    template <typename... __Ts>                                                                                        \
+    inline _LIBCPP_HIDE_FROM_ABI decltype(auto) name(__Ts&&... __vs) {                                                 \
+      return ::name(__libcpp_maybe_cast_to_bare_pthread(__vs)...);                                                     \
+    }
+#endif
+
 //
 // Mutex
 //
-typedef pthread_mutex_t __libcpp_mutex_t;
-#define _LIBCPP_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
+#ifdef __CYGWIN__
+typedef __libcpp_cygwin_pthread_wrapper_t<pthread_mutex_t, 19> __libcpp_mutex_t;
+#  define _LIBCPP_MUTEX_INITIALIZER                                                                                    \
+    {                                                                                                                  \
+    }
+__WRAP_CYGPTHR_API(pthread_mutexattr_init)
+__WRAP_CYGPTHR_API(pthread_mutexattr_settype)
+__WRAP_CYGPTHR_API(pthread_mutexattr_destroy)
+__WRAP_CYGPTHR_API(pthread_mutex_init)
+__WRAP_CYGPTHR_API(pthread_mutex_destroy)
+__WRAP_CYGPTHR_API(pthread_mutex_lock)
+__WRAP_CYGPTHR_API(pthread_mutex_trylock)
+__WRAP_CYGPTHR_API(pthread_mutex_unlock)
 
-typedef pthread_mutex_t __libcpp_recursive_mutex_t;
+#else
+typedef pthread_mutex_t __libcpp_mutex_t;
+#  define _LIBCPP_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
+#endif
+
+typedef __libcpp_mutex_t __libcpp_recursive_mutex_t;
 
 inline _LIBCPP_HIDE_FROM_ABI int __libcpp_recursive_mutex_init(__libcpp_recursive_mutex_t* __m) {
   pthread_mutexattr_t __attr;
@@ -108,8 +173,20 @@ inline _LIBCPP_HIDE_FROM_ABI int __libcpp_mutex_destroy(__libcpp_mutex_t* __m) {
 //
 // Condition Variable
 //
+#ifdef __CYGWIN__
+typedef __libcpp_cygwin_pthread_wrapper_t<pthread_cond_t, 21> __libcpp_condvar_t;
+#  define _LIBCPP_CONDVAR_INITIALIZER                                                                                  \
+    {                                                                                                                  \
+    }
+__WRAP_CYGPTHR_API(pthread_cond_signal)
+__WRAP_CYGPTHR_API(pthread_cond_broadcast)
+__WRAP_CYGPTHR_API(pthread_cond_wait)
+__WRAP_CYGPTHR_API(pthread_cond_timedwait)
+__WRAP_CYGPTHR_API(pthread_cond_destroy)
+#else
 typedef pthread_cond_t __libcpp_condvar_t;
-#define _LIBCPP_CONDVAR_INITIALIZER PTHREAD_COND_INITIALIZER
+#  define _LIBCPP_CONDVAR_INITIALIZER PTHREAD_COND_INITIALIZER
+#endif
 
 inline _LIBCPP_HIDE_FROM_ABI int __libcpp_condvar_signal(__libcpp_condvar_t* __cv) { return pthread_cond_signal(__cv); }
 
@@ -134,12 +211,25 @@ inline _LIBCPP_HIDE_FROM_ABI int __libcpp_condvar_destroy(__libcpp_condvar_t* __
 //
 // Execute once
 //
+#ifdef __CYGWIN
+typedef struct __libcpp_exec_once_flag {
+  __libcpp_mutex_t mutex;
+  int state;
+};
+#  define _LIBCPP_EXEC_ONCE_INITIALIZER {{}, 0}
+
+inline _LIBCPP_HIDE_FROM_ABI int __libcpp_execute_once(__libcpp_exec_once_flag* __flag, void (*__init_routine)()) {
+  return pthread_once(reinterpret_cast<pthread_once_t*>(__flag), __init_routine);
+}
+
+#else
 typedef pthread_once_t __libcpp_exec_once_flag;
-#define _LIBCPP_EXEC_ONCE_INITIALIZER PTHREAD_ONCE_INIT
+#  define _LIBCPP_EXEC_ONCE_INITIALIZER PTHREAD_ONCE_INIT
 
 inline _LIBCPP_HIDE_FROM_ABI int __libcpp_execute_once(__libcpp_exec_once_flag* __flag, void (*__init_routine)()) {
   return pthread_once(__flag, __init_routine);
 }
+#endif
 
 //
 // Thread id
@@ -147,7 +237,11 @@ inline _LIBCPP_HIDE_FROM_ABI int __libcpp_execute_once(__libcpp_exec_once_flag* 
 #if defined(__MVS__)
 typedef unsigned long long __libcpp_thread_id;
 #else
+#  ifdef __CYGWIN__
+typedef uintptr_t __libcpp_thread_id;
+#  else
 typedef pthread_t __libcpp_thread_id;
+#  endif
 #endif
 
 // Returns non-zero if the thread ids are equal, otherwise 0
@@ -164,13 +258,25 @@ inline _LIBCPP_HIDE_FROM_ABI bool __libcpp_thread_id_less(__libcpp_thread_id __t
 // Thread
 //
 #define _LIBCPP_NULL_THREAD ((__libcpp_thread_t()))
+
+#ifdef __CYGWIN__
+typedef __libcpp_cygwin_pthread_wrapper_t<pthread_t, 0> __libcpp_thread_t;
+__WRAP_CYGPTHR_API(pthread_create)
+__WRAP_CYGPTHR_API(pthread_join)
+__WRAP_CYGPTHR_API(pthread_detach)
+#else
 typedef pthread_t __libcpp_thread_t;
+#endif
 
 inline _LIBCPP_HIDE_FROM_ABI __libcpp_thread_id __libcpp_thread_get_id(const __libcpp_thread_t* __t) {
 #if defined(__MVS__)
   return __t->__;
 #else
+#  ifdef __CYGWIN__
+  return __t->__opaque_value;
+#  else
   return *__t;
+#  endif
 #endif
 }
 
@@ -204,7 +310,14 @@ inline _LIBCPP_HIDE_FROM_ABI void __libcpp_thread_sleep_for(const chrono::nanose
 //
 #define _LIBCPP_TLS_DESTRUCTOR_CC /* nothing */
 
+#ifdef __CYGWIN__
+typedef __libcpp_cygwin_pthread_wrapper_t<pthread_key_t, 0> __libcpp_tls_key;
+__WRAP_CYGPTHR_API(pthread_key_create)
+__WRAP_CYGPTHR_API(pthread_getspecific)
+__WRAP_CYGPTHR_API(pthread_setspecific)
+#else
 typedef pthread_key_t __libcpp_tls_key;
+#endif
 
 inline _LIBCPP_HIDE_FROM_ABI int __libcpp_tls_create(__libcpp_tls_key* __key, void (*__at_exit)(void*)) {
   return pthread_key_create(__key, __at_exit);

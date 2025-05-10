@@ -101,6 +101,9 @@ add_link_flags_if(CXX_SUPPORTS_UNWINDLIB_EQ_NONE_FLAG --unwindlib=none)
 # MINGW_LIBRARIES is defined in config-ix.cmake
 add_library_flags_if(MINGW "${MINGW_LIBRARIES}")
 
+# CYGWIN_LIBRARIES is defined in config-ix.cmake
+add_library_flags_if(CYGWIN "${CYGWIN_LIBRARIES}")
+
 if (LIBUNWIND_ENABLE_SHARED AND
     NOT (CXX_SUPPORTS_FNO_EXCEPTIONS_FLAG AND
          CXX_SUPPORTS_FUNWIND_TABLES_FLAG))

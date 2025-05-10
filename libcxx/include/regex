@@ -1004,7 +1004,9 @@ public:
   typedef _CharT char_type;
   typedef basic_string<char_type> string_type;
   typedef locale locale_type;
-#    if defined(__BIONIC__) || defined(_NEWLIB_VERSION)
+#if defined(__CYGWIN__)
+  typedef int16_t char_class_type;
+#    elif defined(__BIONIC__) || defined(_NEWLIB_VERSION)
   // Originally bionic's ctype_base used its own ctype masks because the
   // builtin ctype implementation wasn't in libc++ yet. Bionic's ctype mask
   // was only 8 bits wide and already saturated, so it used a wider type here

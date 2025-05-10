@@ -92,6 +92,10 @@ if (MINGW)
   # MINGW_LIBRARIES is defined in config-ix.cmake
   list(APPEND LIBCXXABI_LIBRARIES ${MINGW_LIBRARIES})
 endif()
+if (CYGWIN)
+  # CYGWIN_LIBRARIES is defined in config-ix.cmake
+  list(APPEND LIBCXXABI_LIBRARIES ${CYGWIN_LIBRARIES})
+endif()
 if (ANDROID AND ANDROID_PLATFORM_LEVEL LESS 21)
   list(APPEND LIBCXXABI_LIBRARIES android_support)
 endif()

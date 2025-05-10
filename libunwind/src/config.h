@@ -28,12 +28,12 @@
     #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 1
     #define _LIBUNWIND_SUPPORT_DWARF_UNWIND 1
   #endif
-#elif defined(_WIN32)
-  #ifdef __SEH__
-    #define _LIBUNWIND_SUPPORT_SEH_UNWIND 1
-  #else
-    #define _LIBUNWIND_SUPPORT_DWARF_UNWIND 1
-  #endif
+#elif defined(_WIN32) || defined(__CYGWIN__)
+#ifdef __SEH__
+#define _LIBUNWIND_SUPPORT_SEH_UNWIND 1
+#else
+#define _LIBUNWIND_SUPPORT_DWARF_UNWIND 1
+#endif
 #elif defined(_LIBUNWIND_IS_BAREMETAL)
   #if !defined(_LIBUNWIND_ARM_EHABI)
     #define _LIBUNWIND_SUPPORT_DWARF_UNWIND 1
@@ -104,6 +104,10 @@
                                              SYMBOL_NAME(name)))               \
   extern "C" _LIBUNWIND_EXPORT __typeof(name) aliasname;
 #endif
+#elif defined(__CYGWIN__)
+#define _LIBUNWIND_WEAK_ALIAS(name, aliasname)                                 \
+  extern "C" _LIBUNWIND_EXPORT __typeof(name) aliasname                        \
+      __attribute__((alias(#name)));
 #else
 #error Unsupported target
 #endif
@@ -126,7 +130,7 @@
 #ifndef _LIBUNWIND_REMEMBER_HEAP_ALLOC
 #if defined(_LIBUNWIND_REMEMBER_STACK_ALLOC) || defined(__APPLE__) ||          \
     defined(__linux__) || defined(__ANDROID__) || defined(__MINGW32__) ||      \
-    defined(_LIBUNWIND_IS_BAREMETAL)
+    defined(_LIBUNWIND_IS_BAREMETAL) || defined(__CYGWIN__)
 #define _LIBUNWIND_REMEMBER_ALLOC(_size) __builtin_alloca(_size)
 #define _LIBUNWIND_REMEMBER_FREE(_ptr)                                         \
   do {                                                                         \

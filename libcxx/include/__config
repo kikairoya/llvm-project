@@ -228,6 +228,10 @@ _LIBCPP_HARDENING_MODE_DEBUG
 #      define _LIBCPP_HAS_BITSCAN64 0
 #    endif
 #    define _LIBCPP_HAS_OPEN_WITH_WCHAR 1
+#  elif defined(__CYGWIN__)
+#    define _LIBCPP_SHORT_WCHAR 1
+#    define _LIBCPP_HAS_OPEN_WITH_WCHAR 0
+#    define _LIBCPP_HAS_BITSCAN64 1
 #  else
 #    define _LIBCPP_HAS_OPEN_WITH_WCHAR 0
 #    define _LIBCPP_HAS_BITSCAN64 0
@@ -360,7 +364,7 @@ typedef __char32_t char32_t;
 #      define _LIBCPP_CRT_FUNC
 #    endif
 
-#    if defined(_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS) || (defined(__MINGW32__) && !defined(_LIBCPP_BUILDING_LIBRARY))
+#    if defined(_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS) || ((defined(__MINGW32__) || defined(__CYGWIN__)) && !defined(_LIBCPP_BUILDING_LIBRARY))
 #      define _LIBCPP_EXTERN_TEMPLATE_TYPE_VIS
 #      define _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS
 #      define _LIBCPP_OVERRIDABLE_FUNC_VIS
@@ -372,7 +376,7 @@ typedef __char32_t char32_t;
 #        define _LIBCPP_INNER_CLASS_IN_TEMPLATE_VIS __attribute__((__exclude_from_explicit_instantiation__))
 #      endif
 #    elif defined(_LIBCPP_BUILDING_LIBRARY)
-#      if defined(__MINGW32__)
+#      if defined(__MINGW32__) || defined(__CYGWIN__)
 #        define _LIBCPP_EXTERN_TEMPLATE_TYPE_VIS __declspec(dllexport)
 #        define _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS
 #      else
@@ -832,6 +836,7 @@ typedef __char32_t char32_t;
         defined(__APPLE__) ||                                                                                          \
         defined(__MVS__) ||                                                                                            \
         defined(_AIX) ||                                                                                               \
+        defined(__CYGWIN__) ||                                                                                         \
         defined(__EMSCRIPTEN__)
 // clang-format on
 #      undef _LIBCPP_HAS_THREAD_API_PTHREAD

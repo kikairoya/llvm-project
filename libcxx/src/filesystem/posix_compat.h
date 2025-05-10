@@ -475,7 +475,9 @@ using ::stat;
 using ::statvfs;
 using ::truncate;
 
-#  define O_BINARY 0
+#  ifndef __CYGWIN__
+#    define O_BINARY 0
+#  endif
 
 using StatVFS = struct statvfs;
 using ModeT   = ::mode_t;
