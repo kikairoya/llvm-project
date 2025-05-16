@@ -18,6 +18,9 @@ if (LLVM_BUILD_STATIC)
   target_link_libraries(c-index-test
     PRIVATE
     libclang_static
+  )
+  clang_target_link_libraries(c-index-test
+    PRIVATE
     clangCodeGen
     clangIndex
   )
@@ -25,6 +28,9 @@ else()
   target_link_libraries(c-index-test
     PRIVATE
     libclang
+  )
+  clang_target_link_libraries(c-index-test
+    PRIVATE
     clangAST
     clangBasic
     clangFrontend

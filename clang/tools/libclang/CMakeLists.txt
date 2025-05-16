@@ -56,19 +56,23 @@ set(SOURCES
   ../../include/clang-c/Index.h
   )
 
-set(LIBS
-  clangAST
-  clangBasic
-  clangDriver
-  clangExtractAPI
-  clangFrontend
-  clangIndex
-  clangLex
-  clangRewrite
-  clangSema
-  clangSerialization
-  clangTooling
-)
+if (TARGET clang-cpp)
+  set (LIBS clang-cpp)
+else ()
+  set(LIBS
+    clangAST
+    clangBasic
+    clangDriver
+    clangExtractAPI
+    clangFrontend
+    clangIndex
+    clangLex
+    clangRewrite
+    clangSema
+    clangSerialization
+    clangTooling
+  )
+endif ()
 
 if (HAVE_LIBDL)
   list(APPEND LIBS ${CMAKE_DL_LIBS})
