@@ -57,21 +57,6 @@ set(SOURCES
   ../../include/clang-c/Index.h
   )
 
-set(LIBS
-  clangAST
-  clangBasic
-  clangDriver
-  clangExtractAPI
-  clangFrontend
-  clangIndex
-  clangLex
-  clangOptions
-  clangRewrite
-  clangSema
-  clangSerialization
-  clangTooling
-)
-
 if (HAVE_LIBDL)
   list(APPEND LIBS ${CMAKE_DL_LIBS})
 elseif (CLANG_BUILT_STANDALONE)
@@ -149,6 +134,22 @@ add_clang_library(libclang ${ENABLE_SHARED} ${ENABLE_STATIC} INSTALL_WITH_TOOLCH
   Support
   TargetParser
   )
+
+clang_target_link_libraries(libclang
+  PRIVATE
+  clangAST
+  clangBasic
+  clangDriver
+  clangExtractAPI
+  clangFrontend
+  clangIndex
+  clangLex
+  clangOptions
+  clangRewrite
+  clangSema
+  clangSerialization
+  clangTooling
+)
 
 if(ENABLE_STATIC)
   foreach(name libclang obj.libclang libclang_static)
