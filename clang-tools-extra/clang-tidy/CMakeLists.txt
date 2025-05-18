@@ -8,7 +8,11 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/clang-tidy-config.h)
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_clang_library(clangTidy STATIC
+set(CLANG_TIDY_LIBTYPE STATIC)
+if (CLANG_PLUGIN_SUPPORT AND NOT LLVM_EXPORT_SYMBOLS_FOR_PLUGINS)
+  set(CLANG_TIDY_LIBTYPE SHARED)
+endif ()
+add_clang_library(clangTidy ${CLANG_TIDY_LIBTYPE}
   ClangTidy.cpp
   ClangTidyCheck.cpp
   ClangTidyModule.cpp
