@@ -89,6 +89,8 @@ void tools::Cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   const ToolChain &TC = getToolChain();
   const Driver &D = TC.getDriver();
   const SanitizerArgs &Sanitize = TC.getSanitizerArgs(Args);
+  bool IsLLD;
+  const char *Exec = Args.MakeArgString(TC.GetLinkerPath(&IsLLD));
 
   ArgStringList CmdArgs;
 
@@ -101,10 +103,14 @@ void tools::Cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   Args.ClaimAllArgs(options::OPT_w);
 
   if (!D.SysRoot.empty()) {
-    StringRef Sep = llvm::sys::path::get_separator();
     CmdArgs.push_back(Args.MakeArgString("--sysroot=" + D.SysRoot));
     CmdArgs.push_back("-L");
-    CmdArgs.push_back(Args.MakeArgString(D.SysRoot + Sep + "lib" + Sep + "w32api"));
+    CmdArgs.push_back(Args.MakeArgString(D.SysRoot + "lib/w32api"));
+  } else if (IsLLD) {
+    CmdArgs.push_back("-L");
+    CmdArgs.push_back(Args.MakeArgString(D.SysRoot + "lib"));
+    CmdArgs.push_back("-L");
+    CmdArgs.push_back(Args.MakeArgString(D.SysRoot + "lib/w32api"));
   }
 
   if (Args.hasArg(options::OPT_s))
@@ -172,8 +178,10 @@ void tools::Cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   if (Args.hasArg(options::OPT_Z_Xlinker__no_demangle))
     CmdArgs.push_back("--no-demangle");
 
-  if (!Args.hasFlag(options::OPT_fauto_import, options::OPT_fno_auto_import,
+  if (Args.hasFlag(options::OPT_fauto_import, options::OPT_fno_auto_import,
                     true))
+    CmdArgs.push_back("--enable-auto-import");
+  else
     CmdArgs.push_back("--disable-auto-import");
 
   CmdArgs.push_back("-o");
@@ -308,7 +316,6 @@ void tools::Cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
       CmdArgs.push_back(Args.MakeArgString(TC.GetFilePath("crtend.o")));
     }
   }
-  const char *Exec = Args.MakeArgString(TC.GetLinkerPath());
   C.addCommand(std::make_unique<Command>(JA, *this,
                                          ResponseFileSupport::AtFileUTF8(),
                                          Exec, CmdArgs, Inputs, Output));
