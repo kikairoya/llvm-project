@@ -301,7 +301,7 @@ if re.match(r"^arm64(e)?-apple-(macos|darwin)", config.target_triple):
 
 # [PR18856] Depends to remove opened file. On win32, a file could be removed
 # only if all handles were closed.
-if platform.system() not in ["Windows"]:
+if platform.system() not in ["Windows"] and not platform.system().startswith("CYGWIN"):
     config.available_features.add("can-remove-opened-file")
 
 # Features
