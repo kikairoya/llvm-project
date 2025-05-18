@@ -1,5 +1,6 @@
 ; LoongArch does not support emulated tls.
 ; UNSUPPORTED: target=loongarch{{.*}}
+; UNSUPPORTED: system-cygwin
 
 ; RUN: not lli -no-process-syms -lljit-platform=Inactive -emulated-tls \
 ; RUN:   -jit-kind=orc-lazy %s 2>&1 | FileCheck %s

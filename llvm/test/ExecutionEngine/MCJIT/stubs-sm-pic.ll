@@ -1,7 +1,8 @@
 ; RUN: %lli -jit-kind=mcjit -disable-lazy-compilation=false -relocation-model=pic -code-model=small %s
-; XFAIL: target={{(mips|mipsel)-.*}}, target={{(i686|i386).*}}, target={{(aarch64|arm).*}}, target={{.*-(cygwin|windows-cygnus)}}
+; XFAIL: target={{(mips|mipsel)-.*}}, target={{(i686|i386).*}}, target={{(aarch64|arm).*}}
+; UNSUPPORTED: system-cygwin
 ; This test segfaults on cygwin, but succeeds with cygwin-elf.  Unfortunately,
-; cygwin-elf breaks the remote tests due to lack of __register_frame.
+; cygwin-elf breaks the remote tests due to lack of __register_frame unless using libunwind.
 
 define i32 @main() nounwind {
 entry:
