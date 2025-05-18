@@ -1286,7 +1286,7 @@ Expected<std::unique_ptr<orc::ExecutorProcessControl>> launchRemote() {
 //
 // TODO: Move this into libORC at some point, see
 // https://github.com/llvm/llvm-project/issues/56603.
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || defined(__CYGWIN__)
 // This is a MinGW version of #pragma comment(linker, "...") that doesn't
 // require compiling with -fms-extensions.
 #if defined(__i386__)
