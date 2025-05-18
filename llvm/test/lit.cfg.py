@@ -376,7 +376,7 @@ if config.target_triple:
     else:
         config.available_features.add("target-byteorder-little-endian")
 
-if sys.platform in ["win32"]:
+if sys.platform in ["win32", "cygwin"]:
     # ExecutionEngine, no weak symbols in COFF.
     config.available_features.add("uses_COFF")
 else:
@@ -584,7 +584,7 @@ def host_unwind_supports_jit():
         return True
 
     # Windows does not support frame info without the ORC runtime.
-    if platform.system() == "Windows":
+    if platform.system() == "Windows" or platform.system().startswith("CYGWIN"):
         return False
 
     # On Darwin/x86-64 clang produces both eh-frames and compact-unwind, and
@@ -650,7 +650,7 @@ if not hasattr(sys, "getwindowsversion") or sys.getwindowsversion().build >= 170
 
 # .debug_frame is not emitted for targeting Windows x64, aarch64/arm64, AIX, or Apple Silicon Mac.
 if not re.match(
-    r"^(x86_64|aarch64|arm64|powerpc|powerpc64).*-(windows-gnu|windows-msvc|aix)",
+    r"^(x86_64|aarch64|arm64|powerpc|powerpc64).*-(cygwin|windows-gnu|windows-msvc|aix)",
     config.target_triple,
 ) and not re.match(r"^arm64(e)?-apple-(macos|darwin)", config.target_triple):
     config.available_features.add("debug_frame")
