@@ -702,7 +702,7 @@ def host_unwind_supports_jit():
         return True
 
     # Windows does not support frame info without the ORC runtime.
-    if platform.system() == "Windows":
+    if platform.system() == "Windows" or platform.system().startswith("CYGWIN"):
         return False
 
     # On Darwin/x86-64 clang produces both eh-frames and compact-unwind, and

@@ -1,4 +1,5 @@
 ; REQUIRES: native && target-x86_64
+; UNSUPPORTED: system-cygwin
 
 ; RUN: lli --jit-linker=rtdyld --orc-lazy-debug=jit-debug-descriptor %s 2>&1 | FileCheck %s
 ; RUN: lli --jit-linker=jitlink --orc-lazy-debug=jit-debug-descriptor %s 2>&1 | FileCheck %s

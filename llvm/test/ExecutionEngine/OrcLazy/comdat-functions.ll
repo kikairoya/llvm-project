@@ -1,4 +1,4 @@
-; REQUIRES: system-windows
+; REQUIRES: system-windows || system-cygwin
 ; RUN: lli -jit-kind=orc-lazy -extra-module %p/Inputs/comdat-functions.ll %s
 ; Check if crashing comdat any functions are not causing duplicate symbol error.
 
