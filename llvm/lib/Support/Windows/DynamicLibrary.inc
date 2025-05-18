@@ -26,7 +26,7 @@ DynamicLibrary::HandleSet::~HandleSet() {
     FreeLibrary(HMODULE(Handle));
 
   // 'Process' should not be released on Windows.
-  assert((!Process || Process == this) && "Bad Handle");
+  assert((!Process || Process == &Invalid || Process == this) && "Bad Handle");
   // llvm_shutdown called, Return to default
   DynamicLibrary::SearchOrder = DynamicLibrary::SO_Linker;
 }
