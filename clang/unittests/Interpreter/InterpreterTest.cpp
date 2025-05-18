@@ -223,7 +223,7 @@ TEST_F(InterpreterTest, FindMangledNameSymbol) {
   EXPECT_FALSE(!Addr);
 
   // FIXME: Re-enable when we investigate the way we handle dllimports on Win.
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
   EXPECT_EQ((uintptr_t)&printf, Addr->getValue());
 #endif // _WIN32
 }

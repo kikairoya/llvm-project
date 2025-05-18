@@ -1,4 +1,5 @@
 // REQUIRES: !system-windows
+// REQUIRES: !system-cygwin
 //
 // RUN: rm -rf %t
 // RUN: mkdir -p %t

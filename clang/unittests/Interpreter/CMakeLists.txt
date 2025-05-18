@@ -27,7 +27,7 @@ add_distinct_clang_unittest(ClangReplInterpreterTests
   )
 
 # Exceptions on Windows are not yet supported.
-if(NOT WIN32)
+if(NOT WIN32 AND NOT CYGWIN)
   add_subdirectory(ExceptionTests)
 endif()
 

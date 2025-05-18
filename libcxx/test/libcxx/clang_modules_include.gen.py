@@ -38,6 +38,7 @@ for header in public_headers:
 
 // The Windows headers don't appear to be compatible with modules
 // UNSUPPORTED: windows
+// UNSUPPORTED: cygwin
 // UNSUPPORTED: buildhost=windows
 
 // The Android headers don't appear to be compatible with modules yet
