@@ -2105,7 +2105,8 @@ void Preprocessor::processPathForFileMacro(SmallVectorImpl<char> &Path,
                                            const TargetInfo &TI) {
   LangOpts.remapPathPrefix(Path);
   if (LangOpts.UseTargetPathSeparator) {
-    if (TI.getTriple().isOSWindows())
+    if (TI.getTriple().isOSWindows() &&
+        !TI.getTriple().isWindowsCygwinEnvironment())
       llvm::sys::path::remove_dots(Path, false,
                                    llvm::sys::path::Style::windows_backslash);
     else
