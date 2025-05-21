@@ -14,7 +14,7 @@
 #
 name: Build and Test libc++
 on:
-  pull_request:
+  push:
     paths:
       - 'libcxx/**'
       - 'libcxxabi/**'
@@ -22,9 +22,6 @@ on:
       - 'runtimes/**'
       - 'cmake/**'
       - '.github/workflows/libcxx-build-and-test.yaml'
-  schedule:
-    # Run nightly at 08:00 UTC (aka 00:00 Pacific, aka 03:00 Eastern)
-    - cron: '0 8 * * *'
 
 permissions:
   contents: read # Default everything to read-only
@@ -35,18 +32,18 @@ concurrency:
 
 jobs:
   stage1:
-    if: github.repository_owner == 'llvm'
-    runs-on: libcxx-self-hosted-linux
+    if: github.repository_owner == 'kikairoya'
+    runs-on: self-hosted
     container: ghcr.io/llvm/libcxx-linux-builder:2b57ebb50b6d418e70382e655feaa619b558e254
     continue-on-error: false
     strategy:
       fail-fast: false
       matrix:
         config: [
-          'frozen-cxx03-headers',
-          'generic-cxx03',
+          #'frozen-cxx03-headers',
+          #'generic-cxx03',
           'generic-cxx26',
-          'generic-modules'
+          #'generic-modules'
         ]
         cc: [  'clang-21' ]
         cxx: [ 'clang++-21' ]
@@ -73,8 +70,8 @@ jobs:
             **/CMakeOutput.log
             **/crash_diagnostics/*
   stage2:
-    if: github.repository_owner == 'llvm'
-    runs-on: libcxx-self-hosted-linux
+    if: github.repository_owner == 'kikairoya'
+    runs-on: self-hosted
     container: ghcr.io/llvm/libcxx-linux-builder:2b57ebb50b6d418e70382e655feaa619b558e254
     needs: [ stage1 ]
     continue-on-error: false
@@ -82,24 +79,24 @@ jobs:
       fail-fast: false
       matrix:
         config: [
-          'generic-cxx11',
-          'generic-cxx14',
-          'generic-cxx17',
-          'generic-cxx20',
+          #'generic-cxx11',
+          #'generic-cxx14',
+          #'generic-cxx17',
+          #'generic-cxx20',
           'generic-cxx23'
         ]
         cc: [ 'clang-21' ]
         cxx: [ 'clang++-21' ]
-        include:
-          - config: 'generic-gcc-cxx11'
-            cc: 'gcc-14'
-            cxx: 'g++-14'
-          - config: 'generic-cxx26'
-            cc: 'clang-20'
-            cxx: 'clang++-20'
-          - config: 'generic-cxx26'
-            cc: 'clang-19'
-            cxx: 'clang++-19'
+        #include:
+        #  - config: 'generic-gcc-cxx11'
+        #    cc: 'gcc-14'
+        #    cxx: 'g++-14'
+        #  - config: 'generic-cxx26'
+        #    cc: 'clang-20'
+        #    cxx: 'clang++-20'
+        #  - config: 'generic-cxx26'
+        #    cc: 'clang-19'
+        #    cxx: 'clang++-19'
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: ${{ matrix.config }}
@@ -119,7 +116,8 @@ jobs:
             **/CMakeOutput.log
             **/crash_diagnostics/*
   stage3:
-    if: github.repository_owner == 'llvm'
+    if: github.repository_owner == 'kikairoya'
+    runs-on: self-hosted
     needs: [ stage2 ]
     continue-on-error: false
     strategy:
@@ -128,41 +126,27 @@ jobs:
       matrix:
         config: [
           'generic-abi-unstable',
-          'generic-hardening-mode-debug',
-          'generic-hardening-mode-extensive',
-          'generic-hardening-mode-fast',
-          'generic-hardening-mode-fast-with-abi-breaks',
-          'generic-merged',
-          'generic-modules-cxx17-lsv',
-          'generic-no-exceptions',
-          'generic-no-experimental',
-          'generic-no-filesystem',
-          'generic-no-localization',
-          'generic-no-terminal',
-          'generic-no-random_device',
-          'generic-no-threads',
-          'generic-no-tzdb',
-          'generic-no-unicode',
-          'generic-no-wide-characters',
-          'generic-no-rtti',
-          'generic-optimized-speed',
-          'generic-static',
-          'bootstrapping-build'
+          #'generic-hardening-mode-debug',
+          #'generic-hardening-mode-extensive',
+          #'generic-hardening-mode-fast',
+          #'generic-hardening-mode-fast-with-abi-breaks',
+          #'generic-merged',
+          #'generic-modules-cxx17-lsv',
+          #'generic-no-exceptions',
+          #'generic-no-experimental',
+          #'generic-no-filesystem',
+          #'generic-no-localization',
+          #'generic-no-terminal',
+          #'generic-no-random_device',
+          #'generic-no-threads',
+          #'generic-no-tzdb',
+          #'generic-no-unicode',
+          #'generic-no-wide-characters',
+          #'generic-no-rtti',
+          #'generic-optimized-speed',
+          #'generic-static',
+          #'bootstrapping-build'
         ]
-        machine: [ 'libcxx-self-hosted-linux' ]
-        include:
-        - config: 'generic-cxx26'
-          machine: libcxx-self-hosted-linux
-        - config: 'generic-asan'
-          machine: libcxx-self-hosted-linux
-        - config: 'generic-tsan'
-          machine: libcxx-self-hosted-linux
-        - config: 'generic-ubsan'
-          machine: libcxx-self-hosted-linux
-        # Use a larger machine for MSAN to avoid timeout and memory allocation issues.
-        - config: 'generic-msan'
-          machine: libcxx-self-hosted-linux
-    runs-on: ${{ matrix.machine }}
     container: ghcr.io/llvm/libcxx-linux-builder:2b57ebb50b6d418e70382e655feaa619b558e254
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -184,6 +168,7 @@ jobs:
             **/crash_diagnostics/*
 
   macos:
+    if: false
     needs: [ stage3 ]
     strategy:
       fail-fast: false
@@ -245,14 +230,14 @@ jobs:
       matrix:
         include:
         - { config: clang-cl-dll, mingw: false }
-        - { config: clang-cl-static, mingw: false }
-        - { config: clang-cl-no-vcruntime, mingw: false }
-        - { config: clang-cl-debug, mingw: false }
-        - { config: clang-cl-static-crt, mingw: false }
+        #- { config: clang-cl-static, mingw: false }
+        #- { config: clang-cl-no-vcruntime, mingw: false }
+        #- { config: clang-cl-debug, mingw: false }
+        #- { config: clang-cl-static-crt, mingw: false }
         - { config: mingw-dll, mingw: true }
-        - { config: mingw-static, mingw: true }
+        #- { config: mingw-static, mingw: true }
         - { config: mingw-dll-i686, mingw: true }
-        - { config: mingw-incomplete-sysroot, mingw: true }
+        #- { config: mingw-incomplete-sysroot, mingw: true }
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install dependencies
@@ -286,3 +271,9 @@ jobs:
       - name: Build and test
         run: |
           bash libcxx/utils/ci/run-buildbot ${{ matrix.config }}
+      - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
+        if: always()
+        with:
+          name: ${{ matrix.config }}-results
+          path: |
+            **/build/**/*.dll

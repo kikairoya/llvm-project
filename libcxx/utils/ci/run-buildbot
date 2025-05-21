@@ -133,7 +133,7 @@ function generate-cmake-base() {
           -S "${MONOREPO_ROOT}/runtimes" \
           -B "${BUILD_DIR}" \
           -GNinja -DCMAKE_MAKE_PROGRAM="${NINJA}" \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
           -DLIBCXX_ENABLE_WERROR=YES \
           -DLIBCXXABI_ENABLE_WERROR=YES \
@@ -216,7 +216,7 @@ function test-armv7m-picolibc() {
         -S "${MONOREPO_ROOT}/compiler-rt" \
         -B "${BUILD_DIR}/compiler-rt" \
         -GNinja -DCMAKE_MAKE_PROGRAM="${NINJA}" \
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
         -DCMAKE_C_FLAGS="${flags}" \
         -DCMAKE_CXX_FLAGS="${flags}" \
@@ -342,7 +342,8 @@ generic-gcc)
     clean
     generate-cmake -DLIBCXX_ENABLE_WERROR=NO \
                    -DLIBCXXABI_ENABLE_WERROR=NO \
-                   -DLIBUNWIND_ENABLE_WERROR=NO
+                   -DLIBUNWIND_ENABLE_WERROR=NO \
+                   -DLLVM_LIT_ARGS="-sv -j2 --xunit-xml-output test-results.xml --timeout=1500 --time-tests"
     check-runtimes
 ;;
 generic-gcc-cxx11)
@@ -350,7 +351,8 @@ generic-gcc-cxx11)
     generate-cmake -C "${MONOREPO_ROOT}/libcxx/cmake/caches/Generic-cxx11.cmake" \
                    -DLIBCXX_ENABLE_WERROR=NO \
                    -DLIBCXXABI_ENABLE_WERROR=NO \
-                   -DLIBUNWIND_ENABLE_WERROR=NO
+                   -DLIBUNWIND_ENABLE_WERROR=NO \
+                   -DLLVM_LIT_ARGS="-sv -j2 --xunit-xml-output test-results.xml --timeout=1500 --time-tests"
     check-runtimes
 ;;
 #
@@ -363,7 +365,8 @@ generic-asan)
 ;;
 generic-msan)
     clean
-    generate-cmake -C "${MONOREPO_ROOT}/libcxx/cmake/caches/Generic-msan.cmake"
+    generate-cmake -C "${MONOREPO_ROOT}/libcxx/cmake/caches/Generic-msan.cmake" \
+                   -DLLVM_LIT_ARGS="-sv -j3 --xunit-xml-output test-results.xml --timeout=1500 --time-tests"
     check-runtimes
 ;;
 generic-tsan)
@@ -570,7 +573,7 @@ apple-system|apple-system-hardened)
         -S "${MONOREPO_ROOT}/runtimes" \
         -B "${BUILD_DIR}/cxx" \
         -GNinja -DCMAKE_MAKE_PROGRAM="${NINJA}" \
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}/cxx" \
         -DLLVM_LIT_ARGS="-sv --xunit-xml-output test-results.xml --timeout=1500 --time-tests" \
         -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi" \
@@ -586,7 +589,7 @@ apple-system|apple-system-hardened)
         -S "${MONOREPO_ROOT}/runtimes" \
         -B "${BUILD_DIR}/unwind" \
         -GNinja -DCMAKE_MAKE_PROGRAM="${NINJA}" \
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}/unwind" \
         -DLLVM_LIT_ARGS="-sv --xunit-xml-output test-results.xml --timeout=1500 --time-tests" \
         -DLLVM_ENABLE_RUNTIMES="libunwind" \
