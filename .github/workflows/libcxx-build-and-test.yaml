@@ -87,16 +87,16 @@ jobs:
         ]
         cc: [ 'clang-21' ]
         cxx: [ 'clang++-21' ]
-        #include:
-        #  - config: 'generic-gcc-cxx11'
-        #    cc: 'gcc-14'
-        #    cxx: 'g++-14'
-        #  - config: 'generic-cxx26'
-        #    cc: 'clang-20'
-        #    cxx: 'clang++-20'
-        #  - config: 'generic-cxx26'
-        #    cc: 'clang-19'
-        #    cxx: 'clang++-19'
+        include:
+          - config: 'generic-gcc-cxx11'
+            cc: 'gcc-14'
+            cxx: 'g++-14'
+          - config: 'generic-cxx26'
+            cc: 'clang-20'
+            cxx: 'clang++-20'
+          - config: 'generic-cxx26'
+            cc: 'clang-19'
+            cxx: 'clang++-19'
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: ${{ matrix.config }}
@@ -230,14 +230,14 @@ jobs:
       matrix:
         include:
         - { config: clang-cl-dll, mingw: false }
-        #- { config: clang-cl-static, mingw: false }
-        #- { config: clang-cl-no-vcruntime, mingw: false }
-        #- { config: clang-cl-debug, mingw: false }
-        #- { config: clang-cl-static-crt, mingw: false }
+        - { config: clang-cl-static, mingw: false }
+        - { config: clang-cl-no-vcruntime, mingw: false }
+        - { config: clang-cl-debug, mingw: false }
+        - { config: clang-cl-static-crt, mingw: false }
         - { config: mingw-dll, mingw: true }
-        #- { config: mingw-static, mingw: true }
+        - { config: mingw-static, mingw: true }
         - { config: mingw-dll-i686, mingw: true }
-        #- { config: mingw-incomplete-sysroot, mingw: true }
+        - { config: mingw-incomplete-sysroot, mingw: true }
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install dependencies
