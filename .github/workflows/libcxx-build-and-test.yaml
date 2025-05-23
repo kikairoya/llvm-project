@@ -32,7 +32,7 @@ concurrency:
 
 jobs:
   stage1:
-    if: github.repository_owner == 'kikairoya'
+    if: false && github.repository_owner == 'kikairoya'
     runs-on: self-hosted
     container: ghcr.io/llvm/libcxx-linux-builder:2b57ebb50b6d418e70382e655feaa619b558e254
     continue-on-error: false
@@ -70,7 +70,7 @@ jobs:
             **/CMakeOutput.log
             **/crash_diagnostics/*
   stage2:
-    if: github.repository_owner == 'kikairoya'
+    if: false && github.repository_owner == 'kikairoya'
     runs-on: self-hosted
     container: ghcr.io/llvm/libcxx-linux-builder:2b57ebb50b6d418e70382e655feaa619b558e254
     needs: [ stage1 ]
@@ -116,7 +116,7 @@ jobs:
             **/CMakeOutput.log
             **/crash_diagnostics/*
   stage3:
-    if: github.repository_owner == 'kikairoya'
+    if: false && github.repository_owner == 'kikairoya'
     runs-on: self-hosted
     needs: [ stage2 ]
     continue-on-error: false
@@ -224,7 +224,7 @@ jobs:
 
   windows:
     runs-on: windows-2022
-    needs: [ stage2 ]
+    #needs: [ stage2 ]
     strategy:
       fail-fast: false
       matrix:
