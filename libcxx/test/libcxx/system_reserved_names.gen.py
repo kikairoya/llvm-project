@@ -122,7 +122,7 @@ for header in public_headers:
 #endif
 
 // Newlib & picolibc use __input as a parameter name of a64l & l64a
-#ifndef _NEWLIB_VERSION
+#if !defined(_NEWLIB_VERSION) && !defined(__CYGWIN__)
 # define __input SYSTEM_RESERVED_NAME
 #endif
 #define __output SYSTEM_RESERVED_NAME
@@ -177,8 +177,10 @@ for header in public_headers:
 #define Xs SYSTEM_RESERVED_NAME
 
 // The classic Windows min/max macros
+#ifndef __CYGWIN__
 #define min SYSTEM_RESERVED_NAME
 #define max SYSTEM_RESERVED_NAME
+#endif
 
 // Test to make sure curses has no conflicting macros with the standard library
 #define move SYSTEM_RESERVED_NAME
@@ -202,8 +204,10 @@ for header in public_headers:
 // Make sure we don't swallow the definition of the macros we push/pop
 #define STRINGIFY_IMPL(x) #x
 #define STRINGIFY(x) STRINGIFY_IMPL(x)
+#ifndef __CYGWIN__
 static_assert(__builtin_strcmp(STRINGIFY(min), STRINGIFY(SYSTEM_RESERVED_NAME)) == 0, "");
 static_assert(__builtin_strcmp(STRINGIFY(max), STRINGIFY(SYSTEM_RESERVED_NAME)) == 0, "");
+#endif
 static_assert(__builtin_strcmp(STRINGIFY(move), STRINGIFY(SYSTEM_RESERVED_NAME)) == 0, "");
 static_assert(__builtin_strcmp(STRINGIFY(erase), STRINGIFY(SYSTEM_RESERVED_NAME)) == 0, "");
 static_assert(__builtin_strcmp(STRINGIFY(refresh), STRINGIFY(SYSTEM_RESERVED_NAME)) == 0, "");

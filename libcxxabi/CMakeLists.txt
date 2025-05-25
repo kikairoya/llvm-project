@@ -145,6 +145,8 @@ option(LIBCXXABI_HERMETIC_STATIC_LIBRARY
 
 if(MINGW)
   set(LIBCXXABI_DEFAULT_TEST_CONFIG "llvm-libc++abi-mingw.cfg.in")
+elseif(CYGWIN)
+  set(LIBCXXABI_DEFAULT_TEST_CONFIG "llvm-libc++abi-cygwin.cfg.in")
 elseif(WIN32) # clang-cl
   if (LIBCXXABI_ENABLE_SHARED)
     set(LIBCXXABI_DEFAULT_TEST_CONFIG "llvm-libc++abi-shared-clangcl.cfg.in")

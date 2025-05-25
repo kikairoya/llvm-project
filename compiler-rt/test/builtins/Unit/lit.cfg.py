@@ -97,6 +97,17 @@ elif config.target_os == "Windows":
             + " -lmingw32 -lmoldname -lmingwex -lmsvcrt -ladvapi32 -lshell32 -luser32 -lkernel32 ",
         )
     )
+elif config.target_os == "CYGWIN":
+    base_lib = os.path.join(
+        config.compiler_rt_libdir, "libclang_rt.builtins%s.a" % config.target_suffix
+    )
+    config.substitutions.append(
+        (
+            "%librt ",
+            base_lib
+            + " -lcygwin -ladvapi32 -lshell32 -luser32 -lkernel32 -lcygwin ",
+        )
+    )
 else:
     base_lib = os.path.join(
         config.compiler_rt_libdir, "libclang_rt.builtins%s.a" % config.target_suffix

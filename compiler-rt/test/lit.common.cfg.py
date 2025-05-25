@@ -78,7 +78,7 @@ def find_compiler_libdir():
 
 
 def push_dynamic_library_lookup_path(config, new_path):
-    if platform.system() == "Windows":
+    if platform.system() == "Windows" or platform.sys.platform == 'cygwin':
         dynamic_library_lookup_var = "PATH"
     elif platform.system() == "Darwin":
         dynamic_library_lookup_var = "DYLD_LIBRARY_PATH"

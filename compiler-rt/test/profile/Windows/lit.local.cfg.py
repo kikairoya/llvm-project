@@ -6,5 +6,5 @@ def getRoot(config):
 
 root = getRoot(config)
 
-if root.target_os not in ["Windows"]:
+if root.target_os not in ["Windows", "CYGWIN"]:
     config.unsupported = True
