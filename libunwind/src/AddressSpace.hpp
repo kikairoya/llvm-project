@@ -24,11 +24,12 @@
 #include "Registers.hpp"
 
 #ifndef _LIBUNWIND_USE_DLADDR
-  #if !(defined(_LIBUNWIND_IS_BAREMETAL) || defined(_WIN32) || defined(_AIX))
-    #define _LIBUNWIND_USE_DLADDR 1
-  #else
-    #define _LIBUNWIND_USE_DLADDR 0
-  #endif
+#if !(defined(_LIBUNWIND_IS_BAREMETAL) || defined(_WIN32) || defined(_AIX) ||  \
+      defined(__CYGWIN__))
+#define _LIBUNWIND_USE_DLADDR 1
+#else
+#define _LIBUNWIND_USE_DLADDR 0
+#endif
 #endif
 
 #if _LIBUNWIND_USE_DLADDR
@@ -109,7 +110,8 @@ extern char __eh_frame_hdr_end;
 extern char __exidx_start;
 extern char __exidx_end;
 
-#elif defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND) && defined(_WIN32)
+#elif defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND) &&                              \
+    (defined(_WIN32) || defined(__CYGWIN__))
 
 #include <windows.h>
 #include <psapi.h>
@@ -551,7 +553,8 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
                              (void *)info.arm_section, (void *)info.arm_section_length);
   if (info.arm_section && info.arm_section_length)
     return true;
-#elif defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND) && defined(_WIN32)
+#elif defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND) &&                              \
+    (defined(_WIN32) || defined(__CYGWIN__))
   HMODULE mods[1024];
   HANDLE process = GetCurrentProcess();
   DWORD needed;
@@ -591,7 +594,8 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
     }
   }
   return false;
-#elif defined(_LIBUNWIND_SUPPORT_SEH_UNWIND) && defined(_WIN32)
+#elif defined(_LIBUNWIND_SUPPORT_SEH_UNWIND) &&                                \
+    (defined(_WIN32) || defined(__CYGWIN__))
   // Don't even bother, since Windows has functions that do all this stuff
   // for us.
   (void)targetAddr;
