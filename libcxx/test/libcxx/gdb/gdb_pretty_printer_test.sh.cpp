@@ -23,6 +23,7 @@
 
 // This test doesn't work as such on Windows.
 // UNSUPPORTED: windows
+// UNSUPPORTED: cygwin
 
 // RUN: %{cxx} %{flags} %s -o %t.exe %{compile_flags} -g %{link_flags}
 // Ensure locale-independence for unicode tests.

@@ -75,6 +75,7 @@ static void basic_test() {
       {"a", "/", relative_cwd / "a"},
       {"a/b", "/", relative_cwd / "a/b"},
       {"a", "/net", ".." / relative_cwd / "a"},
+#ifndef __CYGWIN__ // Cygwin treats ^// as a network path
 #ifdef _WIN32
       {"//foo/", "//foo", "//foo/"},
       {"//foo", "//foo/", "//foo"},
@@ -84,6 +85,7 @@ static void basic_test() {
 #endif
       {"//foo", "//foo", "."},
       {"//foo/", "//foo/", "."},
+#endif
 #ifdef _WIN32
       {"//foo", "a", "//foo"},
       {"//foo/a", "//bar", "//foo/a"},
@@ -103,12 +105,14 @@ static void basic_test() {
       {"X:a", "Y:/b", "X:a"},
       {"X:a", "Y:b", "X:a"},
 #else
+#ifndef __CYGWIN__
       {"//foo", "a", dot_dot_to_root / "../foo"},
       {"//foo/a", "//bar", "../foo/a"},
       {"//foo/a", "//bar/", "../foo/a"},
       {"//foo/a", "b", dot_dot_to_root / "../foo/a"},
       {"//foo/a", "/b", "../foo/a"},
       {"//foo/a", "//bar/b", "../../foo/a"},
+#endif
       {"X:/a", "X:/b", "../a"},
       {"X:/a", "X:b", "../X:/a"},
       {"X:/a", "Y:/a", "../../X:/a"},
@@ -123,7 +127,9 @@ static void basic_test() {
       {"a", "a", "."},
       {"a/b", "a/b", "."},
       {"a/b/c/", "a/b/c/", "."},
+#ifndef __CYGWIN__
       {"//foo/a/b", "//foo/a/b", "."},
+#endif
       {"/a/d", "/a/b/c", "../../d"},
       {"/a/b/c", "/a/d", "../b/c"},
       {"a/b/c", "a", "b/c"},

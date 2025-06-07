@@ -14,7 +14,7 @@
 // UNSUPPORTED: c++03
 
 // There is no way to limit the number of threads on windows
-// UNSUPPORTED: windows
+// UNSUPPORTED: windows, cygwin
 
 // AIX, macOS and FreeBSD seem to limit the number of processes, not threads via RLIMIT_NPROC
 // XFAIL: target={{.+}}-aix{{.*}}

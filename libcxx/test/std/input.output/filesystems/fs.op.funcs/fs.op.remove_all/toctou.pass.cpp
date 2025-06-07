@@ -34,6 +34,7 @@
 
 // Windows doesn't support the necessary APIs to mitigate this issue.
 // XFAIL: target={{.+}}-windows-{{.+}}
+// XFAIL: cygwin
 
 #include <cstdio>
 #include <filesystem>
