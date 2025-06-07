@@ -343,7 +343,7 @@ int main(int, char**)
     static_assert(std::alignment_of<T1>::value == Align, "");
     static_assert(sizeof(T1) == Align, "");
   }
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
   // Windows only supports alignment up to 8192 bytes.
   {
     const int Align = 65536;

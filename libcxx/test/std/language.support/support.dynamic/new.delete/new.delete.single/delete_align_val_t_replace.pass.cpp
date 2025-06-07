@@ -10,6 +10,9 @@
 
 // UNSUPPORTED: sanitizer-new-delete, c++03, c++11, c++14
 
+// Cygwin runtime has hack to able override operator-new defined in DLL from EXE but it don't works for align_val_t overloads.
+// XFAIL: cygwin
+
 // Libc++ when built for z/OS doesn't contain the aligned allocation functions,
 // nor does the dynamic library shipped with z/OS.
 // XFAIL: target={{.+}}-zos{{.*}}
