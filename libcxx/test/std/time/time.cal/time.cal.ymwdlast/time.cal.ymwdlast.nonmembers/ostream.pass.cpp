@@ -13,6 +13,9 @@
 // TODO FMT This test should not require std::to_chars(floating-point)
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -154,7 +157,7 @@ static void test() {
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::year_month_weekday_last{
                  std::chrono::year{1970}, std::chrono::month{1}, std::chrono::weekday_last{std::chrono::weekday{0}}}),
              SV("1970/ 1/日[last]"));
-#elif defined(_WIN32) // defined(__APPLE__)
+#elif defined(WINLOCALE) // defined(__APPLE__)
   TEST_EQUAL(
       stream_ja_JP_locale<CharT>(std::chrono::year_month_weekday_last{
           std::chrono::year{-32'768}, std::chrono::month{1}, std::chrono::weekday_last{std::chrono::weekday{0}}}),

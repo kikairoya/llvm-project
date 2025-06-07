@@ -9,6 +9,9 @@
 // NetBSD does not support LC_MONETARY at the moment
 // XFAIL: netbsd
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.en_US.UTF-8
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ru_RU.UTF-8
@@ -83,7 +86,7 @@ int main(int, char**)
     }
 #endif
 
-#ifdef _WIN32
+#ifdef WINLOCALE
     std::string curr_space = "";
 #else
     std::string curr_space = " ";
@@ -97,7 +100,7 @@ int main(int, char**)
         assert(f.curr_symbol() == "USD" + curr_space);
     }
 #ifndef TEST_HAS_NO_WIDE_CHARACTERS
-#ifdef _WIN32
+#  ifdef WINLOCALE
     std::wstring w_curr_space = L"";
 #else
     std::wstring w_curr_space = L" ";
@@ -153,7 +156,7 @@ int main(int, char**)
 
     {
         Fnf f(LOCALE_zh_CN_UTF_8, 1);
-#if defined(_WIN32) || defined(__APPLE__)
+#if (WINLOCALE) || defined(__APPLE__)
         assert(f.curr_symbol() == "\xC2\xA5"); // \u00A5
 #else
         assert(f.curr_symbol() == "\xEF\xBF\xA5"); // \uFFE5
@@ -166,7 +169,7 @@ int main(int, char**)
 #ifndef TEST_HAS_NO_WIDE_CHARACTERS
     {
         Fwf f(LOCALE_zh_CN_UTF_8, 1);
-#if defined(_WIN32) || defined(__APPLE__)
+#  if (WINLOCALE) || defined(__APPLE__)
         assert(f.curr_symbol() == L"\u00A5");
 #else
         assert(f.curr_symbol() == L"\uFFE5");

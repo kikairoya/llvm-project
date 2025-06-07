@@ -136,7 +136,10 @@ int main(int, char**) {
       std::size_t idx = 0;
       try {
         (void)std::stod(L"  - 8", &idx);
+#    ifndef __CYGWIN__
+        // Cygwin's wcstod consumes leading whitespace even if conversion failed
         assert(false);
+#    endif
       } catch (const std::invalid_argument&) {
         assert(idx == 0);
       }

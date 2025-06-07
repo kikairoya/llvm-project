@@ -11,6 +11,9 @@
 
 // XFAIL: LIBCXX-FREEBSD-FIXME
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // XFAIL: no-wide-characters
 
 // REQUIRES: locale.en_US.UTF-8
@@ -51,7 +54,7 @@ int main(int, char**)
     std::tm t;
     {
         const my_facet f(LOCALE_en_US_UTF_8, 1);
-#ifdef _WIN32
+#ifdef WINLOCALE
         // On Windows, the "%c" format lacks the leading week day, which
         // means that t.tm_wday doesn't get set when parsing the string.
         const wchar_t in[] = L"12/31/2061 11:55:59 PM";
@@ -72,14 +75,14 @@ int main(int, char**)
         assert(t.tm_mday == 31);
         assert(t.tm_mon == 11);
         assert(t.tm_year == 161);
-#if !defined(_WIN32) && !defined(_AIX)
+#if !defined(WINLOCALE) && !defined(_AIX)
         assert(t.tm_wday == 6);
 #endif
         assert(err == std::ios_base::eofbit);
     }
     {
         const my_facet f(LOCALE_en_US_UTF_8, 1);
-#if defined(_WIN32) || defined(TEST_HAS_GLIBC) || defined(_AIX)
+#if defined(WINLOCALE) || defined(TEST_HAS_GLIBC) || defined(_AIX)
         const wchar_t in[] = L"11:55:59 PM";
 #else
         const wchar_t in[] = L"23:55:59";
@@ -95,7 +98,7 @@ int main(int, char**)
     }
     {
         const my_facet f(LOCALE_fr_FR_UTF_8, 1);
-#ifdef _WIN32
+#ifdef WINLOCALE
         const wchar_t in[] = L"31/12/2061 23:55:59";
 #elif defined(TEST_HAS_GLIBC)
         const wchar_t in[] = L"sam. 31 d" L"\xE9" L"c. 2061 23:55:59";
@@ -114,7 +117,7 @@ int main(int, char**)
         assert(t.tm_mday == 31);
         assert(t.tm_mon == 11);
         assert(t.tm_year == 161);
-#if !defined(_WIN32) && !defined(_AIX)
+#if !defined(WINLOCALE) && !defined(_AIX)
         assert(t.tm_wday == 6);
 #endif
         assert(err == std::ios_base::eofbit);
@@ -187,7 +190,7 @@ int main(int, char**)
 #endif
     {
         const my_facet f(LOCALE_zh_CN_UTF_8, 1);
-#ifdef _WIN32
+#ifdef WINLOCALE
         const wchar_t in[] = L"23:55:59";
 #elif defined(_AIX)
         const wchar_t in[] = L"\x4E0B\x5348" L"11:55:59";

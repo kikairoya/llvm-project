@@ -13,6 +13,9 @@
 // TODO FMT This test should not require std::to_chars(floating-point)
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -271,11 +274,11 @@ static void test_valid_month() {
         lfmt,
         std::chrono::month_weekday{std::chrono::March, std::chrono::weekday_indexed{std::chrono::weekday{0}, 1}});
   check(
-#  if defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  if defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
       SV("%b='avr.'\t%B='avril'\t%h='avr.'\t%m='04'\t%Om='04'\n"),
-#  else  // defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  else  // defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
       SV("%b='avril'\t%B='avril'\t%h='avril'\t%m='04'\t%Om='04'\n"),
-#  endif // defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  endif // defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
       lfmt,
       std::chrono::month_weekday{std::chrono::April, std::chrono::weekday_indexed{std::chrono::weekday{0}, 1}});
   check(SV("%b='mai'\t%B='mai'\t%h='mai'\t%m='05'\t%Om='05'\n"),
@@ -305,7 +308,7 @@ static void test_valid_month() {
 #endif   // defined(__APPLE__)
 
   // Use supplied locale (ja_JP)
-#ifdef _WIN32
+#ifdef WINLOCALE
   check(loc,
         SV("%b='1'\t%B='1月'\t%h='1'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -354,7 +357,7 @@ static void test_valid_month() {
         SV("%b='12'\t%B='12月'\t%h='12'\t%m='12'\t%Om='12'\n"),
         lfmt,
         std::chrono::month_weekday{std::chrono::December, std::chrono::weekday_indexed{std::chrono::weekday{0}, 1}});
-#elif defined(__APPLE__) // defined(_WIN32)
+#elif defined(__APPLE__)   // defined(WINLOCALE)
   check(loc,
         SV("%b=' 1'\t%B='1月'\t%h=' 1'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -403,7 +406,7 @@ static void test_valid_month() {
         SV("%b='12'\t%B='12月'\t%h='12'\t%m='12'\t%Om='12'\n"),
         lfmt,
         std::chrono::month_weekday{std::chrono::December, std::chrono::weekday_indexed{std::chrono::weekday{0}, 1}});
-#elif defined(_AIX)      // _WIN32
+#elif defined(_AIX)        // WINLOCALE
   check(loc,
         SV("%b='1月'\t%B='1月'\t%h='1月'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -452,7 +455,7 @@ static void test_valid_month() {
         SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='12'\n"),
         lfmt,
         std::chrono::month_weekday{std::chrono::December, std::chrono::weekday_indexed{std::chrono::weekday{0}, 1}});
-#elif defined(__FreeBSD__) // _WIN32
+#elif defined(__FreeBSD__) // WINLOCALE
   check(loc,
         SV("%b=' 1月'\t%B='1月'\t%h=' 1月'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -501,7 +504,7 @@ static void test_valid_month() {
         SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='12'\n"),
         lfmt,
         std::chrono::month_weekday{std::chrono::December, std::chrono::weekday_indexed{std::chrono::weekday{0}, 1}});
-#else                    // _WIN32
+#else                      // WINLOCALE
   check(loc,
         SV("%b=' 1月'\t%B='1月'\t%h=' 1月'\t%m='01'\t%Om='一'\n"),
         lfmt,
@@ -550,7 +553,7 @@ static void test_valid_month() {
         SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='十二'\n"),
         lfmt,
         std::chrono::month_weekday{std::chrono::December, std::chrono::weekday_indexed{std::chrono::weekday{0}, 1}});
-#endif                   // _WIN32
+#endif                     // WINLOCALE
 
   std::locale::global(std::locale::classic());
 }
@@ -646,7 +649,7 @@ static void test_valid_weekday() {
 
   // Use supplied locale (ja_JP).
   // This locale has a different alternate, but not on all platforms
-#if defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#if defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%u='7'\t%Ou='7'\t%w='0'\t%Ow='0'\t%a='日'\t%A='日曜日'\n"),
         lfmt,
@@ -679,7 +682,7 @@ static void test_valid_weekday() {
         SV("%u='7'\t%Ou='7'\t%w='0'\t%Ow='0'\t%a='日'\t%A='日曜日'\n"),
         lfmt,
         std::chrono::month_weekday{std::chrono::January, std::chrono::weekday_indexed{std::chrono::weekday{7}, 1}});
-#else  // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#else  // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%u='7'\t%Ou='七'\t%w='0'\t%Ow='〇'\t%a='日'\t%A='日曜日'\n"),
         lfmt,
@@ -712,7 +715,7 @@ static void test_valid_weekday() {
         SV("%u='7'\t%Ou='七'\t%w='0'\t%Ow='〇'\t%a='日'\t%A='日曜日'\n"),
         lfmt,
         std::chrono::month_weekday{std::chrono::January, std::chrono::weekday_indexed{std::chrono::weekday{7}, 1}});
-#endif // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#endif // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
 
   std::locale::global(std::locale::classic());
 }

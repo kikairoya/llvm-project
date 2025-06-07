@@ -13,6 +13,9 @@
 // TODO FMT This test should not require std::to_chars(floating-point)
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -170,15 +173,15 @@ static void test() {
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month_weekday_last{
                  std::chrono::month{3}, std::chrono::weekday_last{std::chrono::weekday{2}}}),
              SV("mars/mar.[last]"));
-#  if defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  if defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month_weekday_last{
                  std::chrono::month{4}, std::chrono::weekday_last{std::chrono::weekday{3}}}),
              SV("avr./mer.[last]"));
-#  else  // defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  else  // defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month_weekday_last{
                  std::chrono::month{4}, std::chrono::weekday_last{std::chrono::weekday{3}}}),
              SV("avril/mer.[last]"));
-#  endif // defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  endif // defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month_weekday_last{
                  std::chrono::month{5}, std::chrono::weekday_last{std::chrono::weekday{4}}}),
              SV("mai/jeu.[last]"));
@@ -211,7 +214,7 @@ static void test() {
                  std::chrono::month{255}, std::chrono::weekday_last{std::chrono::weekday{8}}}),
              SV("255 is not a valid month/8 is not a valid weekday[last]"));
 
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(WINLOCALE)
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_weekday_last{
                  std::chrono::month{0}, std::chrono::weekday_last{std::chrono::weekday{0}}}),
              SV("0 is not a valid month/日[last]"));
@@ -281,7 +284,7 @@ static void test() {
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_weekday_last{
                  std::chrono::month{12}, std::chrono::weekday_last{std::chrono::weekday{0}}}),
              SV("12/日[last]"));
-#else // defined(__APPLE__) || defined(_WIN32)
+#else // defined(__APPLE__) || defined(WINLOCALE)
 #  if defined(_AIX)
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_weekday_last{
                  std::chrono::month{0}, std::chrono::weekday_last{std::chrono::weekday{0}}}),
@@ -354,7 +357,7 @@ static void test() {
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_weekday_last{
                  std::chrono::month{12}, std::chrono::weekday_last{std::chrono::weekday{0}}}),
              SV("12月/日[last]"));
-#endif   // defined(__APPLE__) || defined(_WIN32)
+#endif   // defined(__APPLE__) || defined(WINLOCALE)
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_weekday_last{
                  std::chrono::month{13}, std::chrono::weekday_last{std::chrono::weekday{0}}}),
              SV("13 is not a valid month/日[last]"));

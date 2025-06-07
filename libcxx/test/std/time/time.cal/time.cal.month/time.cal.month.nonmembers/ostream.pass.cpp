@@ -13,6 +13,9 @@
 // TODO FMT This test should not require std::to_chars(floating-point)
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -102,7 +105,7 @@ static void test() {
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month{1}), SV("janv."));
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month{2}), SV("févr."));
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month{3}), SV("mars"));
-#  if defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  if defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month{4}), SV("avr."));
 #  else
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month{4}), SV("avril"));
@@ -120,7 +123,7 @@ static void test() {
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month{255}), SV("255 is not a valid month"));
 
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{0}), SV("0 is not a valid month"));
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(WINLOCALE)
 #  if defined(__APPLE__)
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{1}), SV(" 1"));
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{2}), SV(" 2"));
@@ -145,7 +148,7 @@ static void test() {
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{10}), SV("10"));
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{11}), SV("11"));
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{12}), SV("12"));
-#else // defined(__APPLE__)|| defined(_WIN32)
+#else // defined(__APPLE__)|| defined(WINLOCALE)
 #  if defined(_AIX)
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{1}), SV("1月"));
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{2}), SV("2月"));
@@ -170,7 +173,7 @@ static void test() {
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{10}), SV("10月"));
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{11}), SV("11月"));
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{12}), SV("12月"));
-#endif   // defined(__APPLE__)|| defined(_WIN32)
+#endif   // defined(__APPLE__)|| defined(WINLOCALE)
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{13}), SV("13 is not a valid month"));
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month{255}), SV("255 is not a valid month"));
 }

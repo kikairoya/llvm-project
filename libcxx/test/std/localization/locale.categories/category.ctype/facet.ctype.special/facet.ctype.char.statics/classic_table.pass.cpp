@@ -22,6 +22,7 @@
 #include <cassert>
 
 #include "test_macros.h"
+#include "platform_support.h" // locale name macros
 
 int main(int, char**)
 {
@@ -42,7 +43,7 @@ int main(int, char**)
 #if defined(_MSVC_STL_VERSION)
         // MS STL includes the _SPACE bit in F::blank
         bool expect_blank = (9 <= i && i <= 13) || (i == ' ');
-#elif defined(_WIN32)
+#elif defined(WINLOCALE)
         // The _BLANK bit isn't set for '\t' on Windows
         bool expect_blank = (i == ' ');
 #else

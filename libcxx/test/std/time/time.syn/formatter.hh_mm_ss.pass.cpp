@@ -12,6 +12,9 @@
 
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -183,7 +186,7 @@ static void test_valid_values() {
 #endif
            "%R='00:00'\t"
            "%T='00:00:00'\t"
-#ifdef _WIN32
+#ifdef WINLOCALE
            "%r='00:00:00'\t"
 #elif defined(_AIX)
            "%r='12:00:00 AM'\t"
@@ -213,7 +216,7 @@ static void test_valid_values() {
 #endif
            "%R='23:31'\t"
            "%T='23:31:30,123'\t"
-#ifdef _WIN32
+#ifdef WINLOCALE
            "%r='23:31:30'\t"
 #elif defined(_AIX)
            "%r='11:31:30 PM'\t"
@@ -243,7 +246,7 @@ static void test_valid_values() {
 #endif
            "%R='03:02'\t"
            "%T='03:02:01,123456789012'\t"
-#ifdef _WIN32
+#ifdef WINLOCALE
            "%r='03:02:01'\t"
 #elif defined(_AIX)
            "%r='03:02:01 AM'\t"
@@ -273,7 +276,7 @@ static void test_valid_values() {
 #endif
            "%R='01:01'\t"
            "%T='01:01:01'\t"
-#ifdef _WIN32
+#ifdef WINLOCALE
            "%r='01:01:01'\t"
 #elif defined(_AIX)
            "%r='01:01:01 AM'\t"
@@ -289,7 +292,7 @@ static void test_valid_values() {
         std::chrono::hh_mm_ss(std::chrono::duration<double>(3661.123456)));
 
   // Use supplied locale (ja_JP). This locale has a different alternate.
-#if defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
   check(loc,
         SV("%H='00'\t"
            "%OH='00'\t"
@@ -306,7 +309,7 @@ static void test_valid_values() {
            "%r='12:00:00 午前'\t"
            "%X='00時00分00秒'\t"
            "%EX='00時00分00秒'\t"
-#  elif defined(_WIN32)
+#  elif defined(WINLOCALE)
            "%r='0:00:00'\t"
            "%X='0:00:00'\t"
            "%EX='0:00:00'\t"
@@ -335,7 +338,7 @@ static void test_valid_values() {
            "%r='11:31:30 午後'\t"
            "%X='23時31分30秒'\t"
            "%EX='23時31分30秒'\t"
-#  elif defined(_WIN32)
+#  elif defined(WINLOCALE)
            "%r='23:31:30'\t"
            "%X='23:31:30'\t"
            "%EX='23:31:30'\t"
@@ -364,7 +367,7 @@ static void test_valid_values() {
            "%r='03:02:01 午前'\t"
            "%X='03時02分01秒'\t"
            "%EX='03時02分01秒'\t"
-#  elif defined(_WIN32)
+#  elif defined(WINLOCALE)
            "%r='3:02:01'\t"
            "%X='3:02:01'\t"
            "%EX='3:02:01'\t"
@@ -393,7 +396,7 @@ static void test_valid_values() {
            "%r='01:01:01 午前'\t"
            "%X='01時01分01秒'\t"
            "%EX='01時01分01秒'\t"
-#  elif defined(_WIN32)
+#  elif defined(WINLOCALE)
            "%r='1:01:01'\t"
            "%X='1:01:01'\t"
            "%EX='1:01:01'\t"
@@ -405,7 +408,7 @@ static void test_valid_values() {
            "\n"),
         lfmt,
         std::chrono::hh_mm_ss(std::chrono::duration<double>(3661.123456)));
-#else  // defined(__APPLE__) || defined(_AIX) || defined(_WIN32)
+#else  // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE)
   check(loc,
         SV("%H='00'\t"
            "%OH='〇'\t"
@@ -482,7 +485,7 @@ static void test_valid_values() {
            "\n"),
         lfmt,
         std::chrono::hh_mm_ss(std::chrono::duration<double>(3661.123456)));
-#endif // defined(__APPLE__) || defined(_AIX) || defined(_WIN32)
+#endif // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE)
 
   std::locale::global(std::locale::classic());
 }

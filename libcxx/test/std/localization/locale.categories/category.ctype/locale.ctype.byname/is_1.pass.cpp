@@ -109,7 +109,7 @@ int main(int, char**)
             assert(f.is(F::graph, L'.'));
             assert(!f.is(F::graph,  L'\x07'));
 
-#if defined(_WIN32)
+#if defined(WINLOCALE)
             // On Windows, these wchars are classified according to their
             // Unicode interpretation even in the "C" locale.
             assert(f.is(F::alpha, L'\x00DA'));

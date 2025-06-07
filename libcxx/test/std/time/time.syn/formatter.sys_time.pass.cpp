@@ -13,6 +13,9 @@
 // TODO FMT This test should not require std::to_chars(floating-point)
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -101,7 +104,7 @@ static void test_valid_values_year() {
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
 
   // Use supplied locale (ja_JP). This locale has a different alternate.
-#if defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#if defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%C='19'\t%EC='19'\t%y='70'\t%Oy='70'\t%Ey='70'\t%Y='1970'\t%EY='1970'\n"),
         lfmt,
@@ -111,7 +114,7 @@ static void test_valid_values_year() {
         SV("%C='20'\t%EC='20'\t%y='09'\t%Oy='09'\t%Ey='09'\t%Y='2009'\t%EY='2009'\n"),
         lfmt,
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
-#else  // defined(_WIN32) || defined(__APPLE__) || defined(_AIX)||defined(__FreeBSD__)
+#else  // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX)||defined(__FreeBSD__)
   check(loc,
         SV("%C='19'\t%EC='昭和'\t%y='70'\t%Oy='七十'\t%Ey='45'\t%Y='1970'\t%EY='昭和45年'\n"),
         lfmt,
@@ -121,7 +124,7 @@ static void test_valid_values_year() {
         SV("%C='20'\t%EC='平成'\t%y='09'\t%Oy='九'\t%Ey='21'\t%Y='2009'\t%EY='平成21年'\n"),
         lfmt,
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
-#endif // defined(_WIN32) || defined(__APPLE__) || defined(_AIX)||defined(__FreeBSD__)
+#endif // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX)||defined(__FreeBSD__)
 
   std::locale::global(std::locale::classic());
 }
@@ -161,7 +164,7 @@ static void test_valid_values_month() {
         std::chrono::sys_seconds(2'000'000'000s)); // 03:33:20 UTC on Wednesday, 18 May 2033
 
   // Use supplied locale (ja_JP). This locale has a different alternate.
-#ifdef _WIN32
+#ifdef WINLOCALE
   check(loc,
         SV("%b='1'\t%h='1'\t%B='1月'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -171,7 +174,7 @@ static void test_valid_values_month() {
         SV("%b='5'\t%h='5'\t%B='5月'\t%m='05'\t%Om='05'\n"),
         lfmt,
         std::chrono::sys_seconds(2'000'000'000s)); // 03:33:20 UTC on Wednesday, 18 May 2033
-#elif defined(_AIX)                                // _WIN32
+#elif defined(_AIX)                                // WINLOCALE
   check(loc,
         SV("%b='1月'\t%h='1月'\t%B='1月'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -181,7 +184,7 @@ static void test_valid_values_month() {
         SV("%b='5月'\t%h='5月'\t%B='5月'\t%m='05'\t%Om='05'\n"),
         lfmt,
         std::chrono::sys_seconds(2'000'000'000s)); // 03:33:20 UTC on Wednesday, 18 May 2033
-#elif defined(__APPLE__)                           // _WIN32
+#elif defined(__APPLE__)                           // WINLOCALE
   check(loc,
         SV("%b=' 1'\t%h=' 1'\t%B='1月'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -191,7 +194,7 @@ static void test_valid_values_month() {
         SV("%b=' 5'\t%h=' 5'\t%B='5月'\t%m='05'\t%Om='05'\n"),
         lfmt,
         std::chrono::sys_seconds(2'000'000'000s)); // 03:33:20 UTC on Wednesday, 18 May 2033
-#elif defined(__FreeBSD__)                         // _WIN32
+#elif defined(__FreeBSD__)                         // WINLOCALE
   check(loc,
         SV("%b=' 1月'\t%h=' 1月'\t%B='1月'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -201,7 +204,7 @@ static void test_valid_values_month() {
         SV("%b=' 5月'\t%h=' 5月'\t%B='5月'\t%m='05'\t%Om='05'\n"),
         lfmt,
         std::chrono::sys_seconds(2'000'000'000s)); // 03:33:20 UTC on Wednesday, 18 May 2033
-#else                                              // _WIN32
+#else                                              // WINLOCALE
   check(loc,
         SV("%b=' 1月'\t%h=' 1月'\t%B='1月'\t%m='01'\t%Om='一'\n"),
         lfmt,
@@ -211,7 +214,7 @@ static void test_valid_values_month() {
         SV("%b=' 5月'\t%h=' 5月'\t%B='5月'\t%m='05'\t%Om='五'\n"),
         lfmt,
         std::chrono::sys_seconds(2'000'000'000s)); // 03:33:20 UTC on Wednesday, 18 May 2033
-#endif                                             // _WIN32
+#endif                                             // WINLOCALE
 
   std::locale::global(std::locale::classic());
 }
@@ -245,7 +248,7 @@ static void test_valid_values_day() {
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
 
   // Use supplied locale (ja_JP). This locale has a different alternate.
-#if defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#if defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%d='01'\t%Od='01'\t%e=' 1'\t%Oe=' 1'\n"),
         lfmt,
@@ -255,7 +258,7 @@ static void test_valid_values_day() {
         SV("%d='13'\t%Od='13'\t%e='13'\t%Oe='13'\n"),
         lfmt,
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
-#else // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#else // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%d='01'\t%Od='一'\t%e=' 1'\t%Oe='一'\n"),
         lfmt,
@@ -266,7 +269,7 @@ static void test_valid_values_day() {
         lfmt,
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
 
-#endif // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#endif // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
 
   std::locale::global(std::locale::classic());
 }
@@ -313,7 +316,7 @@ static void test_valid_values_weekday() {
 
   // Use supplied locale (ja_JP).
   // This locale has a different alternate, but not on all platforms
-#if defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#if defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%a='木'\t%A='木曜日'\t%u='4'\t%Ou='4'\t%w='4'\t%Ow='4'\n"),
         lfmt,
@@ -323,7 +326,7 @@ static void test_valid_values_weekday() {
         SV("%a='日'\t%A='日曜日'\t%u='7'\t%Ou='7'\t%w='0'\t%Ow='0'\n"),
         lfmt,
         std::chrono::sys_seconds(4'294'967'295s)); // 06:28:15 UTC on Sunday, 7 February 2106
-#else  // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#else  // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%a='木'\t%A='木曜日'\t%u='4'\t%Ou='四'\t%w='4'\t%Ow='四'\n"),
         lfmt,
@@ -333,7 +336,7 @@ static void test_valid_values_weekday() {
         SV("%a='日'\t%A='日曜日'\t%u='7'\t%Ou='七'\t%w='0'\t%Ow='〇'\n"),
         lfmt,
         std::chrono::sys_seconds(4'294'967'295s)); // 06:28:15 UTC on Sunday, 7 February 2106
-#endif // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#endif // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
 
   std::locale::global(std::locale::classic());
 }
@@ -394,7 +397,7 @@ static void test_valid_values_week() {
         std::chrono::sys_seconds(2'000'000'000s)); // 03:33:20 UTC on Wednesday, 18 May 2033
 
   // Use supplied locale (ja_JP). This locale has a different alternate.
-#if defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#if defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%U='00'\t%OU='00'\t%W='00'\t%OW='00'\n"),
         lfmt,
@@ -404,7 +407,7 @@ static void test_valid_values_week() {
         SV("%U='20'\t%OU='20'\t%W='20'\t%OW='20'\n"),
         lfmt,
         std::chrono::sys_seconds(2'000'000'000s)); // 03:33:20 UTC on Wednesday, 18 May 2033
-#else  // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#else  // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%U='00'\t%OU='〇'\t%W='00'\t%OW='〇'\n"),
         lfmt,
@@ -414,7 +417,7 @@ static void test_valid_values_week() {
         SV("%U='20'\t%OU='二十'\t%W='20'\t%OW='二十'\n"),
         lfmt,
         std::chrono::sys_seconds(2'000'000'000s)); // 03:33:20 UTC on Wednesday, 18 May 2033
-#endif // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#endif // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   std::locale::global(std::locale::classic());
 }
 
@@ -447,7 +450,7 @@ static void test_valid_values_iso_8601_week() {
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
 
   // Use supplied locale (ja_JP). This locale has a different alternate.
-#if defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#if defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%g='70'\t%G='1970'\t%V='01'\t%OV='01'\n"),
         lfmt,
@@ -457,7 +460,7 @@ static void test_valid_values_iso_8601_week() {
         SV("%g='09'\t%G='2009'\t%V='07'\t%OV='07'\n"),
         lfmt,
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
-#else  // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#else  // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%g='70'\t%G='1970'\t%V='01'\t%OV='一'\n"),
         lfmt,
@@ -467,7 +470,7 @@ static void test_valid_values_iso_8601_week() {
         SV("%g='09'\t%G='2009'\t%V='07'\t%OV='七'\n"),
         lfmt,
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
-#endif // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#endif // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
 
   std::locale::global(std::locale::classic());
 }
@@ -511,7 +514,7 @@ static void test_valid_values_date() {
 #endif
 
   // Use supplied locale (ja_JP). This locale has a different alternate.
-#if defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#if defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%D='01/01/70'\t%F='1970-01-01'\t%x='1970/01/01'\t%Ex='1970/01/01'\n"),
         lfmt,
@@ -521,7 +524,7 @@ static void test_valid_values_date() {
         SV("%D='02/13/09'\t%F='2009-02-13'\t%x='2009/02/13'\t%Ex='2009/02/13'\n"),
         lfmt,
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
-#else  // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#else  // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%D='01/01/70'\t%F='1970-01-01'\t%x='1970年01月01日'\t%Ex='昭和45年01月01日'\n"),
         lfmt,
@@ -531,7 +534,7 @@ static void test_valid_values_date() {
         SV("%D='02/13/09'\t%F='2009-02-13'\t%x='2009年02月13日'\t%Ex='平成21年02月13日'\n"),
         lfmt,
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
-#endif // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#endif // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
 
   std::locale::global(std::locale::classic());
 }
@@ -631,7 +634,7 @@ static void test_valid_values_time() {
 #endif
            "%R='00:00'\t"
            "%T='00:00:00'\t"
-#ifdef _WIN32
+#ifdef WINLOCALE
            "%r='00:00:00'\t"
 #elif defined(_AIX)
            "%r='12:00:00 AM'\t"
@@ -661,7 +664,7 @@ static void test_valid_values_time() {
 #endif
            "%R='23:31'\t"
            "%T='23:31:30,123'\t"
-#ifdef _WIN32
+#ifdef WINLOCALE
            "%r='23:31:30'\t"
 #elif defined(_AIX)
            "%r='11:31:30 PM'\t"
@@ -678,7 +681,7 @@ static void test_valid_values_time() {
             1'234'567'890'123ms)); // 23:31:30 UTC on Friday, 13 February 2009
 
   // Use supplied locale (ja_JP). This locale has a different alternate.
-#if defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
   check(loc,
         SV("%H='00'\t"
            "%OH='00'\t"
@@ -695,7 +698,7 @@ static void test_valid_values_time() {
            "%r='12:00:00 午前'\t"
            "%X='00時00分00秒'\t"
            "%EX='00時00分00秒'\t"
-#  elif defined(_WIN32)
+#  elif defined(WINLOCALE)
            "%r='0:00:00'\t"
            "%X='0:00:00'\t"
            "%EX='0:00:00'\t"
@@ -724,7 +727,7 @@ static void test_valid_values_time() {
            "%r='11:31:30 午後'\t"
            "%X='23時31分30秒'\t"
            "%EX='23時31分30秒'\t"
-#  elif defined(_WIN32)
+#  elif defined(WINLOCALE)
            "%r='23:31:30'\t"
            "%X='23:31:30'\t"
            "%EX='23:31:30'\t"
@@ -736,7 +739,7 @@ static void test_valid_values_time() {
            "\n"),
         lfmt,
         std::chrono::hh_mm_ss(23h + 31min + 30s + 123ms));
-#else  // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#else  // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
   check(loc,
         SV("%H='00'\t"
            "%OH='〇'\t"
@@ -775,7 +778,7 @@ static void test_valid_values_time() {
         lfmt,
         std::chrono::sys_time<std::chrono::milliseconds>(
             1'234'567'890'123ms)); // 23:31:30 UTC on Friday, 13 February 2009
-#endif // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#endif // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
 
   std::locale::global(std::locale::classic());
 }
@@ -810,7 +813,7 @@ static void test_valid_values_date_time() {
       SV("%c=' 1 janvier 1970 à 00:00:00 UTC'\t%Ec=' 1 janvier 1970 à 00:00:00 UTC'\n"),
 #elif defined(__APPLE__)
       SV("%c='Jeu  1 jan 00:00:00 1970'\t%Ec='Jeu  1 jan 00:00:00 1970'\n"),
-#elif defined(_WIN32)
+#elif defined(WINLOCALE)
       SV("%c='01/01/1970 00:00:00'\t%Ec='01/01/1970 00:00:00'\n"),
 #elif defined(__FreeBSD__)
       SV("%c='jeu.  1 janv. 00:00:00 1970'\t%Ec='jeu.  1 janv. 00:00:00 1970'\n"),
@@ -830,7 +833,7 @@ static void test_valid_values_date_time() {
       SV("%c='13 février 2009 à 23:31:30 UTC'\t%Ec='13 février 2009 à 23:31:30 UTC'\n"),
 #elif defined(__APPLE__)
       SV("%c='Ven 13 fév 23:31:30 2009'\t%Ec='Ven 13 fév 23:31:30 2009'\n"),
-#elif defined(_WIN32)
+#elif defined(WINLOCALE)
       SV("%c='13/02/2009 23:31:30'\t%Ec='13/02/2009 23:31:30'\n"),
 #elif defined(__FreeBSD__)
       SV("%c='ven. 13 févr. 23:31:30 2009'\t%Ec='ven. 13 févr. 23:31:30 2009'\n"),
@@ -859,7 +862,7 @@ static void test_valid_values_date_time() {
         SV("%c='2009年02月13日 23:31:30 UTC'\t%Ec='2009年02月13日 23:31:30 UTC'\n"),
         lfmt,
         std::chrono::sys_seconds(1'234'567'890s)); // 23:31:30 UTC on Friday, 13 February 2009
-#elif defined(_WIN32)                              // defined(__APPLE__)|| defined(__FreeBSD__)
+#elif defined(WINLOCALE)                           // defined(__APPLE__)|| defined(__FreeBSD__)
   check(loc,
         SV("%c='1970/01/01 0:00:00'\t%Ec='1970/01/01 0:00:00'\n"),
         lfmt,

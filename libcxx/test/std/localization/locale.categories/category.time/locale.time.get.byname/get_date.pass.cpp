@@ -62,7 +62,7 @@ int main(int, char**)
     }
     {
         const my_facet f(LOCALE_fr_FR_UTF_8, 1);
-#if defined(_WIN32) || defined(TEST_HAS_GLIBC) || defined(_AIX)
+#if defined(WINLOCALE) || defined(TEST_HAS_GLIBC) || defined(_AIX)
         const char in[] = "10/06/2009";
 #else
         const char in[] = "10.06.2009";

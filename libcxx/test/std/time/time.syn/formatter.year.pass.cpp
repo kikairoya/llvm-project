@@ -13,6 +13,9 @@
 // TODO FMT This test should not require std::to_chars(floating-point)
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -82,7 +85,7 @@ static void test_valid_values() {
 
   // Non localized output using C-locale
   check(SV("%C='00'\t"
-#if defined(__APPLE__) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(WINLOCALE) || defined(__FreeBSD__)
            "%EC='00'\t"
 #else
            "%EC='0'\t"
@@ -91,7 +94,7 @@ static void test_valid_values() {
            "%Ey='00'\t"
            "%Oy='00'\t"
            "%Y='0000'\t"
-#if defined(__APPLE__) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(WINLOCALE) || defined(__FreeBSD__)
            "%EY='0000'\t"
 #elif defined(_AIX)
            "%EY=''\t"
@@ -126,7 +129,7 @@ static void test_valid_values() {
 
   // Use the global locale (fr_FR)
   check(SV("%C='00'\t"
-#if defined(__APPLE__) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(WINLOCALE) || defined(__FreeBSD__)
            "%EC='00'\t"
 #else
            "%EC='0'\t"
@@ -135,7 +138,7 @@ static void test_valid_values() {
            "%Ey='00'\t"
            "%Oy='00'\t"
            "%Y='0000'\t"
-#if defined(__APPLE__) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(WINLOCALE) || defined(__FreeBSD__)
            "%EY='0000'\t"
 #elif defined(_AIX)
            "%EY=''\t"
@@ -169,10 +172,10 @@ static void test_valid_values() {
         std::chrono::year{2038});
 
   // Use supplied locale (ja_JP). This locale has a different alternate.
-#if defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
 
   check(SV("%C='00'\t"
-#  if defined(__APPLE__) || defined(_WIN32) || defined(__FreeBSD__)
+#  if defined(__APPLE__) || defined(WINLOCALE) || defined(__FreeBSD__)
            "%EC='00'\t"
 #  else
            "%EC='0'\t"
@@ -212,7 +215,7 @@ static void test_valid_values() {
         lfmt,
         std::chrono::year{2038});
 
-#else // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#else // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
   check(loc,
         SV("%C='00'\t"
            "%EC='紀元前'\t"
@@ -259,7 +262,7 @@ static void test_valid_values() {
            "\n"),
         lfmt,
         std::chrono::year{2038});
-#endif // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#endif // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
 
   std::locale::global(std::locale::classic());
 }
