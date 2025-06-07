@@ -70,7 +70,7 @@ static void test_exist_not_found()
 static void test_is_socket_fails()
 {
     scoped_test_env env;
-#ifdef _WIN32
+#ifdef TEST_WIN_NO_FILESYSTEM_PERMS_NONE
     // Windows doesn't support setting perms::none to trigger failures
     // reading directories; test using a special inaccessible directory
     // instead.
