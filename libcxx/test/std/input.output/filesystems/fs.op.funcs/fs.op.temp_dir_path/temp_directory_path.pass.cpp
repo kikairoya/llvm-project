@@ -45,7 +45,7 @@ static void basic_tests()
     scoped_test_env env;
     const path dne = env.make_env_path("dne");
     const path file = env.create_file("file", 42);
-#ifdef _WIN32
+#ifdef TEST_WIN_NO_FILESYSTEM_PERMS_NONE
     // Windows doesn't support setting perms::none to trigger failures
     // reading directories; test using a special inaccessible directory
     // instead.

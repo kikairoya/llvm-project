@@ -404,8 +404,8 @@ inline Tp const& DoNotOptimize(Tp const& value) {
 #define ASSERT_WITH_OPERATOR_NEW_FALLBACKS(...) assert(__VA_ARGS__)
 #endif
 
-#ifdef _WIN32
-#define TEST_WIN_NO_FILESYSTEM_PERMS_NONE
+#if defined(_WIN32) || defined(__CYGWIN__)
+#  define TEST_WIN_NO_FILESYSTEM_PERMS_NONE
 #endif
 
 // Support for carving out parts of the test suite, like removing wide characters, etc.

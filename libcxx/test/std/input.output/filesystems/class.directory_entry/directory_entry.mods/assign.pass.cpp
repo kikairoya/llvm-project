@@ -99,7 +99,7 @@ static void test_assign_calls_refresh() {
 static void test_assign_propagates_error() {
   using namespace fs;
   scoped_test_env env;
-#ifdef _WIN32
+#ifdef TEST_WIN_NO_FILESYSTEM_PERMS_NONE
   // Windows doesn't support setting perms::none to trigger failures
   // reading directories; test using a special inaccessible directory
   // instead.
