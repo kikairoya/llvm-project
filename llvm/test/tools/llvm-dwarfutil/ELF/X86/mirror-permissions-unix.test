@@ -2,7 +2,7 @@
 ## llvm-dwarfutil respects the umask in setting output permissions.
 ## Setting the umask to 0 ensures deterministic permissions across
 ## test environments.
-# UNSUPPORTED: system-windows
+# UNSUPPORTED: system-windows, system-cygwin
 
 # RUN: touch %t
 # RUN: chmod 0777 %t

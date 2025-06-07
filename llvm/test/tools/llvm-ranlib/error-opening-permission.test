@@ -1,5 +1,5 @@
 ## Unsupported on windows as marking files "unreadable" is non-trivial on windows.
-# UNSUPPORTED: system-windows
+# UNSUPPORTED: system-windows, system-cygwin
 # REQUIRES: non-root-user
 
 # RUN: rm -rf %t && split-file %s %t && cd %t
