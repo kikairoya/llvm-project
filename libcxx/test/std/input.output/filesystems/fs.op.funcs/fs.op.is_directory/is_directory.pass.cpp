@@ -78,7 +78,7 @@ static void static_env_test()
 static void test_is_directory_fails()
 {
     scoped_test_env env;
-#ifdef _WIN32
+#ifdef TEST_WIN_NO_FILESYSTEM_PERMS_NONE
     // Windows doesn't support setting perms::none to trigger failures
     // reading directories; test using a special inaccessible directory
     // instead.
