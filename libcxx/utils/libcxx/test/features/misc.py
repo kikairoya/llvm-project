@@ -133,7 +133,7 @@ features = [
         name="win32-broken-utf8-wchar-ctype",
         when=lambda cfg: not "_LIBCPP_HAS_LOCALIZATION" in compilerMacros(cfg)
         or compilerMacros(cfg)["_LIBCPP_HAS_LOCALIZATION"] == "1"
-        and "_WIN32" in compilerMacros(cfg)
+        and ("_WIN32" in compilerMacros(cfg) or "__CYGWIN__" in compilerMacros(cfg))
         and not programSucceeds(
             cfg,
             """
@@ -150,7 +150,7 @@ features = [
     # https://developercommunity.visualstudio.com/t/printf-formatting-with-g-outputs-too/1660837
     Feature(
         name="win32-broken-printf-g-precision",
-        when=lambda cfg: "_WIN32" in compilerMacros(cfg)
+        when=lambda cfg: ("_WIN32" in compilerMacros(cfg) or "__CYGWIN__" in compilerMacros(cfg))
         and not programSucceeds(
             cfg,
             """

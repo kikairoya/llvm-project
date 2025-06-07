@@ -537,7 +537,9 @@ function(cxx_add_basic_build_flags target)
 
   # Build with -fsized-deallocation, which is default in recent versions of Clang.
   # TODO(LLVM 21): This can be dropped once we only support Clang >= 19.
-  target_add_compile_flags_if_supported(${target} PRIVATE -fsized-deallocation)
+  if (NOT CYGWIN)
+    target_add_compile_flags_if_supported(${target} PRIVATE -fsized-deallocation)
+  endif()
 
   # Let the library headers know they are currently being used to build the
   # library.
