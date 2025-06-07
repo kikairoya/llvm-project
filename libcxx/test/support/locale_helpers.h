@@ -42,7 +42,7 @@ std::wstring convert_thousands_sep(std::wstring const& in, wchar_t sep) {
 }
 
 std::wstring negate_en_US(std::wstring s) {
-#if defined(_WIN32)
+#  if defined(_WIN32) || defined(__CYGWIN__)
   return L"(" + s + L")";
 #else
   return L"-" + s;
@@ -58,7 +58,7 @@ wchar_t decimal_point_or_default(std::wstring s) { return !s.empty() ? s[0] : L'
 #endif // TEST_HAS_NO_WIDE_CHARACTERS
 
 std::string negate_en_US(std::string s) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(__CYGWIN__)
   return "(" + s + ")";
 #else
   return "-" + s;
@@ -71,7 +71,7 @@ MultiStringType currency_symbol_ru_RU() {
     return MKSTR("\u0440\u0443\u0431");
   else
     return MKSTR("\u20BD"); // U+20BD RUBLE SIGN
-#elif defined(_WIN32) || defined(__FreeBSD__) || defined(_AIX)
+#elif defined(_WIN32) || defined(__FreeBSD__) || defined(_AIX) || defined(__CYGWIN__)
   return MKSTR("\u20BD"); // U+20BD RUBLE SIGN
 #elif defined(__APPLE__)
   if (__builtin_available(macOS 15.4, *)) {
@@ -85,7 +85,7 @@ MultiStringType currency_symbol_ru_RU() {
 }
 
 MultiStringType currency_symbol_zh_CN() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(__CYGWIN__)
   return MKSTR("\u00A5"); // U+00A5 YEN SIGN
 #elif defined(__APPLE__)
   if (__builtin_available(macOS 15.4, *)) {

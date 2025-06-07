@@ -13,6 +13,9 @@
 // TODO FMT This test should not require std::to_chars(floating-point)
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -114,7 +117,7 @@ static void test() {
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_day{std::chrono::month{1}, 31d}), SV(" 1/31"));
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_day{std::chrono::month{2}, 29d}), SV(" 2/29"));
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_day{std::chrono::month{6}, 31d}), SV(" 6/31"));
-#elif defined(_WIN32) //  defined(__APPLE__)
+#elif defined(WINLOCALE) //  defined(__APPLE__)
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_day{std::chrono::month{1}, 255d}),
              SV("1/255 is not a valid day"));
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_day{std::chrono::month{1}, 31d}), SV("1/31"));

@@ -12,6 +12,9 @@
 // Bionic has minimal locale support, investigate this later.
 // XFAIL: LIBCXX-ANDROID-FIXME
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // <locale>
 
 // template <class charT> class ctype_byname;

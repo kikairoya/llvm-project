@@ -16,6 +16,9 @@
 // TODO FMT Investigate Windows issues.
 // XFAIL: msvc
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -139,7 +142,7 @@ static void test_valid_values() {
 
   // Use supplied locale (ja_JP).
   // This locale has a different alternate, but not on all platforms
-#if defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#if defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%u='7'\t%Ou='7'\t%w='0'\t%Ow='0'\t%a='日'\t%A='日曜日'\n"),
         lfmt,
@@ -172,7 +175,7 @@ static void test_valid_values() {
         SV("%u='7'\t%Ou='7'\t%w='0'\t%Ow='0'\t%a='日'\t%A='日曜日'\n"),
         lfmt,
         std::chrono::weekday_last{std::chrono::weekday(7)});
-#else  // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#else  // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc,
         SV("%u='7'\t%Ou='七'\t%w='0'\t%Ow='〇'\t%a='日'\t%A='日曜日'\n"),
         lfmt,
@@ -205,7 +208,7 @@ static void test_valid_values() {
         SV("%u='7'\t%Ou='七'\t%w='0'\t%Ow='〇'\t%a='日'\t%A='日曜日'\n"),
         lfmt,
         std::chrono::weekday_last{std::chrono::weekday(7)});
-#endif // defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#endif // defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
 
   std::locale::global(std::locale::classic());
 }
@@ -247,7 +250,7 @@ static void test_invalid_values() {
         SV("%u='255'\t%Ou='255'\t%w='255'\t%Ow='255'\n"),
         lfmt,
         std::chrono::weekday_last{std::chrono::weekday(255)});
-#elif defined(_WIN32) // defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(WINLOCALE) // defined(__APPLE__) || defined(__FreeBSD__)
   // Non localized output using C-locale
   check(SV("%u=''\t%Ou=''\t%w=''\t%Ow=''\n"), fmt, std::chrono::weekday_last{std::chrono::weekday(8)});
   check(SV("%u=''\t%Ou=''\t%w=''\t%Ow=''\n"), fmt, std::chrono::weekday_last{std::chrono::weekday(255)});
