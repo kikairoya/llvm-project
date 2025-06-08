@@ -54,13 +54,14 @@
 #    define _LIBCPP_CRT_FUNC
 #  endif
 
-#  if defined(_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS) || (defined(__MINGW32__) && !defined(_LIBCPP_BUILDING_LIBRARY))
+#  if defined(_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS) ||                                                               \
+      ((defined(__MINGW32__) || defined(__CYGWIN__)) && !defined(_LIBCPP_BUILDING_LIBRARY))
 #    define _LIBCPP_EXTERN_TEMPLATE_TYPE_VIS
 #    define _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS
 #    define _LIBCPP_OVERRIDABLE_FUNC_VIS
 #    define _LIBCPP_EXPORTED_FROM_ABI
 #  elif defined(_LIBCPP_BUILDING_LIBRARY)
-#    if defined(__MINGW32__)
+#    if defined(__MINGW32__) || defined(__CYGWIN__)
 #      define _LIBCPP_EXTERN_TEMPLATE_TYPE_VIS __declspec(dllexport)
 #      define _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS
 #    else

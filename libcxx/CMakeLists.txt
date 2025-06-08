@@ -275,7 +275,7 @@ if (LIBCXX_STATICALLY_LINK_ABI_IN_SHARED_LIBRARY
     OR NOT LIBCXX_ENABLE_SHARED
     OR LIBCXX_CXX_ABI STREQUAL "none")
   set(ENABLE_LINKER_SCRIPT_DEFAULT_VALUE OFF)
-elseif((UNIX OR FUCHSIA) AND NOT APPLE)
+elseif((UNIX OR FUCHSIA) AND NOT APPLE AND NOT CYGWIN)
   set(ENABLE_LINKER_SCRIPT_DEFAULT_VALUE ON)
 else()
   set(ENABLE_LINKER_SCRIPT_DEFAULT_VALUE OFF)
@@ -320,7 +320,7 @@ option(LIBCXX_ENABLE_PEDANTIC "Compile with pedantic enabled." OFF)
 option(LIBCXX_ENABLE_WERROR "Fail and stop if a warning is triggered." OFF)
 
 set(LIBCXX_HERMETIC_STATIC_LIBRARY_DEFAULT OFF)
-if (WIN32)
+if (WIN32 OR CYGWIN)
   set(LIBCXX_HERMETIC_STATIC_LIBRARY_DEFAULT ON)
 endif()
 option(LIBCXX_HERMETIC_STATIC_LIBRARY
@@ -509,6 +509,10 @@ function(cxx_add_basic_build_flags target)
     CXX_STANDARD 23
     CXX_STANDARD_REQUIRED OFF # TODO: Make this REQUIRED once we don't need to accommodate the LLVM documentation builders using an ancient CMake
     CXX_EXTENSIONS NO)
+  if (CYGWIN)
+    set_target_properties(${target} PROPERTIES
+      CXX_EXTENSIONS YES)
+  endif()
 
   # When building the dylib, don't warn for unavailable aligned allocation
   # functions based on the deployment target -- they are always available
@@ -688,6 +692,22 @@ function(cxx_link_system_libraries target)
   if (MINGW)
     target_link_libraries(${target} PRIVATE "${MINGW_LIBRARIES}")
   endif()
+  if (CYGWIN)
+    # Cygwin requires gcc_s or compiler-rt explicitly, which are dropped by the effect
+    # of "--unwindlib=none", for Emulated-TLS functionallity
+    if (CXX_SUPPORTS_UNWINDLIB_EQ_NONE_FLAG AND LIBCXXABI_USE_LLVM_UNWINDER AND NOT CYGWIN_LIBRARIES)
+      if (LIBCXX_USE_COMPILER_RT)
+        include(HandleCompilerRT)
+        find_compiler_rt_library(builtins LIBCXX_BUILTINS_LIBRARY
+          FLAGS ${LIBCXX_COMPILE_FLAGS})
+        target_link_libraries(${target} PRIVATE ${LIBCXX_BUILTINS_LIBRARY})
+      else()
+        target_link_libraries(${target} PRIVATE gcc_s)
+      endif()
+    else()
+      target_link_libraries(${target} PRIVATE "${CYGWIN_LIBRARIES}")
+    endif()
+  endif()
 
   if (MSVC)
     if ((NOT CMAKE_MSVC_RUNTIME_LIBRARY AND uppercase_CMAKE_BUILD_TYPE STREQUAL "DEBUG")
@@ -779,6 +799,8 @@ elseif (RUNTIMES_USE_LIBC STREQUAL "newlib")
   config_define(1 _LIBCPP_LIBC_NEWLIB)
 elseif (RUNTIMES_USE_LIBC STREQUAL "llvm-libc")
   config_define(1 _LIBCPP_LIBC_LLVM_LIBC)
+elseif (CYGWIN AND RUNTIMES_USE_LIBC STREQUAL "system")
+  config_define(1 _LIBCPP_LIBC_NEWLIB)
 endif()
 
 if (LIBCXX_HARDENING_MODE STREQUAL "none")
