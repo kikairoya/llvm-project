@@ -27,21 +27,22 @@ namespace mca {
 template <typename T>
 class InstructionError : public ErrorInfo<InstructionError<T>> {
 public:
-  static char ID;
+  LLVM_ABI static char ID;
   std::string Message;
   const T &Inst;
 
-  InstructionError(std::string M, const T &MCI)
+  LLVM_ABI InstructionError(std::string M, const T &MCI)
       : Message(std::move(M)), Inst(MCI) {}
 
-  void log(raw_ostream &OS) const override { OS << Message; }
+  LLVM_ABI void log(raw_ostream &OS) const override { OS << Message; }
 
-  std::error_code convertToErrorCode() const override {
+  LLVM_ABI std::error_code convertToErrorCode() const override {
     return inconvertibleErrorCode();
   }
 };
 
 template <typename T> char InstructionError<T>::ID;
+extern template class LLVM_TEMPLATE_ABI InstructionError<MCInst>;
 
 /// This class represents the number of cycles per resource (fractions of
 /// cycles).  That quantity is managed here as a ratio, and accessed via the
