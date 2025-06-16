@@ -38,6 +38,21 @@ Error deregisterFrameWrapper(const void *P) {
   return Error::success();
 }
 
+#elif defined(__CYGWIN__)
+
+extern "C" void __gcc_register_frame(const void *);
+extern "C" void __gcc_deregister_frame(const void *);
+
+Error registerFrameWrapper(const void *P) {
+  __gcc_register_frame(P);
+  return Error::success();
+}
+
+Error deregisterFrameWrapper(const void *P) {
+  __gcc_deregister_frame(P);
+  return Error::success();
+}
+
 #else
 
 // The building compiler does not have __(de)register_frame but
