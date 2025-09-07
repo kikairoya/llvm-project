@@ -196,23 +196,19 @@ template struct __declspec(dllexport) outer<int>;
 // FUNC-O0:  declare{{.*}} dllimport{{.*}} @_ZN5outerIcEC1EOS0_
 // FUNC-O0:  declare{{.*}} dllimport{{.*}} @_ZN5outerIcEaSERKS0_
 // FUNC-O0:  declare{{.*}} dllimport{{.*}} @_ZN5outerIcEaSEOS0_
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerC1Ev
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerC1ERKS1_
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerC1EOS1_
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5inneraSERKS1_
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5inneraSEOS1_
+// FUNC-O0:  declare{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerC1Ev
+// FUNC-O0:  declare{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerC1ERKS1_
+// FUNC-O0:  declare{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerC1EOS1_
+// FUNC-O0:  declare{{.*}} dso_local{{.*}} @_ZN5outerIcE5inneraSERKS1_
+// FUNC-O0:  declare{{.*}} dso_local{{.*}} @_ZN5outerIcE5inneraSEOS1_
 // FUNC-O0:  declare{{.*}} dllimport{{.*}} @_ZN5outerIcE1fEv
 // FUNC:     declare{{.*}} dllimport{{.*}} @_ZN5outerIcE1gEv
 // FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE1hEv
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5inner1fEv
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5inner1gEv
+// FUNC-O0:  declare{{.*}} dso_local{{.*}} @_ZN5outerIcE5inner1fEv
+// FUNC:     declare{{.*}} dso_local{{.*}} @_ZN5outerIcE5inner1gEv
 // FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5inner1hEv
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerD1Ev
+// FUNC-O0:  declare{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerD1Ev
 // FUNC-O0:  declare{{.*}} dllimport{{.*}} @_ZN5outerIcED1Ev
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerC2Ev
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerD2Ev
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerC2ERKS1_
-// FUNC-O0:  define{{.*}} dso_local{{.*}} @_ZN5outerIcE5innerC2EOS1_
 extern template struct __declspec(dllimport) outer<char>;
 
 int anchor() noexcept {
