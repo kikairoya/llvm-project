@@ -22,19 +22,27 @@ struct C {
 
   // This won't be instantiated.
   EXCLUDE_FROM_EXPLICIT_INSTANTIATION void not_to_be_instantiated() noexcept;
+
+  struct EXCLUDE_FROM_EXPLICIT_INSTANTIATION inner {
+    // This will be instantiated implicitly but won't be exported.
+    static void inner_not_to_be_exported() noexcept;
+  };
 };
 
 template <class T> void C<T>::to_be_exported() noexcept {}
 template <class T> void C<T>::to_be_exported_explicitly() noexcept {}
 template <class T> void C<T>::not_to_be_exported() noexcept {}
 template <class T> void C<T>::not_to_be_instantiated() noexcept {}
+template <class T> void C<T>::inner::inner_not_to_be_exported() noexcept {}
 
 // MSC: $"?to_be_exported@?$C@H@@QEAAXXZ" = comdat any
 // MSC: $"?to_be_exported_explicitly@?$C@H@@QEAAXXZ" = comdat any
 // MSC: $"?not_to_be_exported@?$C@H@@QEAAXXZ" = comdat any
+// MSC: $"?inner_not_to_be_exported@inner@?$C@H@@SAXXZ" = comdat any
 // GNU: $_ZN1CIiE14to_be_exportedEv = comdat any
 // GNU: $_ZN1CIiE25to_be_exported_explicitlyEv = comdat any
 // GNU: $_ZN1CIiE18not_to_be_exportedEv = comdat any
+// GNU: $_ZN1CIiE5inner24inner_not_to_be_exportedEv = comdat any
 
 // MSC: define weak_odr dso_local dllexport{{.*}} void @"?to_be_exported@?$C@H@@QEAAXXZ"
 // GNU: define weak_odr dso_local dllexport{{.*}} void @_ZN1CIiE14to_be_exportedEv
@@ -50,6 +58,10 @@ void use() {
   // MSC: call void @"?not_to_be_exported@?$C@H@@QEAAXXZ"
   // GNU: call void @_ZN1CIiE18not_to_be_exportedEv
   c.not_to_be_exported(); // implicitly instantiated here
+
+  // MSC: call void @"?inner_not_to_be_exported@inner@?$C@H@@SAXXZ"
+  // GNU: call void @_ZN1CIiE5inner24inner_not_to_be_exportedEv
+  C<int>::inner::inner_not_to_be_exported(); // implicitly instanciated here
 };
 
 // MSC: define weak_odr dso_local dllexport{{.*}} void @"?to_be_exported_explicitly@?$C@H@@QEAAXXZ"
@@ -57,3 +69,6 @@ void use() {
 
 // MSC: define linkonce_odr dso_local void @"?not_to_be_exported@?$C@H@@QEAAXXZ"
 // GNU: define linkonce_odr dso_local void @_ZN1CIiE18not_to_be_exportedEv
+
+// MSC: define linkonce_odr dso_local void @"?inner_not_to_be_exported@inner@?$C@H@@SAXXZ"
+// GNU: define linkonce_odr dso_local void @_ZN1CIiE5inner24inner_not_to_be_exportedEv

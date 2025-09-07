@@ -22,14 +22,22 @@ struct C {
 
   // This won't be instantiated.
   EXCLUDE_FROM_EXPLICIT_INSTANTIATION void not_to_be_instantiated() noexcept;
+
+  struct EXCLUDE_FROM_EXPLICIT_INSTANTIATION inner {
+    // This will be instantiated implicitly but won't be imported.
+    static void inner_not_to_be_imported() noexcept;
+  };
 };
 
 template <class T> void C<T>::to_be_imported() noexcept {}
 template <class T> void C<T>::not_to_be_imported() noexcept {}
 template <class T> void C<T>::not_to_be_instantiated() noexcept {}
+template <class T> void C<T>::inner::inner_not_to_be_imported() noexcept {}
 
 // MSC: $"?not_to_be_imported@?$C@H@@QEAAXXZ" = comdat any
+// MSC: $"?inner_not_to_be_imported@inner@?$C@H@@SAXXZ" = comdat any
 // GNU: $_ZN1CIiE18not_to_be_importedEv = comdat any
+// GNU: $_ZN1CIiE5inner24inner_not_to_be_importedEv = comdat any
 extern template struct __declspec(dllimport) C<int>;
 
 void use() {
@@ -46,6 +54,10 @@ void use() {
   // MSC: call void @"?not_to_be_imported@?$C@H@@QEAAXXZ"
   // GNU: call void @_ZN1CIiE18not_to_be_importedEv
   c.not_to_be_imported(); // implicitly instantiated here
+
+  // MSC: call void @"?inner_not_to_be_imported@inner@?$C@H@@SAXXZ"
+  // GNU: call void @_ZN1CIiE5inner24inner_not_to_be_importedEv
+  C<int>::inner::inner_not_to_be_imported(); // implicitly instantiated here
 };
 
 // MSC: declare dllimport void @"?to_be_imported@?$C@H@@QEAAXXZ"
@@ -56,3 +68,6 @@ void use() {
 
 // MSC: define linkonce_odr dso_local void @"?not_to_be_imported@?$C@H@@QEAAXXZ"
 // GNU: define linkonce_odr dso_local void @_ZN1CIiE18not_to_be_importedEv
+
+// MSC: define linkonce_odr dso_local void @"?inner_not_to_be_imported@inner@?$C@H@@SAXXZ"
+// GNU: define linkonce_odr dso_local void @_ZN1CIiE5inner24inner_not_to_be_importedEv
