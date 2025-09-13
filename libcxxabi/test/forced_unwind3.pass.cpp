@@ -16,6 +16,9 @@
 // VE only supports SjLj and doesn't provide _Unwind_ForcedUnwind.
 // UNSUPPORTED: target={{ve-.*}}
 
+// Cygwin crashes during unwind
+// UNSUPPORTED: cygwin
+
 #include <assert.h>
 #include <exception>
 #include <stdlib.h>
