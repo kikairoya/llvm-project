@@ -1,5 +1,6 @@
 /// This test fails on Mac (https://bugs.llvm.org/show_bug.cgi?id=38134)
 // XFAIL: darwin
+// UNSUPPORTED: cygwin
 
 // RUN: mkdir -p %t.d && cd %t.d
 

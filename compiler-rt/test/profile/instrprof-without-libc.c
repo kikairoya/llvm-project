@@ -11,7 +11,7 @@
 // UNSUPPORTED: target={{.*msvc.*}}
 
 // The MinGW CRT init files do reference malloc etc, so this test fails.
-// UNSUPPORTED: target={{.*windows-gnu.*}}
+// UNSUPPORTED: target={{.*windows-gnu.*}}, cygwin
 
 #include <stdint.h>
 #include <stdlib.h>

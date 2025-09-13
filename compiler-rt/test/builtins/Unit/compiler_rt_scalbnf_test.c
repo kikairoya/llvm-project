@@ -9,7 +9,7 @@
 #include "fp_lib.h"
 
 int test__compiler_rt_scalbnf(const char *mode, fp_t x, int y) {
-#if defined(__ve__)
+#if defined(__ve__) || defined(__CYGWIN__)
   if (fpclassify(x) == FP_SUBNORMAL)
     return 0;
 #endif
