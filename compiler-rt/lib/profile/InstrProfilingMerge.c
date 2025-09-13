@@ -100,7 +100,7 @@ int __llvm_profile_check_compatibility(const char *ProfileData,
 }
 
 static uintptr_t signextIfWin64(void *V) {
-#ifdef _WIN64
+#if defined(_WIN64) || defined(__CYGWIN64__)
   return (uintptr_t)(int32_t)(uintptr_t)V;
 #else
   return (uintptr_t)V;

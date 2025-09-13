@@ -312,7 +312,7 @@ COMPILER_RT_VISIBILITY int lprofWriteDataImpl(
 
   /* On WIN64, label differences are truncated 32-bit values. Truncate
    * CountersDelta to match. */
-#ifdef _WIN64
+#if defined(_WIN64) || defined(__CYGWIN64__)
   Header.CountersDelta = (uint32_t)Header.CountersDelta;
   Header.BitmapDelta = (uint32_t)Header.BitmapDelta;
 #endif

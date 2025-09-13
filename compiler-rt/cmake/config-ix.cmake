@@ -66,6 +66,19 @@ if (C_SUPPORTS_NODEFAULTLIBS_FLAG)
                         moldname mingwex msvcrt)
     list(APPEND CMAKE_REQUIRED_LIBRARIES ${MINGW_LIBRARIES})
   endif()
+  if (CYGWIN)
+    # Cygwin requires quite a few "C" runtime libraries in order for basic
+    # programs to link successfully with -nodefaultlibs.
+    if (COMPILER_RT_USE_BUILTINS_LIBRARY)
+      set(CYGWIN_RUNTIME ${COMPILER_RT_BUILTINS_LIBRARY})
+    else ()
+      set(CYGWIN_RUNTIME gcc_s gcc)
+    endif()
+    set(CYGWIN_LIBRARIES cygwin ${CYGWIN_RUNTIME} advapi32
+                         shell32 user32 kernel32 ${CYGWIN_RUNTIME}
+                         cygwin)
+    list(APPEND CMAKE_REQUIRED_LIBRARIES ${CYGWIN_LIBRARIES})
+  endif()
   if (NOT TARGET unwind)
     # Don't check for a library named unwind, if there's a target with that name within
     # the same build.
@@ -842,7 +855,7 @@ else()
 endif()
 
 if (PROFILE_SUPPORTED_ARCH AND NOT LLVM_USE_SANITIZER AND
-    OS_NAME MATCHES "Darwin|Linux|FreeBSD|Windows|Android|Fuchsia|SunOS|NetBSD|AIX|WASI|Haiku")
+    OS_NAME MATCHES "Darwin|Linux|FreeBSD|Windows|Android|Fuchsia|SunOS|NetBSD|AIX|WASI|Haiku|CYGWIN")
   set(COMPILER_RT_HAS_PROFILE TRUE)
 else()
   set(COMPILER_RT_HAS_PROFILE FALSE)
