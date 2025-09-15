@@ -5,8 +5,8 @@
 
 RUN: mkdir -p %t.d
 RUN: %clang_pgogen -mllvm -pgo-function-entry-coverage -o %t.d/libfoo.so -fPIC -shared %S/../Inputs/instrprof-shared-lib.c
-RUN: %clang_pgogen -mllvm -pgo-function-entry-coverage -o %t -L%t.d -rpath %t.d -lfoo %S/../Inputs/instrprof-shared-main.c
-RUN: env LLVM_PROFILE_FILE=%t.profraw %run %t
+RUN: %clang_pgogen -mllvm -pgo-function-entry-coverage -o %t -L%t.d -rpath %t.d %t.d/libfoo.so %S/../Inputs/instrprof-shared-main.c
+RUN: env LLVM_PROFILE_FILE=%t.profraw PATH="%t.d:$PATH" %run %t
 RUN: llvm-profdata merge -o %t.profdata %t.profraw
 RUN: llvm-profdata show --covered %t.profdata | FileCheck %s
 

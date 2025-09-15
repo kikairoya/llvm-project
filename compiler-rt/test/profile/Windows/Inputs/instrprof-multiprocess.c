@@ -3,11 +3,31 @@
  * file locking support, the data from each child should not
  * be lost.
  */
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <process.h>
 #include <windows.h>
 
 void spawn_child(PROCESS_INFORMATION *pi, int child_num) {
+#ifdef __CYGWIN__
+  extern char ** __argv;
+  char child_str[20];
+  snprintf(child_str, 20, "CHILD_NUM=%d", child_num);
+  if (putenv(child_str) < 0) {
+    printf("putenv failed (%d).\n", errno);
+    fflush(stdout);
+    exit(1);
+  }
+
+  pi->hProcess = (HANDLE)(intptr_t)spawnl(_P_NOWAIT, __argv[0], __argv[0], (void *)0);
+  if (pi->hProcess == (HANDLE)-1) {
+    printf("spawnl failed (%d).\n", errno);
+    fflush(stdout);
+    exit(1);
+  }
+#else
   wchar_t child_str[10];
   _itow(child_num, child_str, 10);
   if (!SetEnvironmentVariableW(L"CHILD_NUM", child_str)) {
@@ -35,9 +55,18 @@ void spawn_child(PROCESS_INFORMATION *pi, int child_num) {
     fflush(stdout);
     exit(1);
   }
+#endif
 }
 
 int wait_child(PROCESS_INFORMATION *pi) {
+#ifdef __CYGWIN__
+  int exit_code;
+  if (cwait(&exit_code, (intptr_t)pi->hProcess, 0) < 0) {
+    printf("cwait failed (%d).\n", errno);
+    fflush(stdout);
+    exit(1);
+  }
+#else
   WaitForSingleObject(pi->hProcess, INFINITE);
 
   DWORD exit_code;
@@ -49,6 +78,7 @@ int wait_child(PROCESS_INFORMATION *pi) {
 
   CloseHandle(pi->hProcess);
   CloseHandle(pi->hThread);
+#endif
 
   return exit_code;
 }

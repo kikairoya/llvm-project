@@ -15,8 +15,8 @@ RUN: %clang_profgen -o %t.d/libt-no-instr.so -fPIC -shared %t.d/instrprof-shared
 
 # Header + Header
 RUN: echo "src:other.c" > %t-file.list
-RUN: %clang_profgen -fprofile-list=%t-file.list -o %t-no-instr-no-instr -L%t.d -rpath %t.d -lt-no-instr  %S/../Inputs/instrprof-shared-main.c
-RUN: env LLVM_PROFILE_FILE=%t-no-instr-no-instr.profraw %run %t-no-instr-no-instr
+RUN: %clang_profgen -fprofile-list=%t-file.list -o %t-no-instr-no-instr -L%t.d -rpath %t.d %t.d/libt-no-instr.so  %S/../Inputs/instrprof-shared-main.c
+RUN: env LLVM_PROFILE_FILE=%t-no-instr-no-instr.profraw PATH="%t.d:$PATH" %run %t-no-instr-no-instr
 RUN: llvm-profdata show %t-no-instr-no-instr.profraw | FileCheck %s --check-prefix=HEADER-HEADER
 // HEADER-HEADER: Instrumentation level: Front-end
 // HEADER-HEADER-NEXT: Total functions: 0
@@ -24,8 +24,8 @@ RUN: llvm-profdata show %t-no-instr-no-instr.profraw | FileCheck %s --check-pref
 // HEADER-HEADER-NEXT: Maximum internal block count: 0
 
 # Header + Profile
-RUN: %clang_profgen -fprofile-list=%t-file.list -o %t-no-instr-instr -L%t.d -rpath %t.d -lt-instr  %S/../Inputs/instrprof-shared-main.c
-RUN: env LLVM_PROFILE_FILE=%t-no-instr-instr.profraw %run %t-no-instr-instr
+RUN: %clang_profgen -fprofile-list=%t-file.list -o %t-no-instr-instr -L%t.d -rpath %t.d %t.d/libt-instr.so  %S/../Inputs/instrprof-shared-main.c
+RUN: env LLVM_PROFILE_FILE=%t-no-instr-instr.profraw PATH="%t.d:$PATH" %run %t-no-instr-instr
 RUN: llvm-profdata show %t-no-instr-instr.profraw | FileCheck %s --check-prefix=HEADER-PROFILE
 // HEADER-PROFILE: Instrumentation level: Front-end
 // HEADER-PROFILE-NEXT: Total functions: 1
@@ -33,8 +33,8 @@ RUN: llvm-profdata show %t-no-instr-instr.profraw | FileCheck %s --check-prefix=
 // HEADER-PROFILE-NEXT: Maximum internal block count: 360000
 
 # Profile + Header
-RUN: %clang_profgen -o %t-instr-no-instr -L%t.d -rpath %t.d -lt-no-instr %S/../Inputs/instrprof-shared-main.c
-RUN: env LLVM_PROFILE_FILE=%t-instr-no-instr.profraw %run %t-instr-no-instr
+RUN: %clang_profgen -o %t-instr-no-instr -L%t.d -rpath %t.d %t.d/libt-no-instr.so %S/../Inputs/instrprof-shared-main.c
+RUN: env LLVM_PROFILE_FILE=%t-instr-no-instr.profraw PATH="%t.d:$PATH" %run %t-instr-no-instr
 RUN: llvm-profdata show %t-instr-no-instr.profraw | FileCheck %s --check-prefix=PROFILE-HEADER
 // PROFILE-HEADER: Instrumentation level: Front-end
 // PROFILE-HEADER-NEXT: Total functions: 1

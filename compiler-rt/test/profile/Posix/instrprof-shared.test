@@ -19,26 +19,26 @@ RUN: %clang -o %t.d/libt-no-instr1.so -fPIC -shared %S/../Inputs/instrprof-share
 RUN: %clang -c -o %t.d/instrprof-shared-lib-no-instr2.o -fPIC  %S/../Inputs/instrprof-shared-lib.c
 RUN: %clang_profgen -o %t.d/libt-no-instr2.so -fPIC -shared %t.d/instrprof-shared-lib-no-instr2.o
 
-RUN: %clang_profgen -o %t-instr-instr -L%t.d -rpath %t.d -lt-instr  %S/../Inputs/instrprof-shared-main.c
-RUN: %clang_profgen -o %t-instr-no-instr1 -L%t.d -rpath %t.d -lt-no-instr1  %S/../Inputs/instrprof-shared-main.c
-RUN: %clang_profgen -o %t-instr-no-instr2 -L%t.d -rpath %t.d -lt-no-instr2  %S/../Inputs/instrprof-shared-main.c
-RUN: %clang -o %t-no-instr1-instr -L%t.d -rpath %t.d -lt-instr  %S/../Inputs/instrprof-shared-main.c
-RUN: %clang -o %t-no-instr1-no-instr1 -L%t.d -rpath %t.d -lt-no-instr1  %S/../Inputs/instrprof-shared-main.c
-RUN: %clang -o %t-no-instr1-no-instr2 -L%t.d -rpath %t.d -lt-no-instr2  %S/../Inputs/instrprof-shared-main.c
-RUN: %clang -c -o %t.d/instrprof-shared-main-no-instr2.o  %S/../Inputs/instrprof-shared-main.c
-RUN: %clang -o %t-no-instr2-instr -L%t.d -rpath %t.d -lt-instr  %t.d/instrprof-shared-main-no-instr2.o
-RUN: %clang -o %t-no-instr2-no-instr1 -L%t.d -rpath %t.d -lt-no-instr1  %t.d/instrprof-shared-main-no-instr2.o
-RUN: %clang -o %t-no-instr2-no-instr2 -L%t.d -rpath %t.d -lt-no-instr2  %t.d/instrprof-shared-main-no-instr2.o
+RUN: %clang_profgen -o %t-instr-instr -L%t.d -rpath %t.d %t.d/libt-instr.so %S/../Inputs/instrprof-shared-main.c
+RUN: %clang_profgen -o %t-instr-no-instr1 -L%t.d -rpath %t.d %t.d/libt-no-instr1.so %S/../Inputs/instrprof-shared-main.c
+RUN: %clang_profgen -o %t-instr-no-instr2 -L%t.d -rpath %t.d %t.d/libt-no-instr2.so %S/../Inputs/instrprof-shared-main.c
+RUN: %clang -o %t-no-instr1-instr -L%t.d -rpath %t.d %t.d/libt-instr.so %S/../Inputs/instrprof-shared-main.c
+RUN: %clang -o %t-no-instr1-no-instr1 -L%t.d -rpath %t.d %t.d/libt-no-instr1.so %S/../Inputs/instrprof-shared-main.c
+RUN: %clang -o %t-no-instr1-no-instr2 -L%t.d -rpath %t.d %t.d/libt-no-instr2.so %S/../Inputs/instrprof-shared-main.c
+RUN: %clang -c -o %t.d/instrprof-shared-main-no-instr2.o %S/../Inputs/instrprof-shared-main.c
+RUN: %clang -o %t-no-instr2-instr -L%t.d -rpath %t.d %t.d/libt-instr.so %t.d/instrprof-shared-main-no-instr2.o
+RUN: %clang -o %t-no-instr2-no-instr1 -L%t.d -rpath %t.d %t.d/libt-no-instr1.so %t.d/instrprof-shared-main-no-instr2.o
+RUN: %clang -o %t-no-instr2-no-instr2 -L%t.d -rpath %t.d %t.d/libt-no-instr2.so %t.d/instrprof-shared-main-no-instr2.o
 
-RUN: env LLVM_PROFILE_FILE=%t-instr-instr.profraw %run %t-instr-instr
-RUN: env LLVM_PROFILE_FILE=%t-instr-no-instr1.profraw %run %t-instr-no-instr1
-RUN: env LLVM_PROFILE_FILE=%t-instr-no-instr2.profraw %run %t-instr-no-instr2
-RUN: env LLVM_PROFILE_FILE=%t-no-instr1-instr.profraw %run %t-no-instr1-instr
-RUN: env LLVM_PROFILE_FILE=%t-no-instr2-instr.profraw %run %t-no-instr2-instr
-RUN: env LLVM_PROFILE_FILE=%t-no-instr1-no-instr1.profraw %run %t-no-instr1-no-instr1
-RUN: env LLVM_PROFILE_FILE=%t-no-instr1-no-instr2.profraw %run %t-no-instr1-no-instr2
-RUN: env LLVM_PROFILE_FILE=%t-no-instr2-no-instr1.profraw %run %t-no-instr2-no-instr1
-RUN: env LLVM_PROFILE_FILE=%t-no-instr2-no-instr2.profraw %run %t-no-instr2-no-instr2
+RUN: env LLVM_PROFILE_FILE=%t-instr-instr.profraw PATH="%t.d:$PATH" %run %t-instr-instr
+RUN: env LLVM_PROFILE_FILE=%t-instr-no-instr1.profraw PATH="%t.d:$PATH" %run %t-instr-no-instr1
+RUN: env LLVM_PROFILE_FILE=%t-instr-no-instr2.profraw PATH="%t.d:$PATH" %run %t-instr-no-instr2
+RUN: env LLVM_PROFILE_FILE=%t-no-instr1-instr.profraw PATH="%t.d:$PATH" %run %t-no-instr1-instr
+RUN: env LLVM_PROFILE_FILE=%t-no-instr2-instr.profraw PATH="%t.d:$PATH" %run %t-no-instr2-instr
+RUN: env LLVM_PROFILE_FILE=%t-no-instr1-no-instr1.profraw PATH="%t.d:$PATH" %run %t-no-instr1-no-instr1
+RUN: env LLVM_PROFILE_FILE=%t-no-instr1-no-instr2.profraw PATH="%t.d:$PATH" %run %t-no-instr1-no-instr2
+RUN: env LLVM_PROFILE_FILE=%t-no-instr2-no-instr1.profraw PATH="%t.d:$PATH" %run %t-no-instr2-no-instr1
+RUN: env LLVM_PROFILE_FILE=%t-no-instr2-no-instr2.profraw PATH="%t.d:$PATH" %run %t-no-instr2-no-instr2
 
 RUN: llvm-profdata merge -o %t-instr-instr.profdata %t-instr-instr.profraw
 RUN: llvm-profdata merge -o %t-instr-no-instr1.profdata %t-instr-no-instr1.profraw
