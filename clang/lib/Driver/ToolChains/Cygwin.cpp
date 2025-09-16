@@ -46,6 +46,7 @@ Cygwin::Cygwin(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
 
   addPathIfExists(D, SysRoot + "/lib", Paths);
   addPathIfExists(D, SysRoot + "/usr/lib", Paths);
+  addPathIfExists(D, SysRoot + "/lib/w32api", Paths);
   addPathIfExists(D, SysRoot + "/usr/lib/w32api", Paths);
 }
 
