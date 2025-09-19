@@ -47,7 +47,10 @@ __unw_remove_dynamic_eh_frame_section(const void *) ORC_RT_WEAK_IMPORT;
 namespace {
 
 struct TLSInfoEntry {
-  unsigned long Key = 0;
+  union {
+    pthread_key_t Key;
+    unsigned long Dummy;
+  };
   unsigned long DataAddress = 0;
 };
 
@@ -778,15 +781,27 @@ ORC_RT_INTERFACE ptrdiff_t ___orc_rt_elfnix_tlsdesc_resolver_impl(
 
 ORC_RT_INTERFACE orc_rt_WrapperFunctionResult
 __orc_rt_elfnix_create_pthread_key(char *ArgData, size_t ArgSize) {
-  return WrapperFunction<SPSExpected<uint64_t>(void)>::handle(
+  return WrapperFunction<SPSExpected<unsigned long>(void)>::handle(
              ArgData, ArgSize,
-             []() -> Expected<uint64_t> {
+             []() -> Expected<unsigned long> {
                pthread_key_t Key;
                if (int Err = pthread_key_create(&Key, destroyELFNixTLVMgr)) {
                  __orc_rt_log_error("Call to pthread_key_create failed");
                  return make_error<StringError>(strerror(Err));
                }
-               return static_cast<uint64_t>(Key);
+               if constexpr (std::is_convertible_v<pthread_key_t,
+                                                   unsigned long> &&
+                             sizeof(pthread_key_t) <= sizeof(unsigned long)) {
+                 return Key;
+               } else {
+                 static_assert(sizeof(pthread_key_t) <= sizeof(unsigned long));
+                 static_assert(std::is_trivially_copyable_v<pthread_key_t>);
+                 unsigned long Ret = 0;
+                 std::copy_n(reinterpret_cast<const unsigned char *>(&Key),
+                             sizeof(Key),
+                             reinterpret_cast<unsigned char *>(Ret));
+                 return Ret;
+               }
              })
       .release();
 }
