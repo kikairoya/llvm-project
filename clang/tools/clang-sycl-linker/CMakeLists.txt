@@ -33,7 +33,8 @@ set(CLANG_SYCL_LINKER_LIB_DEPS
   clangBasic
   )
 
-target_link_libraries(clang-sycl-linker
+clang_target_link_libraries(clang-sycl-linker
   PRIVATE
+  DISABLE_CLANG_LINK_CLANG_DYLIB
   ${CLANG_SYCL_LINKER_LIB_DEPS}
   )

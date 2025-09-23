@@ -13,6 +13,7 @@
 #ifndef LLVM_CLANG_ANALYSIS_FLOWSENSITIVE_NOOP_LATTICE_H
 #define LLVM_CLANG_ANALYSIS_FLOWSENSITIVE_NOOP_LATTICE_H
 
+#include "clang/Analysis/FlowSensitive/CachedConstAccessorsLattice.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "clang/Support/Compiler.h"
 #include "llvm/ADT/Any.h"
@@ -47,6 +48,8 @@ namespace llvm {
 // CLANG_LINK_CLANG_DYLIB
 extern template struct CLANG_TEMPLATE_ABI
     Any::TypeId<clang::dataflow::NoopLattice>;
+extern template struct CLANG_TEMPLATE_ABI Any::TypeId<
+    clang::dataflow::CachedConstAccessorsLattice<clang::dataflow::NoopLattice>>;
 } // namespace llvm
 
 #endif // LLVM_CLANG_ANALYSIS_FLOWSENSITIVE_NOOP_LATTICE_H
