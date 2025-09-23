@@ -1,4 +1,4 @@
-if(CLANG_PLUGIN_SUPPORT AND LLVM_ENABLE_PLUGINS AND NOT WIN32)
+if(CLANG_PLUGIN_SUPPORT AND LLVM_ENABLE_PLUGINS AND NOT (WIN32 OR CYGWIN))
   # Plugins must never bring LLVM or Clang libraries in statically.
   # clang-ssaf-analyzer already loads clangScalableStaticAnalysisCore
   # and LLVM into the process; a second static copy would produce duplicate

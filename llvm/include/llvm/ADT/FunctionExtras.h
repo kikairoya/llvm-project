@@ -131,7 +131,7 @@ protected:
   // pointer in a struct or a pointer to a static struct of the call, move, and
   // destroy pointers.
   using CallbackPointerUnionT =
-      PointerUnion<TrivialCallback *, NonTrivialCallbacks *>;
+      PointerUnion<const TrivialCallback *, const NonTrivialCallbacks *>;
 
   // The main storage buffer. This will either have a pointer to out-of-line
   // storage or an inline buffer storing the callable.
@@ -163,15 +163,17 @@ protected:
   bool isInlineStorage() const { return CallbackAndInlineFlag.getInt(); }
 
   bool isTrivialCallback() const {
-    return isa<TrivialCallback *>(CallbackAndInlineFlag.getPointer());
+    return isa<const TrivialCallback *>(CallbackAndInlineFlag.getPointer());
   }
 
   CallPtrT getTrivialCallback() const {
-    return cast<TrivialCallback *>(CallbackAndInlineFlag.getPointer())->CallPtr;
+    return cast<const TrivialCallback *>(CallbackAndInlineFlag.getPointer())
+        ->CallPtr;
   }
 
-  NonTrivialCallbacks *getNonTrivialCallbacks() const {
-    return cast<NonTrivialCallbacks *>(CallbackAndInlineFlag.getPointer());
+  const NonTrivialCallbacks *getNonTrivialCallbacks() const {
+    return cast<const NonTrivialCallbacks *>(
+        CallbackAndInlineFlag.getPointer());
   }
 
   CallPtrT getCallPtr() const {
@@ -230,7 +232,7 @@ protected:
   // here and each instance will contain a pointer to it.
   // Wrap in a struct to avoid https://gcc.gnu.org/PR71954
   template <typename CallableT, typename CalledAs> struct CallbacksHolder {
-    inline static auto Callbacks = []() constexpr {
+    static constexpr auto Callbacks = []() constexpr {
       // For trivial callables, we don't need to store move and destroy
       // callbacks.
       if constexpr (std::is_trivially_move_constructible_v<CallableT> &&

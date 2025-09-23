@@ -14,7 +14,7 @@
 #include "llvm/Support/Path.h"
 #include <algorithm>
 
-LLVM_INSTANTIATE_REGISTRY(clang::clangd::URISchemeRegistry)
+LLVM_DEFINE_REGISTRY(clang::clangd::URISchemeRegistry)
 
 namespace clang {
 namespace clangd {

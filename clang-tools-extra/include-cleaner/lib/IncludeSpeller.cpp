@@ -15,7 +15,7 @@
 #include <memory>
 #include <string>
 
-LLVM_INSTANTIATE_REGISTRY(clang::include_cleaner::IncludeSpellingStrategy)
+LLVM_DEFINE_REGISTRY(clang::include_cleaner::IncludeSpellingStrategy)
 
 namespace clang::include_cleaner {
 namespace {

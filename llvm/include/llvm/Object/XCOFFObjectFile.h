@@ -788,6 +788,10 @@ XCOFFObjectFile::relocations<XCOFFSectionHeader32, XCOFFRelocation32>(
 extern template LLVM_TEMPLATE_ABI Expected<ArrayRef<XCOFFRelocation64>>
 XCOFFObjectFile::relocations<XCOFFSectionHeader64, XCOFFRelocation64>(
     const XCOFFSectionHeader64 &Sec) const;
+extern template LLVM_TEMPLATE_ABI Expected<ArrayRef<ExceptionSectionEntry32>>
+XCOFFObjectFile::getExceptionEntries() const;
+extern template LLVM_TEMPLATE_ABI Expected<ArrayRef<ExceptionSectionEntry64>>
+XCOFFObjectFile::getExceptionEntries() const;
 
 class XCOFFSymbolRef : public SymbolRef {
 public:

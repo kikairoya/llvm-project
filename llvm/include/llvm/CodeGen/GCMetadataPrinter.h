@@ -30,12 +30,6 @@ class GCStrategy;
 class Module;
 class StackMaps;
 
-/// GCMetadataPrinterRegistry - The GC assembly printer registry uses all the
-/// defaults from Registry.
-using GCMetadataPrinterRegistry = Registry<GCMetadataPrinter>;
-
-extern template class LLVM_TEMPLATE_ABI Registry<GCMetadataPrinter>;
-
 /// GCMetadataPrinter - Emits GC metadata as assembly code.  Instances are
 /// created, managed, and owned by the AsmPrinter.
 class LLVM_ABI GCMetadataPrinter {
@@ -69,6 +63,12 @@ public:
   virtual bool emitStackMaps(StackMaps &SM, AsmPrinter &AP) { return false; }
 };
 
+/// GCMetadataPrinterRegistry - The GC assembly printer registry uses all the
+/// defaults from Registry.
+using GCMetadataPrinterRegistry = Registry<GCMetadataPrinter>;
+
 } // end namespace llvm
+
+LLVM_DECLARE_REGISTRY(GCMetadataPrinterRegistry)
 
 #endif // LLVM_CODEGEN_GCMETADATAPRINTER_H

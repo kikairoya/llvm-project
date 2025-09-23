@@ -2,6 +2,8 @@
 // PairsEntitySummary plugin error tests that exercise the same parsing path.
 
 // REQUIRES: plugins
+// UNSUPPORTED: system-windows
+// UNSUPPORTED: system-cygwin
 
 // ============================================================================
 // readLUSummary() errors

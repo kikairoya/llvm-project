@@ -14,7 +14,7 @@
 
 using namespace llvm;
 
-LLVM_INSTANTIATE_REGISTRY(GCMetadataPrinterRegistry)
+LLVM_DEFINE_REGISTRY(GCMetadataPrinterRegistry)
 
 GCMetadataPrinter::GCMetadataPrinter() = default;
 

@@ -21,9 +21,6 @@ using ToolExecutorPluginRegistry = llvm::Registry<ToolExecutorPlugin>;
 } // namespace tooling
 } // namespace clang
 
-namespace llvm {
-extern template class CLANG_TEMPLATE_ABI
-    Registry<clang::tooling::ToolExecutorPlugin>;
-} // namespace llvm
+LLVM_DECLARE_REGISTRY(clang::tooling::ToolExecutorPluginRegistry)
 
 #endif // LLVM_CLANG_TOOLING_TOOLEXECUTORPLUGINREGISTRY_H
