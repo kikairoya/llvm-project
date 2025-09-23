@@ -8,7 +8,12 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/clang-tidy-config.h)
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_clang_library(clangTidy STATIC
+set(linktype STATIC)
+if ((WIN32 OR CYGWIN) AND CLANG_LINK_CLANG_DYLIB)
+  set(linktype SHARED;INSTALL_WITH_TOOLCHAIN)
+endif()
+
+add_clang_library(clangTidy ${linktype}
   ClangTidy.cpp
   ClangTidyCheck.cpp
   ClangTidyModule.cpp

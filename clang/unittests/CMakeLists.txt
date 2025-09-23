@@ -126,6 +126,10 @@ add_distinct_clang_unittest(AllClangUnitTests
   ${LLVM_COMPONENTS}
 )
 
+if ((MINGW OR CYGWIN) AND NOT (CLANG_LINK_CLANG_DYLIB OR BUILD_SHARED_LIBS))
+  target_link_options(AllClangUnitTests PRIVATE "-S")
+endif()
+
 # The Tooling library has some internal headers. Make those work. If we like
 # the merged clang unit test binary, we can update the include paths and make
 # this the default.
