@@ -112,6 +112,14 @@ void Cygwin::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
   addExternCSystemInclude(DriverArgs, CC1Args, SysRoot + "/usr/include/w32api");
 }
 
+void Cygwin::addClangTargetOptions(const ArgList &DriverArgs,
+                                        ArgStringList &CC1Args,
+                                        Action::OffloadKind) const {
+  if (!DriverArgs.hasFlag(options::OPT_fuse_init_array,
+                          options::OPT_fno_use_init_array, false))
+    CC1Args.push_back("-fno-use-init-array");
+}
+
 void cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                   const InputInfo &Output,
                                   const InputInfoList &Inputs,
