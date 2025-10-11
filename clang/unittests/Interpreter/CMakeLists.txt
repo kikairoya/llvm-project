@@ -97,7 +97,7 @@ if ((MINGW OR CYGWIN) AND NOT (CLANG_LINK_CLANG_DYLIB OR BUILD_SHARED_LIBS))
 endif()
 
 # Exceptions on Windows are not yet supported.
-if(NOT WIN32)
+if(NOT WIN32 AND NOT CYGWIN)
   add_subdirectory(ExceptionTests)
 endif()
 
