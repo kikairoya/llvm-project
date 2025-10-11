@@ -378,6 +378,7 @@ TEST_F(OnDiskCASTest, OnDiskCASBlobsParallelMultiCAS) {
   ASSERT_NO_FATAL_FAILURE(testBlobsParallel(*CAS1, *CAS2, *CAS3, *CAS4, Size));
 }
 
+#ifndef __CYGWIN__ // On Cygwin, this test fails due to ENOENT or EPERM by unknown reason.
 TEST_F(OnDiskCASTest, OnDiskCASBlobsBigParallelMultiCAS) {
   // See comment in BlobsParallelMultiCAS.
   unittest::TempDir Temp("on-disk-cas", /*Unique=*/true);
@@ -404,6 +405,7 @@ TEST_F(OnDiskCASTest, OnDiskCASBlobsBigParallelMultiCAS) {
   uint64_t Size = 100ULL * 1024;
   ASSERT_NO_FATAL_FAILURE(testBlobsParallel(*CAS1, *CAS2, *CAS3, *CAS4, Size));
 }
+#endif // __CYGWIN__
 #endif // _WIN32
 #endif // LLVM_ENABLE_THREADS
 

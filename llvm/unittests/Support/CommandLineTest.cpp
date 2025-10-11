@@ -877,7 +877,11 @@ TEST(CommandLineTest, ResponseFileWindows) {
 
   // Create response file.
   TempFile ResponseFile("resp-", ".txt",
+#ifdef __CYGWIN__
+                        "-top-level\npath\\\\dir\\\\file1\npath/dir/file2",
+#else
                         "-top-level\npath\\dir\\file1\npath/dir/file2",
+#endif
                         /*Unique*/ true);
 
   llvm::SmallString<128> RspOpt;

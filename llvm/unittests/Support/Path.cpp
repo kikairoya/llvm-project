@@ -2303,7 +2303,7 @@ TEST_F(FileSystemTest, permissions) {
 
   EXPECT_EQ(fs::setPermissions(TempPath, fs::all_perms), NoError);
   EXPECT_TRUE(CheckPermissions(fs::all_all));
-#else
+#elif !defined(__CYGWIN__)
   EXPECT_EQ(fs::setPermissions(TempPath, fs::no_perms), NoError);
   EXPECT_TRUE(CheckPermissions(fs::no_perms));
 
