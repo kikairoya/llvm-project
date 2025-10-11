@@ -1,6 +1,7 @@
 // REQUIRES: x86-registered-target
 // REQUIRES: amdgpu-registered-target
 // UNSUPPORTED: target={{.*}}-aix{{.*}}
+// UNSUPPORTED: system-cygwin
 
 // RUN: %clang -v --rocm-path=%S/Inputs/rocm 2>&1 \
 // RUN:   | FileCheck -check-prefixes=FOUND %s

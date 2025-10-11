@@ -1,3 +1,6 @@
+// Windows (including Cygwin) cannot set PATH empty
+// UNSUPPORTED: system-windows, system-cygwin
+
 // RUN: mkdir -p %t.dir
 // RUN: env PATH="" %clang_dxc -I test -Tlib_6_3 -Fo %t.dir/a.dxo  -### %s 2>&1 | FileCheck %s
 

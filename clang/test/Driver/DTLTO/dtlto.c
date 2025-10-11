@@ -7,13 +7,14 @@
 // RUN: %clang -flto=thin %s -### -fuse-ld=lld --target=x86_64-linux-gnu \
 // RUN:   -Xthinlto-distributor=a1 -Xthinlto-distributor=a2,a3 \
 // RUN:   -fthinlto-distributor=d.exe -Werror >>%t_forward.log 2>&1
-// RUN: FileCheck %s --input-file=%t_forward.log --check-prefix=FORWARD
+// RUN: FileCheck %s --input-file=%t_forward.log --check-prefix=FORWARD \
+// RUN:   -DEXEEXT=%if system-windows||system-cygwin %{.exe%}
 
-// FORWARD:      clang-name:[[CLANG:.*]]
+// FORWARD:      clang-name:[[CLANG:.*]][[EXEEXT]]
 // FORWARD-NEXT: prepend-arg:[[PREPEND_ARG:.*]]
 // FORWARD:      ld.lld
 // FORWARD-SAME: "--thinlto-distributor=d.exe"
-// FORWARD-SAME: "--thinlto-remote-compiler={{[^"]*}}[[CLANG]]"
+// FORWARD-SAME: "--thinlto-remote-compiler={{[^"]*}}[[CLANG]]{{([[EXEEXT]])?}}"
 // FORWARD-SAME: [[PREPEND_ARG]]
 // FORWARD-SAME: "--thinlto-distributor-arg=a1"
 // FORWARD-SAME: "--thinlto-distributor-arg=a2"
@@ -36,13 +37,14 @@
 // RUN: %clang -flto=thin %s -### -fuse-ld=lld --target=x86_64-linux-gnu \
 // RUN:   -fthinlto-distributor=d.exe -Werror >>%t_default.log 2>&1
 // RUN: FileCheck %s --input-file=%t_default.log --check-prefix=DEFAULT \
-// RUN:   --implicit-check-not=distributor --implicit-check-not=remote-compiler
+// RUN:   --implicit-check-not=distributor --implicit-check-not=remote-compiler \
+// RUN:   -DEXEEXT=%if system-windows||system-cygwin %{.exe%}
 
-// DEFAULT:      clang-name:[[CLANG:.*]]
+// DEFAULT:      clang-name:[[CLANG:.*]][[EXEEXT]]
 // DEFAULT-NEXT: prepend-arg:[[PREPEND_ARG:.*]]
 // DEFAULT:      ld.lld
 // DEFAULT-SAME: "--thinlto-distributor=d.exe"
-// DEFAULT-SAME: "--thinlto-remote-compiler={{[^"]*}}[[CLANG]]"
+// DEFAULT-SAME: "--thinlto-remote-compiler={{[^"]*}}[[CLANG]]{{([[EXEEXT]])?}}"
 // DEFAULT-SAME: [[PREPEND_ARG]]
 
 /// Check that nothing is forwarded when the compiler is not in LTO mode, and that

@@ -1,5 +1,5 @@
 // REQUIRES: x86-registered-target
-// UNSUPPORTED: target={{.*}}-macosx{{.*}}, target={{.*}}-darwin{{.*}}, target={{.*}}-aix{{.*}}, target={{.*}}-zos{{.*}}
+// UNSUPPORTED: target={{.*}}-macosx{{.*}}, target={{.*}}-darwin{{.*}}, target={{.*}}-aix{{.*}}, target={{.*}}-zos{{.*}}, target={{.*}}-cyg{{.*}}
 
 //
 // Generate all the types of files we can bundle.
