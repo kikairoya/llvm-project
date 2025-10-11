@@ -1,5 +1,8 @@
 REQUIRES: can-execute
 
+## Cygwin's permission support isn't perfect
+UNSUPPORTED: system-cygwin
+
 This tests that we abstract two peculiarities of unix in can_execute:
 
 * Directories are executable, but we don't want to try to execute them.
