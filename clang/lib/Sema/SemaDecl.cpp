@@ -3958,6 +3958,36 @@ bool Sema::MergeFunctionDecl(FunctionDecl *New, NamedDecl *&OldD, Scope *S,
     UndefinedButUsed.insert(std::make_pair(Old->getCanonicalDecl(),
                                            SourceLocation()));
 
+  if ((!Context.getTargetInfo().shouldDLLImportComdatSymbols() ||
+       !getLangOpts().DllExportInlines) &&
+      !Old->isInlined() && New->isInlined()) {
+    if (auto *MD = dyn_cast<CXXMethodDecl>(Old); MD) {
+      auto *Class = MD->getParent();
+      assert(Class && "MD->getParent() != nullptr");
+      auto *ClassAttr = getDLLAttr(Class);
+      auto *OldAttr = getDLLAttr(Old);
+      auto *NewAttr = getDLLAttr(New);
+      TemplateSpecializationKind TSK = Class->getTemplateSpecializationKind();
+      if (ClassAttr && !NewAttr && OldAttr && OldAttr->isInherited() &&
+          TSK != TSK_ExplicitInstantiationDeclaration &&
+          TSK != TSK_ExplicitInstantiationDefinition) {
+        if (Context.getTargetInfo().shouldDLLImportComdatSymbols()) {
+          InheritableAttr *NewAttr = nullptr;
+          if (ClassAttr->getKind() == attr::DLLExport) {
+            NewAttr = ::new (getASTContext())
+                DLLExportStaticLocalAttr(getASTContext(), *ClassAttr);
+          } else {
+            NewAttr = ::new (getASTContext())
+                DLLImportStaticLocalAttr(getASTContext(), *ClassAttr);
+          }
+          NewAttr->setInherited(true);
+          MD->addAttr(NewAttr);
+        }
+        MD->dropAttrs<DLLImportAttr, DLLExportAttr>();
+      }
+    }
+  }
+
   // If this redeclaration makes it newly gnu_inline, we don't want to warn
   // about it.
   if (New->hasAttr<GNUInlineAttr>() &&
