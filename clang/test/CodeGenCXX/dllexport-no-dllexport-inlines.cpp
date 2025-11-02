@@ -49,6 +49,15 @@ struct __declspec(dllexport) ExportedClass {
   // MINGW-DAG: define linkonce_odr dso_local noundef i32 @_ZN13ExportedClass39InlineOutclassDefFuncWithStaticVariableEv
   inline int InlineOutclassDefFuncWithStaticVariable();
 
+  // NOEXPORTINLINE-DAG: define weak_odr dso_local dllexport void @"?InlineLaterOutclassDefFunc@ExportedClass@@QEAAXXZ
+  // EXPORTINLINE-DAG: define weak_odr dso_local dllexport void @"?InlineLaterOutclassDefFunc@ExportedClass@@QEAAXXZ
+  // MINGW-DAG: define weak_odr dso_local dllexport void @_ZN13ExportedClass26InlineLaterOutclassDefFuncEv
+  void InlineLaterOutclassDefFunc();
+
+  // CHECK-DAG: define weak_odr dso_local dllexport noundef i32 @"?InlineLaterOutclassDefFuncWithStaticVariable@ExportedClass@@QEAAHXZ"
+  // MINGW-DAG: define weak_odr dso_local dllexport noundef i32 @_ZN13ExportedClass44InlineLaterOutclassDefFuncWithStaticVariableEv
+  int InlineLaterOutclassDefFuncWithStaticVariable();
+
   // CHECK-DAG: define dso_local dllexport void @"?OutoflineDefFunc@ExportedClass@@QEAAXXZ"
   // MINGW-DAG: define dso_local dllexport void @_ZN13ExportedClass16OutoflineDefFuncEv
   void OutoflineDefFunc();
@@ -64,14 +73,23 @@ inline int ExportedClass::InlineOutclassDefFuncWithStaticVariable() {
   return ++static_variable;
 }
 
+inline void ExportedClass::InlineLaterOutclassDefFunc() {}
+
+inline int ExportedClass::InlineLaterOutclassDefFuncWithStaticVariable() {
+  static int static_variable = 0;
+  return ++static_variable;
+}
+
 void ExportedClassUser() {
   ExportedClass a;
   a.InclassDefFunc();
   a.InlineOutclassDefFunc();
+  a.InlineLaterOutclassDefFunc();
 #if defined(__MINGW32__)
   a.InclassDefFuncWithStaticVariable();
   a.InclassDefFuncWithLambdaStaticVariable();
   a.InlineOutclassDefFuncWithStaticVariable();
+  a.InlineLaterOutclassDefFuncWithStaticVariable();
 #endif
 }
 
