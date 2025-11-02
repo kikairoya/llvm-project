@@ -31,6 +31,20 @@ struct BasicCase {
   EXCLUDE_ATTR __declspec(dllexport) void excludedExportedMethod() {}
   EXCLUDE_ATTR void notToBeInstantiated() {}
   EXCLUDE_ATTR __declspec(dllexport) void notToBeInstantiated_withExport() {}
+  struct nestedType {
+    void noAttrMethod() {}
+    __declspec(dllexport) void exportedMethod() {}
+    EXCLUDE_ATTR void excludedMethod() {}
+    EXCLUDE_ATTR __declspec(dllexport) void excludedExportedMethod() {}
+    EXCLUDE_ATTR void notToBeInstantiated() {}
+    EXCLUDE_ATTR __declspec(dllexport) void notToBeInstantiated_withExport() {}
+  };
+  struct EXCLUDE_ATTR nestedExcludedType {
+    void noAttrMethod() {}
+    __declspec(dllexport) void exportedMethod() {}
+    __declspec(dllexport) void notToBeInstantiated_withExport() {}
+    void notToBeInstantiated_noAttr() {}
+  };
 };
 
 /// Test that an exported explicit instantiation definition causes to export
@@ -39,11 +53,23 @@ template struct __declspec(dllexport) BasicCase<WithExportTag>;
 // MSC-DAG: define weak_odr dso_local dllexport void @"?noAttrMethod@?$BasicCase@UWithExportTag@@@@QEAAXXZ"
 // GNU-DAG: define weak_odr dso_local dllexport void @_ZN9BasicCaseI13WithExportTagE12noAttrMethodEv
 
+// MSC-DAG: define weak_odr dso_local void @"?noAttrMethod@nestedType@?$BasicCase@UWithExportTag@@@@QEAAXXZ"
+// GNU-DAG: define weak_odr dso_local dllexport void @_ZN9BasicCaseI13WithExportTagE10nestedType12noAttrMethodEv
+
+// MSC-DAG: define weak_odr dso_local dllexport void @"?exportedMethod@nestedType@?$BasicCase@UWithExportTag@@@@QEAAXXZ"
+// GNU-DAG: define weak_odr dso_local dllexport void @_ZN9BasicCaseI13WithExportTagE10nestedType14exportedMethodEv
+
 /// Test that a non-exported explicit instantiation definition instantiates
 /// non-exclued methods but not exports.
 template struct BasicCase<NoAttrTag>;
 // MSC-DAG: define weak_odr dso_local void @"?noAttrMethod@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
 // GNU-DAG: define weak_odr dso_local void @_ZN9BasicCaseI9NoAttrTagE12noAttrMethodEv
+
+// MSC-DAG: define weak_odr dso_local void @"?noAttrMethod@nestedType@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
+// GNU-DAG: define weak_odr dso_local void @_ZN9BasicCaseI9NoAttrTagE10nestedType12noAttrMethodEv
+
+// MSC-DAG: define weak_odr dso_local dllexport void @"?exportedMethod@nestedType@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
+// GNU-DAG: define weak_odr dso_local dllexport void @_ZN9BasicCaseI9NoAttrTagE10nestedType14exportedMethodEv
 
 /// Test that an excluded method isn't exported even if the previous explicit
 /// instantiation definition or the method itself is exported.
@@ -58,6 +84,22 @@ void useBasicCase() {
   // MSC-DAG: define linkonce_odr dso_local void @"?excludedExportedMethod@?$BasicCase@UWithExportTag@@@@QEAAXXZ"
   // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI13WithExportTagE22excludedExportedMethodEv
 
+  BasicCase<WithExportTag>::nestedType().excludedMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?excludedMethod@nestedType@?$BasicCase@UWithExportTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI13WithExportTagE10nestedType14excludedMethodEv
+
+  BasicCase<WithExportTag>::nestedType().excludedExportedMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?excludedExportedMethod@nestedType@?$BasicCase@UWithExportTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI13WithExportTagE10nestedType22excludedExportedMethodEv
+
+  BasicCase<WithExportTag>::nestedExcludedType().noAttrMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?noAttrMethod@nestedExcludedType@?$BasicCase@UWithExportTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI13WithExportTagE18nestedExcludedType12noAttrMethodEv
+
+  BasicCase<WithExportTag>::nestedExcludedType().exportedMethod();
+  // MSC-DAG: define weak_odr dso_local dllexport void @"?exportedMethod@nestedExcludedType@?$BasicCase@UWithExportTag@@@@QEAAXXZ"
+  // GNU-DAG: define weak_odr dso_local dllexport void @_ZN9BasicCaseI13WithExportTagE18nestedExcludedType14exportedMethodEv
+
   BasicCase<NoAttrTag>().excludedMethod();
   // MSC-DAG: define linkonce_odr dso_local void @"?excludedMethod@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
   // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI9NoAttrTagE14excludedMethodEv
@@ -66,6 +108,22 @@ void useBasicCase() {
   // MSC-DAG: define linkonce_odr dso_local void @"?excludedExportedMethod@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
   // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI9NoAttrTagE22excludedExportedMethodEv
 
+  BasicCase<NoAttrTag>::nestedType().excludedMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?excludedMethod@nestedType@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI9NoAttrTagE10nestedType14excludedMethodEv
+
+  BasicCase<NoAttrTag>::nestedType().excludedExportedMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?excludedExportedMethod@nestedType@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI9NoAttrTagE10nestedType22excludedExportedMethodEv
+
+  BasicCase<NoAttrTag>::nestedExcludedType().noAttrMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?noAttrMethod@nestedExcludedType@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI9NoAttrTagE18nestedExcludedType12noAttrMethodEv
+
+  BasicCase<NoAttrTag>::nestedExcludedType().exportedMethod();
+  // MSC-DAG: define weak_odr dso_local dllexport void @"?exportedMethod@nestedExcludedType@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
+  // GNU-DAG: define weak_odr dso_local dllexport void @_ZN9BasicCaseI9NoAttrTagE18nestedExcludedType14exportedMethodEv
+
   BasicCase<ImplicitTag>().excludedMethod();
   // MSC-DAG: define linkonce_odr dso_local void @"?excludedMethod@?$BasicCase@UImplicitTag@@@@QEAAXXZ"
   // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI11ImplicitTagE14excludedMethodEv
@@ -73,6 +131,23 @@ void useBasicCase() {
   BasicCase<ImplicitTag>().excludedExportedMethod();
   // MSC-DAG: define linkonce_odr dso_local void @"?excludedExportedMethod@?$BasicCase@UImplicitTag@@@@QEAAXXZ"
   // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI11ImplicitTagE22excludedExportedMethodEv
+
+  BasicCase<ImplicitTag>::nestedType().excludedMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?excludedMethod@nestedType@?$BasicCase@UImplicitTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI11ImplicitTagE10nestedType14excludedMethodEv
+
+  BasicCase<ImplicitTag>::nestedType().excludedExportedMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?excludedExportedMethod@nestedType@?$BasicCase@UImplicitTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI11ImplicitTagE10nestedType22excludedExportedMethodEv
+
+  BasicCase<ImplicitTag>::nestedExcludedType().noAttrMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?noAttrMethod@nestedExcludedType@?$BasicCase@UImplicitTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI11ImplicitTagE18nestedExcludedType12noAttrMethodEv
+
+  BasicCase<ImplicitTag>::nestedExcludedType().exportedMethod();
+  // MSC-DAG: define weak_odr dso_local dllexport void @"?exportedMethod@nestedExcludedType@?$BasicCase@UImplicitTag@@@@QEAAXXZ"
+  // GNU-DAG: define weak_odr dso_local dllexport void @_ZN9BasicCaseI11ImplicitTagE18nestedExcludedType14exportedMethodEv
+
 }
 
 // Test that a class-level dllexport attribute won't affect to excluded methods.
@@ -81,20 +156,41 @@ struct __declspec(dllexport) ExportWholeTemplate {
   void noAttrMethod() {}
   EXCLUDE_ATTR void excludedMethod() {}
   EXCLUDE_ATTR void notToBeInstantiated() {}
+  struct nestedType {
+    void noAttrMethod() {}
+  };
+  struct EXCLUDE_ATTR nestedExcludedType {
+    void noAttrMethod() {}
+    void notToBeInstantiated_noAttr() {}
+  };
 };
 
 template struct ExportWholeTemplate<NoAttrTag>;
 // MSC-DAG: define weak_odr dso_local dllexport void @"?noAttrMethod@?$ExportWholeTemplate@UNoAttrTag@@@@QEAAXXZ"
 // GNU-DAG: define weak_odr dso_local dllexport void @_ZN19ExportWholeTemplateI9NoAttrTagE12noAttrMethodEv
+// MSC-DAG: define weak_odr dso_local void @"?noAttrMethod@nestedType@?$ExportWholeTemplate@UNoAttrTag@@@@QEAAXXZ"
+// GNU-DAG: define weak_odr dso_local dllexport void @_ZN19ExportWholeTemplateI9NoAttrTagE10nestedType12noAttrMethodEv
 
 void useExportWholeTemplate() {
   ExportWholeTemplate<NoAttrTag>().excludedMethod();
   // MSC-DAG: define linkonce_odr dso_local void @"?excludedMethod@?$ExportWholeTemplate@UNoAttrTag@@@@QEAAXXZ"
   // GNU-DAG: define linkonce_odr dso_local void @_ZN19ExportWholeTemplateI9NoAttrTagE14excludedMethodEv
 
+  ExportWholeTemplate<NoAttrTag>::nestedExcludedType().noAttrMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?noAttrMethod@nestedExcludedType@?$ExportWholeTemplate@UNoAttrTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN19ExportWholeTemplateI9NoAttrTagE18nestedExcludedType12noAttrMethodEv
+
   ExportWholeTemplate<ImplicitTag>().excludedMethod();
   // MSC-DAG: define linkonce_odr dso_local void @"?excludedMethod@?$ExportWholeTemplate@UImplicitTag@@@@QEAAXXZ"
   // GNU-DAG: define linkonce_odr dso_local void @_ZN19ExportWholeTemplateI11ImplicitTagE14excludedMethodEv
+
+  ExportWholeTemplate<ImplicitTag>::nestedType().noAttrMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?noAttrMethod@nestedType@?$ExportWholeTemplate@UImplicitTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN19ExportWholeTemplateI11ImplicitTagE10nestedType12noAttrMethodEv
+
+  ExportWholeTemplate<ImplicitTag>::nestedExcludedType().noAttrMethod();
+  // MSC-DAG: define linkonce_odr dso_local void @"?noAttrMethod@nestedExcludedType@?$ExportWholeTemplate@UImplicitTag@@@@QEAAXXZ"
+  // GNU-DAG: define linkonce_odr dso_local void @_ZN19ExportWholeTemplateI11ImplicitTagE18nestedExcludedType12noAttrMethodEv
 }
 
 // Interaction with VTables.
