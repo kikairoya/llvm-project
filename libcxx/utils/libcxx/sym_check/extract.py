@@ -194,6 +194,40 @@ class ReadElfExtractor(object):
         return lines[start:end]
 
 
+class LLVMReadObjDLLExtractor(object):
+    """
+    LLVMReadObjDLLExtractor - Extract symbol lists from PE DLL using llvm-readobj.
+    """
+
+    @staticmethod
+    def find_tool():
+        """
+        Search for the llvm-readobj executable and return the path.
+        """
+        return shutil.which("llvm-readobj")
+
+    def __init__(self, static_lib):
+        """
+        Initialize the llvm-readobj executable and flags that will be used to
+        extract symbols from shared libraries.
+        """
+        self.readobj_exe = self.find_tool()
+        if self.readobj_exe is None:
+            # ERROR no llvm-readobj found
+            print("ERROR: Could not find llvm-readobj")
+            sys.exit(1)
+
+    def extract(self, lib):
+        """
+        Extract symbols from a library and return the results as a dict of
+        parsed symbols.
+        """
+        r = re.compile(" *Name: *(.*)")
+        out = subprocess.check_output([self.readobj_exe, "--coff-exports", lib]).decode()
+        matches = (r.match(l) for l in out.splitlines())
+        return [{"name": m.group(1), "is_defined":True, "type": ""} for m in matches if m]
+
+
 class AIXDumpExtractor(object):
     """
     AIXDumpExtractor - Extract symbol lists from libraries using AIX dump.
@@ -287,17 +321,25 @@ def is_static_library(lib_file):
         _, ext = os.path.splitext(lib_file)
         return ext == ".a"
 
+def is_dll(lib_file):
+    """
+    Determine if a given library is a DLL file.
+    """
+    _, ext = os.path.splitext(lib_file)
+    return ext == ".dll"
 
 def extract_symbols(lib_file, static_lib=None):
     """
     Extract and return a list of symbols extracted from a static or dynamic
-    library. The symbols are extracted using dump, nm or readelf. They are
-    then filtered and formated. Finally the symbols are made unique.
+    library. The symbols are extracted using dump, llvm-readobj, nm, or readelf.
+    They are then filtered and formated. Finally the symbols are made unique.
     """
     if static_lib is None:
         static_lib = is_static_library(lib_file)
     if sys.platform.startswith("aix"):
         extractor = AIXDumpExtractor(static_lib=static_lib)
+    elif is_dll(lib_file):
+        extractor = LLVMReadObjDLLExtractor(static_lib=static_lib)
     elif ReadElfExtractor.find_tool() and not static_lib:
         extractor = ReadElfExtractor(static_lib=static_lib)
     else:
