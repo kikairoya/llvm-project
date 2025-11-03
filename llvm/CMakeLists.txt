@@ -1308,6 +1308,15 @@ endif( "${CMAKE_SYSTEM_NAME}" MATCHES SunOS )
 # use EXPORT_SYMBOLS argument.
 set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 
+if (CYGWIN AND LLVM_EXPORT_SYMBOLS_FOR_PLUGINS)
+  # CMake sets CMAKE_EXE_EXPORTS_${lang}_FLAG to `-Wl,--export-all-symbols`
+  # for Cygwin. This is incompatible with LLVM_EXPORT_SYMBOLS_FOR_PLUGINS
+  # tweaks, so unset them.
+  set(CMAKE_EXE_EXPORTS_ASM_FLAG "")
+  set(CMAKE_EXE_EXPORTS_C_FLAG "")
+  set(CMAKE_EXE_EXPORTS_CXX_FLAG "")
+endif()
+
 include(AddLLVM)
 include(TableGen)
 
