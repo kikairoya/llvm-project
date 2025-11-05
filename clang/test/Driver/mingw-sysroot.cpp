@@ -1,4 +1,4 @@
-// UNSUPPORTED: system-windows
+// UNSUPPORTED: system-windows, system-cygwin
 
 // RUN: rm -rf %t.dir/testroot-gcc
 // RUN: mkdir -p %t.dir/testroot-gcc/bin

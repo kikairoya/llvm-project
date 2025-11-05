@@ -17,6 +17,7 @@
 #ifndef LLVM_CODEGEN_MACHINEFUNCTION_H
 #define LLVM_CODEGEN_MACHINEFUNCTION_H
 
+#include "llvm/ADT/Any.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/GraphTraits.h"
@@ -1494,6 +1495,8 @@ public:
     return ++DebugInstrNumberingCount;
   }
 };
+
+extern template struct LLVM_TEMPLATE_ABI Any::TypeId<const MachineFunction *>;
 
 //===--------------------------------------------------------------------===//
 // GraphTraits specializations for function basic block graphs (CFGs)

@@ -34,18 +34,22 @@ add_clang_library(clangDaemonTweaks OBJECT
   SwapIfBranches.cpp
 
   LINK_LIBS
-  clangAST
-  clangBasic
   clangDaemon
   clangdSupport
+
+  DEPENDS
+  omp_gen
+  ClangDriverOptions
+  )
+
+clang_target_link_libraries(clangDaemonTweaks
+  PRIVATE
+  clangAST
+  clangBasic
   clangFormat
   clangLex
   clangSema
   clangToolingCore
   clangToolingRefactoring
   clangToolingSyntax
-
-  DEPENDS
-  omp_gen
-  ClangDriverOptions
   )

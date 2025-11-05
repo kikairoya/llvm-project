@@ -3,7 +3,7 @@
 ; RUN: llc < %s %loadnewpmbye -last-words | FileCheck %s --check-prefix=CHECK-ACTIVE
 ; RUN: not llc < %s %loadnewpmbye -last-words -filetype=obj 2>&1 | FileCheck %s --check-prefix=CHECK-ERR
 ; REQUIRES: plugins, examples
-; UNSUPPORTED: target={{.*windows.*}}
+; UNSUPPORTED: (system-windows || system-cygwin) && !llvm-dylib
 ; Plugins are currently broken on AIX, at least in the CI.
 ; XFAIL: target={{.*}}-aix{{.*}}
 ; CHECK-ASM: somefunk:

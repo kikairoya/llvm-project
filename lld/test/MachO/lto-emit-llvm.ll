@@ -3,7 +3,7 @@
 ; Check that the --lto-emit-llvm option is handled correctly.
 ;
 ; RUN: opt %s -o %t.o
-; RUN: ld.lld --lto-emit-llvm %t.o -o %t.out.o
+; RUN: %lld --lto-emit-llvm %t.o -o %t.out.o
 ; RUN: llvm-dis < %t.out.o -o - | FileCheck %s
 ;
 ; CHECK: define hidden void @main()

@@ -282,6 +282,9 @@ if "aarch64" in config.host_arch:
 if not (config.build_shared_libs or config.link_llvm_dylib or config.link_clang_dylib):
     config.available_features.add("static-libs")
 
+if config.link_llvm_dylib:
+    config.available_features.add("llvm-dylib")
+
 # Plugins (loadable modules)
 if config.has_plugins and config.llvm_plugin_ext:
     config.available_features.add("plugins")
@@ -297,7 +300,8 @@ if config.clang_default_cxx_stdlib != "":
     )
 
 # As of 2011.08, crash-recovery tests still do not pass on FreeBSD.
-if platform.system() not in ["FreeBSD"]:
+# Cygwin has instability about crashing
+if platform.system() not in ["FreeBSD"] and sys.platform not in ["cygwin"]:
     config.available_features.add("crash-recovery")
 
 # ANSI escape sequences in non-dumb terminal
@@ -351,7 +355,7 @@ if re.match(r"^arm64(e)?-apple-(macos|darwin)", config.target_triple):
 
 # [PR18856] Depends to remove opened file. On win32, a file could be removed
 # only if all handles were closed.
-if platform.system() not in ["Windows"]:
+if platform.system() not in ["Windows"] and sys.platform not in ["cygwin"]:
     config.available_features.add("can-remove-opened-file")
 
 # Features
