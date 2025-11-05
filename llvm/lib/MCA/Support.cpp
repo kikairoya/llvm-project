@@ -108,5 +108,7 @@ double computeBlockRThroughput(const MCSchedModel &SM, unsigned DispatchWidth,
   return Max;
 }
 
+template class LLVM_EXPORT_TEMPLATE InstructionError<MCInst>;
+
 } // namespace mca
 } // namespace llvm

@@ -7378,14 +7378,16 @@ static void checkDLLAttributeRedeclaration(Sema &S, NamedDecl *OldDecl,
       OldDecl->dropAttr<DLLImportAttr>();
       NewDecl->dropAttr<DLLImportAttr>();
     }
-  } else if (IsInline && OldImportAttr && !IsMicrosoftABI) {
+  } else if (IsInline && OldImportAttr &&
+             (!IsMicrosoftABI || !S.getLangOpts().DllExportInlines)) {
     // In MinGW, seeing a function declared inline drops the dllimport
     // attribute.
     OldDecl->dropAttr<DLLImportAttr>();
     NewDecl->dropAttr<DLLImportAttr>();
-    S.Diag(NewDecl->getLocation(),
-           diag::warn_dllimport_dropped_from_inline_function)
-        << NewDecl << OldImportAttr;
+    if (!OldImportAttr->isInherited())
+      S.Diag(NewDecl->getLocation(),
+             diag::warn_dllimport_dropped_from_inline_function)
+          << NewDecl << OldImportAttr;
   }
 
   // A specialization of a class template member function is processed here

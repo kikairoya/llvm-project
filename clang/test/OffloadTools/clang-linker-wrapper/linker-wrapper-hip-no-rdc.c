@@ -1,6 +1,9 @@
 // REQUIRES: amdgpu-registered-target
 // REQUIRES: lld
 
+// clang-linker-wrapper doesn't work when LLD_DEFAULT_LD_LLD_IS_MINGW=ON
+// UNSUPPORTED: system-cygwin
+
 // Test HIP non-RDC linker wrapper behavior with new offload driver.
 // The linker wrapper should output .hipfb files directly without using -r option.
 

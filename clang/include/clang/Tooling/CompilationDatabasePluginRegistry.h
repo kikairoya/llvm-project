@@ -43,9 +43,6 @@ using CompilationDatabasePluginRegistry =
 } // namespace tooling
 } // namespace clang
 
-namespace llvm {
-extern template class CLANG_TEMPLATE_ABI
-    Registry<clang::tooling::CompilationDatabasePlugin>;
-} // namespace llvm
+LLVM_DECLARE_REGISTRY(clang::tooling::CompilationDatabasePluginRegistry)
 
 #endif // LLVM_CLANG_TOOLING_COMPILATIONDATABASEPLUGINREGISTRY_H

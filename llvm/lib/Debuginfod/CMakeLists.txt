@@ -5,7 +5,11 @@ endif()
 
 # Note: This isn't a component, since that could potentially add a libcurl
 # dependency to libLLVM.
-add_llvm_library(LLVMDebuginfod
+set(libtype STATIC)
+if (BUILD_SHARED_LIBS)
+  set(libtype)
+endif()
+add_llvm_library(LLVMDebuginfod ${libtype}
   BuildIDFetcher.cpp
   Debuginfod.cpp
 

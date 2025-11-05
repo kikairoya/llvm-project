@@ -8,6 +8,7 @@
 import sys
 import re
 import shlex
+import shutil
 from pathlib import Path
 
 from libcxx.test.dsl import *
@@ -124,6 +125,7 @@ def getSizeOptimizationFlag(cfg):
 
 def testClangTidy(cfg, version, executable):
     try:
+        executable = shutil.which(executable)
         if version in commandOutput(cfg, [f"{executable} --version"]):
             return executable
     except ConfigurationRuntimeError:

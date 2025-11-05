@@ -3189,8 +3189,6 @@ using PragmaHandlerRegistry = llvm::Registry<PragmaHandler>;
 
 } // namespace clang
 
-namespace llvm {
-extern template class CLANG_TEMPLATE_ABI Registry<clang::PragmaHandler>;
-} // namespace llvm
+LLVM_DECLARE_REGISTRY(clang::PragmaHandlerRegistry)
 
 #endif // LLVM_CLANG_LEX_PREPROCESSOR_H

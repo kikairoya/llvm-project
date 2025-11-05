@@ -10,7 +10,7 @@
 #include "clang/Tooling/ToolExecutorPluginRegistry.h"
 #include "clang/Tooling/Tooling.h"
 
-LLVM_INSTANTIATE_REGISTRY(clang::tooling::ToolExecutorPluginRegistry)
+LLVM_DEFINE_REGISTRY(clang::tooling::ToolExecutorPluginRegistry)
 
 namespace clang {
 namespace tooling {

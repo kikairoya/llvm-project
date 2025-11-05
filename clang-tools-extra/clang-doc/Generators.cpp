@@ -10,7 +10,7 @@
 #include "support/File.h"
 #include "llvm/Support/TimeProfiler.h"
 
-LLVM_INSTANTIATE_REGISTRY(clang::doc::GeneratorRegistry)
+LLVM_DEFINE_REGISTRY(clang::doc::GeneratorRegistry)
 
 using namespace llvm;
 using namespace llvm::json;

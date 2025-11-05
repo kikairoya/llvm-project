@@ -20,6 +20,8 @@
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
+#include "clang/Support/Compiler.h"
+#include "llvm/ADT/Any.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 
@@ -213,7 +215,18 @@ CachedConstAccessorsLattice<Base>::getOrCreateConstMethodReturnStorageLocation(
   return Loc;
 }
 
+class NoopLattice;
+
 } // namespace dataflow
 } // namespace clang
+
+namespace llvm {
+// This needs to be exported for ClangAnalysisFlowSensitiveTests so any_cast
+// uses the correct address of Any::TypeId from the clang shared library instead
+// of creating one in the test executable. when building with
+// CLANG_LINK_CLANG_DYLIB
+extern template struct CLANG_TEMPLATE_ABI Any::TypeId<
+    clang::dataflow::CachedConstAccessorsLattice<clang::dataflow::NoopLattice>>;
+} // namespace llvm
 
 #endif // LLVM_CLANG_ANALYSIS_FLOWSENSITIVE_CACHED_CONST_ACCESSORS_LATTICE_H

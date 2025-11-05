@@ -206,7 +206,7 @@ if(LLVM_INCLUDE_EXAMPLES)
       LLJITWithRemoteDebugging
       )
   endif()
-  if (NOT WIN32 AND NOT CYGWIN)
+  if (NOT (WIN32 OR CYGWIN) OR LLVM_LINK_LLVM_DYLIB)
     list(APPEND LLVM_TEST_DEPENDS
       Bye
       ExampleIRTransforms

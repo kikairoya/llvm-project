@@ -1,6 +1,7 @@
 ; REQUIRES: x86, non-root-user
 ;; Not supported on windows since we use permissions to deny the creation
 ; UNSUPPORTED: system-windows
+; UNSUPPORTED: system-cygwin
 
 ; RUN: opt -module-hash -module-summary %s -o %t.o
 ; RUN: opt -module-hash -module-summary %p/Inputs/lto-cache.ll -o %t2.o
