@@ -1234,7 +1234,7 @@ public:
 
   /// Retrieve the default argument, if any.
   const TemplateArgumentLoc &getDefaultArgument() const {
-    static const TemplateArgumentLoc NoneLoc;
+    static constexpr TemplateArgumentLoc NoneLoc{};
     return DefaultArgument.isSet() ? *DefaultArgument.get() : NoneLoc;
   }
 
@@ -1437,7 +1437,7 @@ public:
 
   /// Retrieve the default argument, if any.
   const TemplateArgumentLoc &getDefaultArgument() const {
-    static const TemplateArgumentLoc NoneLoc;
+    static constexpr TemplateArgumentLoc NoneLoc{};
     return DefaultArgument.isSet() ? *DefaultArgument.get() : NoneLoc;
   }
 
@@ -1721,7 +1721,7 @@ public:
 
   /// Retrieve the default argument, if any.
   const TemplateArgumentLoc &getDefaultArgument() const {
-    static const TemplateArgumentLoc NoneLoc;
+    static constexpr TemplateArgumentLoc NoneLoc{};
     return DefaultArgument.isSet() ? *DefaultArgument.get() : NoneLoc;
   }
 

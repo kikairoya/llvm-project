@@ -489,7 +489,7 @@ struct TemplateArgumentLocInfo {
     return cast<TemplateTemplateArgLocInfo *>(Pointer);
   }
 
-  TemplateArgumentLocInfo() {}
+  constexpr TemplateArgumentLocInfo() = default;
   TemplateArgumentLocInfo(TypeSourceInfo *Declarator) { Pointer = Declarator; }
 
   TemplateArgumentLocInfo(Expr *E) { Pointer = E; }
@@ -530,7 +530,7 @@ class TemplateArgumentLoc {
   TemplateArgumentLocInfo LocInfo;
 
 public:
-  TemplateArgumentLoc() {}
+  constexpr TemplateArgumentLoc() = default;
 
   TemplateArgumentLoc(const TemplateArgument &Argument,
                       TemplateArgumentLocInfo Opaque)

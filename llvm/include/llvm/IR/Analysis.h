@@ -19,6 +19,7 @@ namespace llvm {
 
 class Function;
 class Module;
+class MachineFunction;
 
 /// A special type used by analysis passes to provide an address that
 /// identifies that particular analysis pass type.
@@ -59,6 +60,7 @@ template <typename IRUnitT> AnalysisSetKey AllAnalysesOn<IRUnitT>::SetKey;
 
 extern template class LLVM_TEMPLATE_ABI AllAnalysesOn<Module>;
 extern template class LLVM_TEMPLATE_ABI AllAnalysesOn<Function>;
+extern template class LLVM_TEMPLATE_ABI AllAnalysesOn<MachineFunction>;
 
 /// Represents analyses that only rely on functions' control flow.
 ///

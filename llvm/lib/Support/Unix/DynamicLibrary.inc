@@ -33,8 +33,9 @@ void *DynamicLibrary::HandleSet::DLOpen(const char *File, std::string *Err) {
   }
 
 #ifdef __CYGWIN__
-  // Cygwin searches symbols only in the main
-  // with the handle of dlopen(NULL, RTLD_GLOBAL).
+  // On Cygwin environment, calling dlsym with handle of main program doesn't
+  // search symbols from loaded DLLs. That differs from other Unix-like systems,
+  // so RTLD_DEFAULT is required instead of process handle.
   if (!File)
     Handle = RTLD_DEFAULT;
 #endif
@@ -45,6 +46,19 @@ void *DynamicLibrary::HandleSet::DLOpen(const char *File, std::string *Err) {
 void DynamicLibrary::HandleSet::DLClose(void *Handle) { ::dlclose(Handle); }
 
 void *DynamicLibrary::HandleSet::DLSym(void *Handle, const char *Symbol) {
+#ifdef __CYGWIN__
+  // On Cygwin environment, passing RTLD_DEFAULT doesn't care of DLL search
+  // order. All of Cygwin programs load cygwin1.dll and msvcrt.dll but some
+  // symbols are defined on both DLLs (e.g. 'exit'). Searching manually from
+  // cygwin1.dll first ensures such duplicated symbols are picked from
+  // cygwin1.dll properly.
+  // FIXME: DLL name may differ (e.g. msys-2.0.dll).
+  if (Handle == RTLD_DEFAULT) {
+    void *CygDLL = ::dlopen("cygwin1.dll", RTLD_NOLOAD);
+    void *F = ::dlsym(CygDLL, Symbol);
+    return F ? F : ::dlsym(RTLD_DEFAULT, Symbol);
+  }
+#endif
   return ::dlsym(Handle, Symbol);
 }
 

@@ -58,6 +58,9 @@ public:
   explicit operator bool() const { return !isNull(); }
 
 private:
+  friend struct llvm::DenseMapInfo<clang::clangd::SymbolID>;
+  explicit constexpr SymbolID(uint8_t Key1, uint8_t Key2)
+      : HashValue{Key1, Key2} {}
   using IntTy = uint64_t;
   static_assert(sizeof(IntTy) == RawSize);
   std::array<uint8_t, RawSize> HashValue{};
@@ -81,13 +84,11 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, const SymbolID &ID);
 namespace llvm {
 // Support SymbolIDs as DenseMap keys.
 template <> struct DenseMapInfo<clang::clangd::SymbolID> {
-  static inline clang::clangd::SymbolID getEmptyKey() {
-    static clang::clangd::SymbolID EmptyKey("EMPTYKEY");
-    return EmptyKey;
+  static constexpr clang::clangd::SymbolID getEmptyKey() {
+    return clang::clangd::SymbolID(0, 1);
   }
-  static inline clang::clangd::SymbolID getTombstoneKey() {
-    static clang::clangd::SymbolID TombstoneKey("TOMBSTONEKEY");
-    return TombstoneKey;
+  static constexpr clang::clangd::SymbolID getTombstoneKey() {
+    return clang::clangd::SymbolID(1, 0);
   }
   static unsigned getHashValue(const clang::clangd::SymbolID &Sym) {
     return hash_value(Sym);
