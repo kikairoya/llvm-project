@@ -79,7 +79,7 @@ using namespace clang;
 /// Minimum distance between two check points, in tokens.
 static constexpr unsigned CheckPointStepSize = 1024;
 
-LLVM_INSTANTIATE_REGISTRY(PragmaHandlerRegistry)
+LLVM_DEFINE_REGISTRY(PragmaHandlerRegistry)
 
 ExternalPreprocessorSource::~ExternalPreprocessorSource() = default;
 

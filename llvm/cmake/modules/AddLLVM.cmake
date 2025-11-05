@@ -626,6 +626,17 @@ function(llvm_add_library name)
     if(NOT LLVM_ENABLE_PIC)
       set(ARG_DISABLE_PCH_REUSE TRUE)
     endif()
+    if(ARG_PLUGIN_TOOL AND (WIN32 OR CYGWIN))
+      if (TARGET ${ARG_PLUGIN_TOOL})
+        get_target_property(plugin_tool_exporting ${ARG_PLUGIN_TOOL} ENABLE_EXPORTS)
+        if(NOT plugin_tool_exporting)
+          message(WARNING "PLUGIN_TOOL for ${name} is ignored -- ${ARG_PLUGIN_TOOL} is not configured as a plugin target.")
+          set(ARG_PLUGIN_TOOL)
+        endif()
+      else()
+        message(STATUS "PLUGIN_TOOL ${ARG_PLUGIN_TOOL} for ${name} is not a valid target -- assuming that will be defined later.")
+      endif()
+    endif()
   else()
     if(ARG_PLUGIN_TOOL)
       message(WARNING "PLUGIN_TOOL without MODULE doesn't make sense.")
@@ -858,7 +869,7 @@ function(llvm_add_library name)
     set(libtype PRIVATE)
   endif()
 
-  if(ARG_MODULE AND LLVM_EXPORT_SYMBOLS_FOR_PLUGINS AND ARG_PLUGIN_TOOL AND (WIN32 OR CYGWIN))
+  if(ARG_MODULE AND ARG_PLUGIN_TOOL AND (WIN32 OR CYGWIN))
     # On DLL platforms symbols are imported from the tool by linking against it.
     set(llvm_libs ${ARG_PLUGIN_TOOL})
   elseif (NOT ARG_COMPONENT_LIB)
@@ -1228,6 +1239,14 @@ macro(add_llvm_executable name)
     add_llvm_symbol_exports( ${name} ${LLVM_EXPORTED_SYMBOL_FILE} )
   endif(LLVM_EXPORTED_SYMBOL_FILE)
 
+  # The default import library suffix that cmake uses for cygwin/mingw is
+  # ".dll.a", but for clang.exe that causes a collision with libclang.dll,
+  # where the import libraries of both get named libclang.dll.a. Use a suffix
+  # of ".exe.a" to avoid this.
+  if(CYGWIN OR MINGW)
+    set_target_properties(${name} PROPERTIES IMPORT_SUFFIX ".exe.a")
+  endif()
+
   if (DEFINED LLVM_ENABLE_EXPORTED_SYMBOLS_IN_EXECUTABLES AND
       NOT LLVM_ENABLE_EXPORTED_SYMBOLS_IN_EXECUTABLES AND
       NOT ARG_EXPORT_SYMBOLS)
@@ -1459,52 +1478,44 @@ function(process_llvm_pass_plugins)
   endif()
 endfunction()
 
-function(export_executable_symbols target)
-  if (LLVM_EXPORTED_SYMBOL_FILE)
-    # The symbol file should contain the symbols we want the executable to
-    # export
-    set_target_properties(${target} PROPERTIES ENABLE_EXPORTS 1)
-  elseif (LLVM_EXPORT_SYMBOLS_FOR_PLUGINS)
-    # Extract the symbols to export from the static libraries that the
-    # executable links against.
-    set_target_properties(${target} PROPERTIES ENABLE_EXPORTS 1)
-    set(exported_symbol_file ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${target}.symbols)
-    # We need to consider not just the direct link dependencies, but also the
-    # transitive link dependencies. Do this by starting with the set of direct
-    # dependencies, then the dependencies of those dependencies, and so on.
-    get_target_property(new_libs ${target} LINK_LIBRARIES)
-    set(link_libs ${new_libs})
-    while(NOT "${new_libs}" STREQUAL "")
-      foreach(lib ${new_libs})
-        if(TARGET ${lib})
-          # If this is a ALIAS target, continue with its aliasee instead.
-          get_target_property(aliased_lib ${lib} ALIASED_TARGET)
-          if(aliased_lib)
-             set(new_libs ${lib_aliased_target})
-             list(APPEND newer_libs ${aliased_lib})
-             continue()
-          endif()
-
-          get_target_property(lib_type ${lib} TYPE)
-          if("${lib_type}" STREQUAL "STATIC_LIBRARY")
-            list(APPEND static_libs ${lib})
-          else()
-            list(APPEND other_libs ${lib})
-          endif()
-          get_target_property(transitive_libs ${lib} INTERFACE_LINK_LIBRARIES)
-          foreach(transitive_lib ${transitive_libs})
-            if(TARGET ${transitive_lib} AND NOT ${transitive_lib} IN_LIST link_libs)
-              list(APPEND newer_libs ${transitive_lib})
-              list(APPEND link_libs ${transitive_lib})
-            endif()
-          endforeach(transitive_lib)
+function(do_export_executable_symbols_for_plugins target exported_symbol_file)
+  # We need to consider not just the direct link dependencies, but also the
+  # transitive link dependencies. Do this by starting with the set of direct
+  # dependencies, then the dependencies of those dependencies, and so on.
+  get_target_property(new_libs ${target} LINK_LIBRARIES)
+  set(link_libs ${new_libs})
+  while(NOT "${new_libs}" STREQUAL "")
+    foreach(lib ${new_libs})
+      if(TARGET ${lib})
+        # If this is a ALIAS target, continue with its aliasee instead.
+        get_target_property(aliased_lib ${lib} ALIASED_TARGET)
+        if(aliased_lib)
+          set(new_libs ${lib_aliased_target})
+          list(APPEND newer_libs ${aliased_lib})
+          continue()
         endif()
-      endforeach(lib)
-      set(new_libs ${newer_libs})
-      set(newer_libs "")
-    endwhile()
-    list(REMOVE_DUPLICATES static_libs)
-    if (MSVC)
+
+        get_target_property(lib_type ${lib} TYPE)
+        if("${lib_type}" STREQUAL "STATIC_LIBRARY")
+          list(APPEND static_libs ${lib})
+        else()
+          list(APPEND other_libs ${lib})
+        endif()
+        get_target_property(transitive_libs ${lib} INTERFACE_LINK_LIBRARIES)
+        foreach(transitive_lib ${transitive_libs})
+          if(TARGET ${transitive_lib} AND NOT ${transitive_lib} IN_LIST link_libs)
+            list(APPEND newer_libs ${transitive_lib})
+            list(APPEND link_libs ${transitive_lib})
+          endif()
+        endforeach(transitive_lib)
+      endif()
+    endforeach(lib)
+    set(new_libs ${newer_libs})
+    set(newer_libs "")
+  endwhile()
+  list(REMOVE_DUPLICATES static_libs)
+  if(static_libs)
+    if (MSVC OR CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC")
       set(mangling microsoft)
     else()
       set(mangling itanium)
@@ -1523,22 +1534,65 @@ function(export_executable_symbols target)
                          ${static_libs} ${llvm_nm_target} ${llvm_readobj_target}
                        VERBATIM
                        COMMENT "Generating export list for ${target}")
-    add_llvm_symbol_exports( ${target} ${exported_symbol_file} )
-    # If something links against this executable then we want a
-    # transitive link against only the libraries whose symbols
-    # we aren't exporting.
-    set_target_properties(${target} PROPERTIES INTERFACE_LINK_LIBRARIES "${other_libs}")
-    # The default import library suffix that cmake uses for cygwin/mingw is
-    # ".dll.a", but for clang.exe that causes a collision with libclang.dll,
-    # where the import libraries of both get named libclang.dll.a. Use a suffix
-    # of ".exe.a" to avoid this.
-    if(CYGWIN OR MINGW)
-      set_target_properties(${target} PROPERTIES IMPORT_SUFFIX ".exe.a")
+  else()
+    # When shared or dylib builds, static_libs can be empty.
+    file(GENERATE OUTPUT ${exported_symbol_file} CONTENT "")
+  endif()
+  add_llvm_symbol_exports( ${target} ${exported_symbol_file} )
+  # If something links against this executable then we want a
+  # transitive link against only the libraries whose symbols
+  # we aren't exporting.
+  set_target_properties(${target} PROPERTIES INTERFACE_LINK_LIBRARIES "${other_libs}")
+endfunction()
+
+function(do_export_all_symbols_for_plugins target)
+  target_link_options(${target} PRIVATE "LINKER:--export-all-symbols")
+  get_target_property(libs ${target} LINK_LIBRARIES)
+  set(shared_libs)
+  foreach(lib ${libs})
+    if(TARGET ${lib})
+      get_target_property(lib_type ${lib} TYPE)
+      if(${lib_type} STREQUAL "SHARED_LIBRARY")
+        list(APPEND shared_libs ${lib})
+      endif()
     endif()
+  endforeach(lib)
+  set_target_properties(${target} PROPERTIES INTERFACE_LINK_LIBRARIES "${shared_libs}")
+endfunction()
+
+function(export_executable_symbols target)
+  if (LLVM_EXPORTED_SYMBOL_FILE)
+    # The symbol file should contain the symbols we want the executable to
+    # export
+    set_target_properties(${target} PROPERTIES ENABLE_EXPORTS 1)
+  elseif (LLVM_EXPORT_SYMBOLS_FOR_PLUGINS)
+    # Extract the symbols to export from the static libraries that the
+    # executable links against.
+    set_target_properties(${target} PROPERTIES ENABLE_EXPORTS 1)
+    set(exported_symbol_file ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${target}.symbols)
+    # Defer the actual process of exporting since dependants might not
+    # registered yet; e.g. exporting from `clang` is called before
+    # `clang-cpp`(clang-shlib) is registered.
+    cmake_language(EVAL CODE "
+      cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR}
+        CALL do_export_executable_symbols_for_plugins [[${target}]] [[${exported_symbol_file}]]
+      )
+    ")
+  elseif((MINGW OR CYGWIN) AND (BUILD_SHARED_LIBS OR LLVM_LINK_LLVM_DYLIB))
+    # On Windows auto-exporting everything from a static-linked executable
+    # doesn't work because of the limit on the size of the exported symbol table.
+    # Shared or dylib builds reduce symbols per image, therefore enable
+    # exporting when those conditions.
+    # Since MSVC-mode linkers (link.exe or lld-link) don't have "export everything",
+    # they require LLVM_EXPORT_SYMBOLS_FOR_PLUGINS.
+    set_target_properties(${target} PROPERTIES ENABLE_EXPORTS 1)
+    cmake_language(EVAL CODE "
+      cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR}
+        CALL do_export_all_symbols_for_plugins [[${target}]]
+      )
+    ")
   elseif(NOT (WIN32 OR CYGWIN))
-    # On Windows auto-exporting everything doesn't work because of the limit on
-    # the size of the exported symbol table, but on other platforms we can do
-    # it without any trouble.
+    # On non-Windows platforms, we can export everything without any trouble.
     set_target_properties(${target} PROPERTIES ENABLE_EXPORTS 1)
     # CMake doesn't set CMAKE_EXE_EXPORTS_${lang}_FLAG on Solaris, so
     # ENABLE_EXPORTS has no effect.  While Solaris ld defaults to -rdynamic

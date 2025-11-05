@@ -2,6 +2,8 @@
 // diff the result against the original.
 
 // REQUIRES: plugins
+// UNSUPPORTED: system-windows
+// UNSUPPORTED: system-cygwin
 
 // RUN: rm -rf %t
 // RUN: mkdir -p %t

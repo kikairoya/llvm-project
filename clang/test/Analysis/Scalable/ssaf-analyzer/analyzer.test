@@ -1,6 +1,8 @@
 // Tests for clang-ssaf-analyzer that require plugin support.
 
 // REQUIRES: plugins
+// UNSUPPORTED: system-windows
+// UNSUPPORTED: system-cygwin
 
 // RUN: rm -rf %t
 // RUN: mkdir -p %t

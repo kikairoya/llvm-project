@@ -331,6 +331,8 @@ endif()
 option(LIBCXX_HERMETIC_STATIC_LIBRARY
   "Do not export any symbols from the static library." ${LIBCXX_HERMETIC_STATIC_LIBRARY_DEFAULT})
 
+option(LIBCXX_ENABLE_TEST_CLANG_TIDY "Enable clang-tidy checking." ON)
+
 #===============================================================================
 # Check option configurations
 #===============================================================================

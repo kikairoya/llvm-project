@@ -22,7 +22,7 @@
 
 using namespace Fortran::frontend;
 
-LLVM_INSTANTIATE_REGISTRY(FrontendPluginRegistry)
+LLVM_DEFINE_REGISTRY(FrontendPluginRegistry)
 
 void FrontendAction::setCurrentInput(const FrontendInputFile &input) {
   this->currentInput = input;

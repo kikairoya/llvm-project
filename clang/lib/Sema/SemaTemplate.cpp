@@ -10195,8 +10195,8 @@ static bool ScopeSpecifierHasTemplateId(const CXXScopeSpec &SS) {
 
 /// Make a dllexport or dllimport attr on a class template specialization take
 /// effect.
-static void dllExportImportClassTemplateSpecialization(
-    Sema &S, ClassTemplateSpecializationDecl *Def) {
+static void dllExportImportClassTemplateSpecialization(Sema &S,
+                                                       CXXRecordDecl *Def) {
   auto *A = cast_or_null<InheritableAttr>(getDLLAttr(Def));
   assert(A && "dllExportImportClassTemplateSpecialization called "
               "on Def without dllexport or dllimport");
@@ -10261,23 +10261,32 @@ DeclResult Sema::ActOnExplicitInstantiation(
                                        ? TSK_ExplicitInstantiationDefinition
                                        : TSK_ExplicitInstantiationDeclaration;
 
+  bool ShouldIgnoreDLLAttr = false;
+  const ParsedAttr *AttachedExportAttr = nullptr;
+  const ParsedAttr *AttachedImportAttr = nullptr;
+  for (const ParsedAttr &AL : Attr) {
+    if (AL.getKind() == ParsedAttr::AT_DLLExport)
+      AttachedExportAttr = &AL;
+    else if (AL.getKind() == ParsedAttr::AT_DLLImport)
+      AttachedImportAttr = &AL;
+  }
+
   if (TSK == TSK_ExplicitInstantiationDeclaration &&
       !Context.getTargetInfo().getTriple().isOSCygMing()) {
     // Check for dllexport class template instantiation declarations,
     // except for MinGW mode.
-    for (const ParsedAttr &AL : Attr) {
-      if (AL.getKind() == ParsedAttr::AT_DLLExport) {
-        Diag(ExternLoc,
-             diag::warn_attribute_dllexport_explicit_instantiation_decl);
-        Diag(AL.getLoc(), diag::note_attribute);
-        break;
-      }
+    if (AttachedExportAttr) {
+      Diag(ExternLoc,
+           diag::warn_attribute_dllexport_explicit_instantiation_decl);
+      Diag(AttachedExportAttr->getLoc(), diag::note_attribute);
+      ShouldIgnoreDLLAttr = true;
     }
 
     if (auto *A = ClassTemplate->getTemplatedDecl()->getAttr<DLLExportAttr>()) {
       Diag(ExternLoc,
            diag::warn_attribute_dllexport_explicit_instantiation_decl);
       Diag(A->getLocation(), diag::note_attribute);
+      ShouldIgnoreDLLAttr = true;
     }
   }
 
@@ -10285,20 +10294,11 @@ DeclResult Sema::ActOnExplicitInstantiation(
   // instantiation declarations for most purposes.
   bool DLLImportExplicitInstantiationDef = false;
   if (TSK == TSK_ExplicitInstantiationDefinition &&
-      Context.getTargetInfo().getCXXABI().isMicrosoft()) {
+      Context.getTargetInfo().shouldDLLImportComdatSymbols()) {
     // Check for dllimport class template instantiation definitions.
     bool DLLImport =
         ClassTemplate->getTemplatedDecl()->getAttr<DLLImportAttr>();
-    for (const ParsedAttr &AL : Attr) {
-      if (AL.getKind() == ParsedAttr::AT_DLLImport)
-        DLLImport = true;
-      if (AL.getKind() == ParsedAttr::AT_DLLExport) {
-        // dllexport trumps dllimport here.
-        DLLImport = false;
-        break;
-      }
-    }
-    if (DLLImport) {
+    if ((DLLImport || AttachedImportAttr) && !AttachedExportAttr) {
       TSK = TSK_ExplicitInstantiationDeclaration;
       DLLImportExplicitInstantiationDef = true;
     }
@@ -10330,28 +10330,30 @@ DeclResult Sema::ActOnExplicitInstantiation(
       Context.getTargetInfo().getTriple().isOSCygMing()) {
     // Check for dllexport class template instantiation definitions in MinGW
     // mode, if a previous declaration of the instantiation was seen.
-    for (const ParsedAttr &AL : Attr) {
-      if (AL.getKind() == ParsedAttr::AT_DLLExport) {
-        if (PrevDecl->hasAttr<DLLExportAttr>()) {
-          Diag(AL.getLoc(), diag::warn_attr_dllexport_explicit_inst_def);
-        } else {
-          Diag(AL.getLoc(),
-               diag::warn_attr_dllexport_explicit_inst_def_mismatch);
-          Diag(PrevDecl->getLocation(), diag::note_prev_decl_missing_dllexport);
-        }
-        break;
+    if (AttachedExportAttr) {
+      if (PrevDecl->hasAttr<DLLExportAttr>()) {
+        Diag(AttachedExportAttr->getLoc(),
+             diag::warn_attr_dllexport_explicit_inst_def);
+      } else {
+        Diag(AttachedExportAttr->getLoc(),
+             diag::warn_attr_dllexport_explicit_inst_def_mismatch);
+        Diag(PrevDecl->getLocation(), diag::note_prev_decl_missing_dllexport);
       }
+      ShouldIgnoreDLLAttr = true;
+    } else if (AttachedImportAttr) {
+      Diag(AttachedImportAttr->getLoc(),
+           diag::warn_attribute_dllimport_explicit_instantiation_def);
+      ShouldIgnoreDLLAttr = true;
     }
   }
 
   if (TSK == TSK_ExplicitInstantiationDefinition && PrevDecl &&
       !Context.getTargetInfo().getTriple().isWindowsGNUEnvironment() &&
-      llvm::none_of(Attr, [](const ParsedAttr &AL) {
-        return AL.getKind() == ParsedAttr::AT_DLLExport;
-      })) {
+      !AttachedExportAttr) {
     if (const auto *DEA = PrevDecl->getAttr<DLLExportOnDeclAttr>()) {
       Diag(TemplateLoc, diag::warn_dllexport_on_decl_ignored);
       Diag(DEA->getLoc(), diag::note_dllexport_on_decl);
+      ShouldIgnoreDLLAttr = true;
     }
   }
 
@@ -10423,7 +10425,10 @@ DeclResult Sema::ActOnExplicitInstantiation(
   Specialization->setTemplateKeywordLoc(TemplateLoc);
   Specialization->setBraceRange(SourceRange());
 
-  bool PreviouslyDLLExported = Specialization->hasAttr<DLLExportAttr>();
+  bool PreviouslyDLLExported = Specialization->hasAttr<DLLExportAttr>() ||
+                               (PrevDecl && PrevDecl->hasAttr<DLLExportAttr>());
+  bool PreviouslyDLLImported = Specialization->hasAttr<DLLImportAttr>() ||
+                               (PrevDecl && PrevDecl->hasAttr<DLLImportAttr>());
   ProcessDeclAttributeList(S, Specialization, Attr);
   ProcessAPINotes(Specialization);
 
@@ -10459,11 +10464,12 @@ DeclResult Sema::ActOnExplicitInstantiation(
   ClassTemplateSpecializationDecl *Def
     = cast_or_null<ClassTemplateSpecializationDecl>(
                                               Specialization->getDefinition());
-  if (!Def)
+  if (!Def) {
     InstantiateClassTemplateSpecialization(TemplateNameLoc, Specialization, TSK,
                                            /*Complain=*/true,
                                            CTAI.StrictPackMatch);
-  else if (TSK == TSK_ExplicitInstantiationDefinition) {
+    ShouldIgnoreDLLAttr = true;
+  } else if (TSK == TSK_ExplicitInstantiationDefinition) {
     MarkVTableUsed(TemplateNameLoc, Specialization, true);
     Specialization->setPointOfInstantiation(Def->getPointOfInstantiation());
   }
@@ -10480,55 +10486,122 @@ DeclResult Sema::ActOnExplicitInstantiation(
          DLLImportExplicitInstantiationDef)) {
       // FIXME: Need to notify the ASTMutationListener that we did this.
       Def->setTemplateSpecializationKind(TSK);
-
-      if (!getDLLAttr(Def) && getDLLAttr(Specialization) &&
-          Context.getTargetInfo().shouldDLLImportComdatSymbols()) {
-        // An explicit instantiation definition can add a dll attribute to a
-        // template with a previous instantiation declaration. MinGW doesn't
-        // allow this.
-        auto *A = cast<InheritableAttr>(
-            getDLLAttr(Specialization)->clone(getASTContext()));
-        A->setInherited(true);
-        Def->addAttr(A);
-        dllExportImportClassTemplateSpecialization(*this, Def);
-      }
     }
 
-    // Fix a TSK_ImplicitInstantiation followed by a
-    // TSK_ExplicitInstantiationDefinition
-    bool NewlyDLLExported =
-        !PreviouslyDLLExported && Specialization->hasAttr<DLLExportAttr>();
-    if (Old_TSK == TSK_ImplicitInstantiation && NewlyDLLExported &&
-        Context.getTargetInfo().shouldDLLImportComdatSymbols()) {
-      // An explicit instantiation definition can add a dll attribute to a
-      // template with a previous implicit instantiation. MinGW doesn't allow
-      // this. We limit clang to only adding dllexport, to avoid potentially
-      // strange codegen behavior. For example, if we extend this conditional
-      // to dllimport, and we have a source file calling a method on an
-      // implicitly instantiated template class instance and then declaring a
-      // dllimport explicit instantiation definition for the same template
-      // class, the codegen for the method call will not respect the dllimport,
-      // while it will with cl. The Def will already have the DLL attribute,
-      // since the Def and Specialization will be the same in the case of
-      // Old_TSK == TSK_ImplicitInstantiation, and we already added the
-      // attribute to the Specialization; we just need to make it take effect.
-      assert(Def == Specialization &&
-             "Def and Specialization should match for implicit instantiation");
-      dllExportImportClassTemplateSpecialization(*this, Def);
-    }
+    bool NewlyDLLExported = !PreviouslyDLLExported && AttachedExportAttr &&
+                            Specialization->hasAttr<DLLExportAttr>();
+    bool NewlyDLLImported = !PreviouslyDLLImported && AttachedImportAttr &&
+                            Specialization->hasAttr<DLLImportAttr>();
 
-    // In MinGW mode, export the template instantiation if the declaration
-    // was marked dllexport.
+    // In MinGW mode, an exported explicit instantiation declaration makes
+    // subsequent explicit definition to be exported.
     if (PrevDecl_TSK == TSK_ExplicitInstantiationDeclaration &&
+        TSK == TSK_ExplicitInstantiationDefinition &&
         Context.getTargetInfo().getTriple().isOSCygMing() &&
-        PrevDecl->hasAttr<DLLExportAttr>()) {
-      dllExportImportClassTemplateSpecialization(*this, Def);
+        PreviouslyDLLExported && !NewlyDLLExported) {
+      auto *A = cast<InheritableAttr>(
+          PrevDecl->getAttr<DLLExportAttr>()->clone(getASTContext()));
+      A->setInherited(true);
+      Specialization->addAttr(A);
+      NewlyDLLExported = true;
     }
+
+    if ((NewlyDLLExported && PreviouslyDLLImported) ||
+        (NewlyDLLImported && PreviouslyDLLExported) ||
+        (!NewlyDLLExported && !NewlyDLLImported))
+      ShouldIgnoreDLLAttr = true;
 
     // Set the template specialization kind. Make sure it is set before
     // instantiating the members which will trigger ASTConsumer callbacks.
     Specialization->setTemplateSpecializationKind(TSK);
+
+    SmallVector<CXXRecordDecl *, 4> NestedClasses{Specialization};
+    // An explicit instantiation can add a dll attribute to a template with a
+    // previous implicit instantiation.
+    if (!ShouldIgnoreDLLAttr) {
+      // For the dllimport attribute, we ignore it if any implicitly instantiate
+      // member is already odr-used, to prevent the codegen for the method call
+      // will not respect the dllimport, while it will with cl.
+      static constexpr auto isUsedImplicitlyInstantiatedMember =
+          [](Decl *Member) {
+            if (Member->hasAttr<ExcludeFromExplicitInstantiationAttr>())
+              return false;
+            auto *VD = dyn_cast<VarDecl>(Member);
+            auto *MD = dyn_cast<CXXMethodDecl>(Member);
+            auto MemberTSK = VD   ? VD->getTemplateSpecializationKind()
+                             : MD ? MD->getTemplateSpecializationKind()
+                                  : TSK_Undeclared;
+            return MemberTSK == TSK_ImplicitInstantiation && Member->isUsed();
+          };
+
+      bool MemberAlreadyUsed = false;
+      if (Context.getTargetInfo().getTriple().isOSCygMing()) {
+        // Apply to nested classes recursively in MinGW mode only.
+        for (size_t i = 0; i < NestedClasses.size() && !MemberAlreadyUsed;
+             ++i) {
+          CXXRecordDecl *Class = NestedClasses[i];
+          for (Decl *Member : Class->decls()) {
+            if (Member->hasAttr<ExcludeFromExplicitInstantiationAttr>())
+              continue;
+            if (NewlyDLLImported) {
+              MemberAlreadyUsed = isUsedImplicitlyInstantiatedMember(Member);
+              if (MemberAlreadyUsed)
+                break;
+            }
+            if (auto *NestedRD = dyn_cast<CXXRecordDecl>(Member);
+                NestedRD && NestedRD->hasDefinition() &&
+                NestedRD->getTemplateSpecializationKind() ==
+                    TSK_ImplicitInstantiation)
+              NestedClasses.push_back(NestedRD);
+          }
+        }
+      } else {
+        MemberAlreadyUsed =
+            NewlyDLLImported &&
+            llvm::any_of(Def->decls(), isUsedImplicitlyInstantiatedMember);
+      }
+      if (MemberAlreadyUsed) {
+        ShouldIgnoreDLLAttr = true;
+        if (Context.getTargetInfo().getTriple().isOSCygMing() &&
+            TSK == TSK_ExplicitInstantiationDeclaration && NewlyDLLImported) {
+          // In MinGW mode, all undefined symbols are also searched from DLLs
+          // even if they were not declared with dllimport, so doesn't warn
+          // about ignoring dllimport.
+        } else {
+          const ParsedAttr *A =
+              (AttachedImportAttr ? AttachedImportAttr : AttachedExportAttr);
+          Diag(A->getLoc(), diag::warn_dllattr_ignored_already_instantiated)
+              << A;
+          Diag(Def->getPointOfInstantiation(),
+               diag::note_instantiation_required_here)
+              << /*implicit|explicit=*/0;
+        }
+      } else {
+        NestedClasses.erase(NestedClasses.begin());
+        dllExportImportClassTemplateSpecialization(*this, Specialization);
+        if (Def != Specialization) {
+          if (!getDLLAttr(Def)) {
+            // Apply the attribute to previously instantiated entities also.
+            auto *A = cast<InheritableAttr>(getDLLAttr(Specialization)->clone(getASTContext()));
+            A->setInherited(true);
+            Def->addAttr(A);
+          }
+          dllExportImportClassTemplateSpecialization(*this, Def);
+        }
+      }
+    }
+
     InstantiateClassTemplateSpecializationMembers(TemplateNameLoc, Def, TSK);
+    if (!ShouldIgnoreDLLAttr) {
+      for (CXXRecordDecl *RD : NestedClasses) {
+        if (getDLLAttr(RD)) {
+          // Affect DLLAttr to nested classes which was implicitly instantiated
+          // before.
+          RD->setTemplateSpecializationKind(TSK);
+          dllExportImportClassTemplateSpecialization(*this, RD);
+        }
+      }
+    }
   } else {
 
     // Set the template specialization kind.

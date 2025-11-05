@@ -143,11 +143,11 @@ public:
 /// GCMetadataPrinterRegistery as well.
 using GCRegistry = Registry<GCStrategy>;
 
-extern template class LLVM_TEMPLATE_ABI Registry<GCStrategy>;
-
 /// Lookup the GCStrategy object associated with the given gc name.
 LLVM_ABI std::unique_ptr<GCStrategy> getGCStrategy(const StringRef Name);
 
 } // end namespace llvm
+
+LLVM_DECLARE_REGISTRY(llvm::GCRegistry)
 
 #endif // LLVM_IR_GCSTRATEGY_H
