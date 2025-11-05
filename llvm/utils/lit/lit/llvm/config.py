@@ -413,8 +413,8 @@ class LLVMConfig(object):
             self.lit_config.fatal(
                 "Could not turn '%s' into Itanium ABI triple" % triple
             )
-        if m.group(3).lower() != "windows":
-            # All non-windows triples use the Itanium ABI.
+        if m.group(3).lower() != "windows" or re.match(r"-cyg.*", triple):
+            # All non-Windows (including Cygwin) triples use the Itanium ABI.
             return triple
         return m.group(1) + "-" + m.group(2) + "-" + m.group(3) + "-gnu"
 

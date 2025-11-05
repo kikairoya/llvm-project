@@ -1,6 +1,6 @@
 ; REQUIRES: cxx-shared-library
 ; RUN: %lli -jit-kind=mcjit -remote-mcjit -mcjit-remote-process=lli-child-target %s
-; XFAIL: target=arm{{.*}}, target={{.*-(cygwin|windows-msvc|windows-gnu)}}
+; XFAIL: target=arm{{.*}}, target={{.*-(windows-msvc|windows-gnu)}}
 ; REQUIRES: thread_support
 ; UNSUPPORTED: target=powerpc64-unknown-linux-gnu
 ; Remove UNSUPPORTED for powerpc64-unknown-linux-gnu if problem caused by r266663 is fixed

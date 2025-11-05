@@ -63,21 +63,26 @@ foreach(dep ${LLVM_UTILS_DEPS})
   endif()
 endforeach()
 
-if (NOT WIN32 OR NOT LLVM_LINK_LLVM_DYLIB)
+if (NOT (WIN32 OR CYGWIN) OR CLANG_PLUGIN_SUPPORT)
   llvm_add_library(
-      CTTestTidyModule
-      MODULE clang-tidy/CTTestTidyModule.cpp
-      PLUGIN_TOOL clang-tidy)
-endif()
+    CTTestTidyModule
+    MODULE clang-tidy/CTTestTidyModule.cpp
+    PLUGIN_TOOL clang-tidy)
 
-if(TARGET CTTestTidyModule)
-    list(APPEND CLANG_TOOLS_TEST_DEPS CTTestTidyModule)
-    target_include_directories(CTTestTidyModule PUBLIC BEFORE "${CLANG_TOOLS_SOURCE_DIR}")
-    if(CLANG_PLUGIN_SUPPORT AND (WIN32 OR CYGWIN))
-      set(LLVM_LINK_COMPONENTS
-        Support
-      )
-    endif()
+  list(APPEND CLANG_TOOLS_TEST_DEPS CTTestTidyModule)
+  target_include_directories(CTTestTidyModule PUBLIC BEFORE "${CLANG_TOOLS_SOURCE_DIR}")
+
+  if ((WIN32 OR CYGWIN) AND NOT LLVM_EXPORT_SYMBOLS_FOR_PLUGINS)
+    target_link_libraries(CTTestTidyModule PRIVATE clangTidy)
+    clang_target_link_libraries(CTTestTidyModule
+      PRIVATE
+      clangAST
+      clangASTMatchers
+      clangBasic
+      clangTooling
+      clangToolingCore
+    )
+  endif()
 endif()
 
 add_lit_testsuite(check-clang-extra "Running clang-tools-extra/test"

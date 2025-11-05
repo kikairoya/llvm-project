@@ -6551,6 +6551,8 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
     return;
   }
 
+  TemplateSpecializationKind TSK = Class->getTemplateSpecializationKind();
+
   if (Context.getTargetInfo().shouldDLLImportComdatSymbols() &&
       !ClassAttr->isInherited()) {
     // Diagnose dll attributes on members of class with dll attribute.
@@ -6559,6 +6561,11 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
         continue;
       InheritableAttr *MemberAttr = getDLLAttr(Member);
       if (!MemberAttr || MemberAttr->isInherited() || Member->isInvalidDecl())
+        continue;
+
+      if ((TSK == TSK_ExplicitInstantiationDeclaration ||
+           TSK == TSK_ExplicitInstantiationDefinition) &&
+          Member->hasAttr<ExcludeFromExplicitInstantiationAttr>())
         continue;
 
       Diag(MemberAttr->getLocation(),
@@ -6583,13 +6590,13 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
       !ClassExported &&
       cast<DLLImportAttr>(ClassAttr)->wasPropagatedToBaseTemplate();
 
-  TemplateSpecializationKind TSK = Class->getTemplateSpecializationKind();
+  const TargetInfo &TI = Context.getTargetInfo();
 
   // Ignore explicit dllexport on explicit class template instantiation
   // declarations, except in MinGW mode.
   if (ClassExported && !ClassAttr->isInherited() &&
       TSK == TSK_ExplicitInstantiationDeclaration &&
-      !Context.getTargetInfo().getTriple().isOSCygMing()) {
+      !TI.getTriple().isOSCygMing()) {
     Class->dropAttr<DLLExportAttr>();
     return;
   }
@@ -6601,6 +6608,20 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
   // seem to be true in practice?
 
   for (Decl *Member : Class->decls()) {
+    if ((TSK == TSK_ExplicitInstantiationDeclaration ||
+         TSK == TSK_ExplicitInstantiationDefinition) &&
+        Member->hasAttr<ExcludeFromExplicitInstantiationAttr>())
+      continue;
+
+    // Inherit dllexport to nested class in MinGW mode.
+    if (TI.getTriple().isOSCygMing() && !getDLLAttr(Member) &&
+        isa<RecordDecl>(Member)) {
+      auto *NewAttr = cast<InheritableAttr>(ClassAttr->clone(getASTContext()));
+      NewAttr->setInherited(true);
+      Member->addAttr(NewAttr);
+      continue;
+    }
+
     VarDecl *VD = dyn_cast<VarDecl>(Member);
     CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(Member);
 
@@ -6616,7 +6637,7 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
       if (MD->isInlined()) {
         // MinGW does not import or export inline methods. But do it for
         // template instantiations.
-        if (!Context.getTargetInfo().shouldDLLImportComdatSymbols() &&
+        if (!TI.shouldDLLImportComdatSymbols() &&
             TSK != TSK_ExplicitInstantiationDeclaration &&
             TSK != TSK_ExplicitInstantiationDefinition)
           continue;
@@ -6627,6 +6648,7 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
         auto *Ctor = dyn_cast<CXXConstructorDecl>(MD);
         if ((MD->isMoveAssignmentOperator() ||
              (Ctor && Ctor->isMoveConstructor())) &&
+            getLangOpts().isCompatibleWithMSVC(LangOptions::MSVC2010) &&
             !getLangOpts().isCompatibleWithMSVC(LangOptions::MSVC2015))
           continue;
 

@@ -1190,9 +1190,10 @@ static StringRef exportSourceName(ExportSource s) {
     return "/export";
   case ExportSource::ModuleDefinition:
     return "/def";
-  default:
-    llvm_unreachable("unknown ExportSource");
+  case ExportSource::Unset:
+    return "(unknown)";
   }
+  llvm_unreachable("unknown ExportSource");
 }
 
 // Performs error checking on all /export arguments.
