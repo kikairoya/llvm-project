@@ -246,12 +246,13 @@ JobserverClient *JobserverClient::getInstance() {
   return GJobserver;
 }
 
-/// For testing purposes only. This function resets the singleton instance by
-/// destroying the existing client and re-initializing the `std::once_flag`.
+/// For testing purposes only. This function resets the reference to the
+/// existing singleton client and re-initializing the `std::once_flag`.
+/// Note that the instance shouldn't be destroyed since it might be
+/// still referenced by `ThreadPoolExecutor`.
 /// This allows tests to simulate the first-time initialization of the
 /// jobserver client multiple times.
 void JobserverClient::resetForTesting() {
-  delete GJobserver;
   GJobserver = nullptr;
   // Re-construct the std::once_flag in place to reset the singleton state.
   new (&GJobserverOnceFlag) std::once_flag();
