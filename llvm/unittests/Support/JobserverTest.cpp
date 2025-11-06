@@ -291,6 +291,7 @@ protected:
     TheFifo.reset();
     // Restore the original strategy to ensure subsequent tests are unaffected.
     parallel::strategy = SavedStrategy;
+    JobserverClient::resetForTesting();
   }
 
   // Starts a background thread that emulates `make`. It populates the FIFO
