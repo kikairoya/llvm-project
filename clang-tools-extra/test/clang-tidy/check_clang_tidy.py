@@ -47,6 +47,7 @@ import os
 import pathlib
 import platform
 import re
+import shutil
 import subprocess
 import sys
 from typing import List, Tuple
@@ -60,6 +61,7 @@ def write_file(file_name: str, text: str) -> None:
 
 def try_run(args: List[str], raise_error: bool = True) -> str:
     try:
+        args[0] = shutil.which(args[0])
         process_output = subprocess.check_output(args, stderr=subprocess.STDOUT).decode(
             errors="ignore"
         )
