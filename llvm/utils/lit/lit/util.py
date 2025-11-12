@@ -467,7 +467,7 @@ def killProcessAndChildrenIsSupported():
         otherwise is contains a string describing why the function is
         not supported.
     """
-    if platform.system() == "AIX" or platform.system() == "OS/390":
+    if platform.system() == "AIX" or platform.system() == "OS/390" or sys.platform == "cygwin":
         return (True, "")
     try:
         import psutil  # noqa: F401
@@ -481,6 +481,33 @@ def killProcessAndChildrenIsSupported():
             " your operating system's package manager.",
         )
 
+def killProcessAndChildrenByProcPid(pid):
+    def killSilently(pid):
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except:
+            pass
+
+    from pathlib import Path
+
+    pidmap = dict()
+    for f in Path('/proc').glob('*/ppid'):
+        try:
+            pidmap[int(f.parent.name)] = int(f.read_text())
+        except:
+            pass
+
+    def isDescendant(child):
+        while child > 1 and child in pidmap:
+            child = pidmap[child]
+            if child == pid: return True
+        return False
+
+    for p in pidmap.keys():
+        if isDescendant(p):
+            killSilently(p)
+
+    killSilently(pid)
 
 def killProcessAndChildren(pid):
     """This function kills a process with ``pid`` and all its running children
@@ -496,6 +523,8 @@ def killProcessAndChildren(pid):
     elif platform.system() == "OS/390":
         # FIXME: Only the process is killed.
         subprocess.call("kill -KILL $(ps -s {} -o pid=)".format(pid), shell=True)
+    elif sys.platform == "cygwin":
+        killProcessAndChildrenByProcPid(pid)
     else:
         import psutil
 
