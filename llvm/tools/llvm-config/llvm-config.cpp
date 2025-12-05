@@ -384,18 +384,18 @@ int main(int argc, char **argv) {
   /// in the first place. This can't be done at configure/build time.
 
   StringRef SharedExt, SharedVersionedExt, SharedDir, SharedPrefix, StaticExt,
-      StaticPrefix, StaticDir = "lib";
+      StaticPrefix, StaticDir;
   std::string DirSep = "/";
   const Triple HostTriple(Triple::normalize(LLVM_HOST_TRIPLE));
   if (HostTriple.isOSWindows()) {
-    SharedExt = "dll";
-    SharedVersionedExt = LLVM_DYLIB_VERSION ".dll";
     if (HostTriple.isOSCygMing()) {
-      SharedPrefix = LLVM_SHARED_LIBRARY_PREFIX;
+      SharedExt = "dll.a";
+      SharedVersionedExt = LLVM_DYLIB_VERSION ".dll.a";
       StaticExt = "a";
-      StaticPrefix = "lib";
+      SharedPrefix = StaticPrefix = "lib";
     } else {
-      StaticExt = "lib";
+      SharedVersionedExt = LLVM_DYLIB_VERSION ".lib";
+      SharedExt = StaticExt = "lib";
       DirSep = "\\";
       llvm::replace(ActiveObjRoot, '/', '\\');
       llvm::replace(ActivePrefix, '/', '\\');
@@ -406,8 +406,7 @@ int main(int argc, char **argv) {
       for (auto &Include : ActiveIncludeOptions)
         llvm::replace(Include, '/', '\\');
     }
-    SharedDir = ActiveBinDir;
-    StaticDir = ActiveLibDir;
+    SharedDir = StaticDir = ActiveLibDir;
   } else if (HostTriple.isOSDarwin()) {
     SharedExt = "dylib";
     SharedVersionedExt = LLVM_DYLIB_VERSION ".dylib";
