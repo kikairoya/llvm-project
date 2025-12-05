@@ -31,11 +31,17 @@ struct C {
 
   // This won't be instantiated.
   EXCLUDE_FROM_EXPLICIT_INSTANTIATION void not_to_be_instantiated();
+
+  struct EXCLUDE_FROM_EXPLICIT_INSTANTIATION inner {
+    // This will be instantiated implicitly but won't be imported.
+    static void inner_not_to_be_imported();
+  };
 };
 
 template <class T> void C<T>::to_be_imported() {}
 template <class T> void C<T>::not_to_be_imported() {}
 template <class T> void C<T>::not_to_be_instantiated() {}
+template <class T> void C<T>::inner::inner_not_to_be_imported() {}
 
 // Attach the attribute to class template declaration instead of instantiation declaration.
 template <class T>
@@ -79,10 +85,12 @@ template <class T> void E<T>::to_be_imported() {}
 template <class T> void E<T>::to_be_instantiated() {}
 
 // MSC: $"?not_to_be_imported@?$C@H@@QEAAXXZ" = comdat any
+// MSC: $"?inner_not_to_be_imported@inner@?$C@H@@SAXXZ" = comdat any
 // MSC: $"?to_be_imported_iff_no_explicit_instantiation@?$D@H@@QEAAXXZ" = comdat any
 // MSC: $"?to_be_instantiated@?$E@H@@UEAAXXZ" = comdat any
 // MSC: $"?to_be_instantiated@?$E@I@@UEAAXXZ" = comdat any
 // GNU: $_ZN1CIiE18not_to_be_importedEv = comdat any
+// GNU: $_ZN1CIiE5inner24inner_not_to_be_importedEv = comdat any
 // GNU: $_ZN1DIiE44to_be_imported_iff_no_explicit_instantiationEv = comdat any
 // GNU: @_ZTV1EIiE = external dllimport unnamed_addr
 // GNU: @_ZTV1EIjE = external unnamed_addr
@@ -117,6 +125,10 @@ void use() {
   // GNU: call void @_ZN1CIiE18not_to_be_importedEv
   c.not_to_be_imported(); // implicitly instantiated here
 
+  // MSC: call void @"?inner_not_to_be_imported@inner@?$C@H@@SAXXZ"
+  // GNU: call void @_ZN1CIiE5inner24inner_not_to_be_importedEv
+  C<int>::inner::inner_not_to_be_imported(); // implicitly instantiated here
+
   D<int> di;
 
   // MSC: call void @"?to_be_imported_iff_no_explicit_instantiation@?$D@H@@QEAAXXZ"
@@ -146,6 +158,9 @@ void use() {
 
 // MSC: define linkonce_odr dso_local void @"?not_to_be_imported@?$C@H@@QEAAXXZ"
 // GNU: define linkonce_odr dso_local void @_ZN1CIiE18not_to_be_importedEv
+
+// MSC: define linkonce_odr dso_local void @"?inner_not_to_be_imported@inner@?$C@H@@SAXXZ"
+// GNU: define linkonce_odr dso_local void @_ZN1CIiE5inner24inner_not_to_be_importedEv
 
 // MSC: define linkonce_odr dso_local void @"?to_be_imported_iff_no_explicit_instantiation@?$D@H@@QEAAXXZ"
 // MSC: declare dllimport void @"?to_be_imported_iff_no_explicit_instantiation@?$D@I@@QEAAXXZ"
