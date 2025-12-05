@@ -1370,6 +1370,8 @@ void MachineFunction::setUseDebugInstrRef(bool Use) {
 // Use one million as a high / reserved number.
 const unsigned MachineFunction::DebugOperandMemNumber = 1000000;
 
+template struct LLVM_EXPORT_TEMPLATE Any::TypeId<const MachineFunction *>;
+
 /// \}
 
 //===----------------------------------------------------------------------===//
