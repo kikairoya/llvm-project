@@ -54,7 +54,7 @@ namespace pointer_union_detail {
   class PointerUnionMembers<Derived, ValTy, I> {
   protected:
     ValTy Val;
-    PointerUnionMembers() = default;
+    constexpr PointerUnionMembers() = default;
     PointerUnionMembers(ValTy Val) : Val(Val) {}
 
     friend struct PointerLikeTypeTraits<Derived>;
@@ -67,7 +67,7 @@ namespace pointer_union_detail {
     using Base = PointerUnionMembers<Derived, ValTy, I + 1, Types...>;
   public:
     using Base::Base;
-    PointerUnionMembers() = default;
+    constexpr PointerUnionMembers() = default;
     PointerUnionMembers(Type V)
         : Base(ValTy(const_cast<void *>(
                          PointerLikeTypeTraits<Type>::getAsVoidPointer(V)),
@@ -126,7 +126,7 @@ class PointerUnion
   template <typename To, typename From, typename Enable> friend struct CastInfo;
 
 public:
-  PointerUnion() = default;
+  constexpr PointerUnion() = default;
 
   PointerUnion(std::nullptr_t) : PointerUnion() {}
   using Base::Base;

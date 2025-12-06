@@ -245,7 +245,9 @@ define i32 @fib_check(){
 // check that loading a plugin works
 // the plugin being loaded acts identically to the default inliner
 TEST(PluginInlineAdvisorTest, PluginLoad) {
-#if !defined(LLVM_ENABLE_PLUGINS)
+#if !defined(LLVM_ENABLE_PLUGINS) ||                                           \
+    ((defined(_WIN32) || defined(__CYGWIN__)) &&                               \
+     defined(LLVM_BUILD_SHARED_LIBS))
   // Skip the test if plugins are disabled.
   GTEST_SKIP();
 #endif

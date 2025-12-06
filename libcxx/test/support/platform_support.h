@@ -25,6 +25,9 @@
 #elif defined(_WIN32)
 #    define LOCALE_fr_CA_ISO8859_1 "fr-CA"
 #    define LOCALE_cs_CZ_ISO8859_2 "cs-CZ"
+#elif defined(__CYGWIN__)
+#  define LOCALE_fr_CA_ISO8859_1 "fr_CA"
+#  define LOCALE_cs_CZ_ISO8859_2 "cs_CZ"
 #else
 #    define LOCALE_fr_CA_ISO8859_1 "fr_CA.ISO8859-1"
 #    define LOCALE_cs_CZ_ISO8859_2 "cs_CZ.ISO8859-2"
@@ -32,6 +35,10 @@
 #define LOCALE_ja_JP_UTF_8     "ja_JP.UTF-8"
 #define LOCALE_ru_RU_UTF_8     "ru_RU.UTF-8"
 #define LOCALE_zh_CN_UTF_8     "zh_CN.UTF-8"
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+#  define WINLOCALE
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -13,6 +13,9 @@
 // TODO FMT This test should not require std::to_chars(floating-point)
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -173,7 +176,7 @@ static void test() {
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month_weekday{
                  std::chrono::month{3}, std::chrono::weekday_indexed{std::chrono::weekday{3}, 3}}),
              SV("mars/mer.[3]"));
-#  if defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  if defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
   TEST_EQUAL(stream_fr_FR_locale<CharT>(std::chrono::month_weekday{
                  std::chrono::month{4}, std::chrono::weekday_indexed{std::chrono::weekday{4}, 4}}),
              SV("avr./jeu.[4]"));
@@ -217,7 +220,7 @@ static void test() {
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_weekday{
                  std::chrono::month{0}, std::chrono::weekday_indexed{std::chrono::weekday{0}, 1}}),
              SV("0 is not a valid month/日[1]"));
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(WINLOCALE)
 #  if defined(__APPLE__)
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_weekday{
                  std::chrono::month{1}, std::chrono::weekday_indexed{std::chrono::weekday{1}, 1}}),
@@ -284,7 +287,7 @@ static void test() {
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_weekday{
                  std::chrono::month{12}, std::chrono::weekday_indexed{std::chrono::weekday{0}, 1}}),
              SV("12/日[1]"));
-#else // defined(__APPLE__) || defined(_WIN32)
+#else // defined(__APPLE__) || defined(WINLOCALE)
 #  if defined(_AIX)
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_weekday{
                  std::chrono::month{1}, std::chrono::weekday_indexed{std::chrono::weekday{1}, 1}}),
@@ -351,7 +354,7 @@ static void test() {
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_weekday{
                  std::chrono::month{12}, std::chrono::weekday_indexed{std::chrono::weekday{0}, 1}}),
              SV("12月/日[1]"));
-#endif   // defined(__APPLE__) || defined(_WIN32)
+#endif   // defined(__APPLE__) || defined(WINLOCALE)
   TEST_EQUAL(stream_ja_JP_locale<CharT>(std::chrono::month_weekday{
                  std::chrono::month{13}, std::chrono::weekday_indexed{std::chrono::weekday{0}, 1}}),
              SV("13 is not a valid month/日[1]"));

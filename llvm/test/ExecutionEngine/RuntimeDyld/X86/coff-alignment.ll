@@ -1,4 +1,4 @@
-; REQUIRES: system-windows, target=x86_64-{{.*}}-windows-{{.*}}
+; REQUIRES: system-windows || system-cygwin, target=x86_64-{{.*}}-{{.*cyg.*|windows-.*}}
 ; RUN: opt -mtriple=x86_64-pc-win32-coff %s -o - | lli
 
 @o = common global i32 0, align 4

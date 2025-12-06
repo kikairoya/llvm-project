@@ -148,6 +148,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(LIBCXX_DEFAULT_TEST_CONFIG "llvm-libc++-shared-gcc.cfg.in")
 elseif(MINGW)
   set(LIBCXX_DEFAULT_TEST_CONFIG "llvm-libc++-mingw.cfg.in")
+elseif(CYGWIN)
+  set(LIBCXX_DEFAULT_TEST_CONFIG "llvm-libc++-cygwin.cfg.in")
 elseif(WIN32) # clang-cl
   if (LIBCXX_ENABLE_SHARED)
     set(LIBCXX_DEFAULT_TEST_CONFIG "llvm-libc++-shared-clangcl.cfg.in")
@@ -275,7 +277,7 @@ if (LIBCXX_STATICALLY_LINK_ABI_IN_SHARED_LIBRARY
     OR NOT LIBCXX_ENABLE_SHARED
     OR LIBCXX_CXX_ABI STREQUAL "none")
   set(ENABLE_LINKER_SCRIPT_DEFAULT_VALUE OFF)
-elseif((UNIX OR FUCHSIA) AND NOT APPLE)
+elseif((UNIX OR FUCHSIA) AND NOT APPLE AND NOT CYGWIN)
   set(ENABLE_LINKER_SCRIPT_DEFAULT_VALUE ON)
 else()
   set(ENABLE_LINKER_SCRIPT_DEFAULT_VALUE OFF)
@@ -320,7 +322,7 @@ option(LIBCXX_ENABLE_PEDANTIC "Compile with pedantic enabled." OFF)
 option(LIBCXX_ENABLE_WERROR "Fail and stop if a warning is triggered." OFF)
 
 set(LIBCXX_HERMETIC_STATIC_LIBRARY_DEFAULT OFF)
-if (WIN32)
+if (WIN32 OR CYGWIN)
   set(LIBCXX_HERMETIC_STATIC_LIBRARY_DEFAULT ON)
 endif()
 option(LIBCXX_HERMETIC_STATIC_LIBRARY
@@ -509,6 +511,10 @@ function(cxx_add_basic_build_flags target)
     CXX_STANDARD 23
     CXX_STANDARD_REQUIRED OFF # TODO: Make this REQUIRED once we don't need to accommodate the LLVM documentation builders using an ancient CMake
     CXX_EXTENSIONS NO)
+  if (CYGWIN)
+    set_target_properties(${target} PROPERTIES
+      CXX_EXTENSIONS YES)
+  endif()
 
   # When building the dylib, don't warn for unavailable aligned allocation
   # functions based on the deployment target -- they are always available
@@ -534,7 +540,9 @@ function(cxx_add_basic_build_flags target)
 
   # Build with -fsized-deallocation, which is default in recent versions of Clang.
   # TODO(LLVM 21): This can be dropped once we only support Clang >= 19.
-  target_add_compile_flags_if_supported(${target} PRIVATE -fsized-deallocation)
+  if (NOT CYGWIN)
+    target_add_compile_flags_if_supported(${target} PRIVATE -fsized-deallocation)
+  endif()
 
   # Let the library headers know they are currently being used to build the
   # library.
@@ -688,6 +696,22 @@ function(cxx_link_system_libraries target)
   if (MINGW)
     target_link_libraries(${target} PRIVATE "${MINGW_LIBRARIES}")
   endif()
+  if (CYGWIN)
+    # Cygwin requires gcc_s or compiler-rt explicitly, which are dropped by the effect
+    # of "--unwindlib=none", for Emulated-TLS functionallity
+    if (CXX_SUPPORTS_UNWINDLIB_EQ_NONE_FLAG AND LIBCXXABI_USE_LLVM_UNWINDER AND NOT CYGWIN_LIBRARIES)
+      if (LIBCXX_USE_COMPILER_RT)
+        include(HandleCompilerRT)
+        find_compiler_rt_library(builtins LIBCXX_BUILTINS_LIBRARY
+          FLAGS ${LIBCXX_COMPILE_FLAGS})
+        target_link_libraries(${target} PRIVATE ${LIBCXX_BUILTINS_LIBRARY})
+      else()
+        target_link_libraries(${target} PRIVATE gcc_s)
+      endif()
+    else()
+      target_link_libraries(${target} PRIVATE "${CYGWIN_LIBRARIES}")
+    endif()
+  endif()
 
   if (MSVC)
     if ((NOT CMAKE_MSVC_RUNTIME_LIBRARY AND uppercase_CMAKE_BUILD_TYPE STREQUAL "DEBUG")
@@ -779,6 +803,8 @@ elseif (RUNTIMES_USE_LIBC STREQUAL "newlib")
   config_define(1 _LIBCPP_LIBC_NEWLIB)
 elseif (RUNTIMES_USE_LIBC STREQUAL "llvm-libc")
   config_define(1 _LIBCPP_LIBC_LLVM_LIBC)
+elseif (CYGWIN AND RUNTIMES_USE_LIBC STREQUAL "system")
+  config_define(1 _LIBCPP_LIBC_NEWLIB)
 endif()
 
 if (LIBCXX_HARDENING_MODE STREQUAL "none")
@@ -844,7 +870,7 @@ if (DEFINED WIN32 AND LIBCXX_ENABLE_STATIC AND NOT LIBCXX_ENABLE_SHARED)
   config_define(ON _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS)
 endif()
 
-if (WIN32 AND LIBCXX_ENABLE_STATIC_ABI_LIBRARY)
+if ((WIN32 OR CYGWIN) AND LIBCXX_ENABLE_STATIC_ABI_LIBRARY)
   # If linking libcxxabi statically into libcxx, skip the dllimport attributes
   # on symbols we refer to from libcxxabi.
   add_definitions(-D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS)

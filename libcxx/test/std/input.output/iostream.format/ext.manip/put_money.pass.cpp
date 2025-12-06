@@ -13,6 +13,9 @@
 // Bionic has minimal locale support, investigate this later.
 // XFAIL: LIBCXX-ANDROID-FIXME
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.en_US.UTF-8
 
 #include <iomanip>
@@ -63,7 +66,7 @@ int main(int, char**)
         std::showbase(os);
         long double x = -123456789;
         os << std::put_money(x, false);
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(sb.str() == "($1,234,567.89)");
 #else
         assert(sb.str() == "-$1,234,567.89");
@@ -76,7 +79,7 @@ int main(int, char**)
         std::showbase(os);
         long double x = -123456789;
         os << std::put_money(x, true);
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(sb.str() == "(USD1,234,567.89)");
 #else
         assert(sb.str() == "-USD 1,234,567.89");
@@ -90,7 +93,7 @@ int main(int, char**)
         std::showbase(os);
         long double x = -123456789;
         os << std::put_money(x, false);
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(sb.str() == L"($1,234,567.89)");
 #else
         assert(sb.str() == L"-$1,234,567.89");
@@ -103,7 +106,7 @@ int main(int, char**)
         std::showbase(os);
         long double x = -123456789;
         os << std::put_money(x, true);
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(sb.str() == L"(USD1,234,567.89)");
 #else
         assert(sb.str() == L"-USD 1,234,567.89");

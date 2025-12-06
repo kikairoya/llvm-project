@@ -2,7 +2,7 @@
 ## assigning permissions of output files.
 
 ## Windows has no umask so this test makes no sense.
-# UNSUPPORTED: system-windows
+# UNSUPPORTED: system-windows, system-cygwin
 
 # RUN: rm -f %t
 # RUN: touch %t

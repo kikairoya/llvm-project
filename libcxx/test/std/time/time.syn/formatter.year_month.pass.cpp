@@ -13,6 +13,9 @@
 // TODO FMT This test should not require std::to_chars(floating-point)
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -166,39 +169,39 @@ static void test_valid_values() {
   // Use supplied locale (ja_JP)
   check(loc,
         SV(
-#if defined(_WIN32)
+#if defined(WINLOCALE)
             "%b='1'\t"
-#elif defined(_AIX)      // defined(_WIN32)
+#elif defined(_AIX)      // defined(WINLOCALE)
             "%b='1月'\t"
-#elif defined(__APPLE__) // defined(_WIN32)
+#elif defined(__APPLE__) // defined(WINLOCALE)
             "%b=' 1'\t"
-#else                    // defined(_WIN32)
+#else                    // defined(WINLOCALE)
             "%b=' 1月'\t"
-#endif                   // defined(_WIN32)
+#endif                   // defined(WINLOCALE)
             "%B='1月'\t"
             "%C='19'\t"
-#if defined(_WIN32)
+#if defined(WINLOCALE)
             "%h='1'\t"
-#elif defined(_AIX)      // defined(_WIN32)
+#elif defined(_AIX)      // defined(WINLOCALE)
             "%h='1月'\t"
-#elif defined(__APPLE__) // defined(_WIN32)
+#elif defined(__APPLE__) // defined(WINLOCALE)
             "%h=' 1'\t"
-#else                    // defined(_WIN32)
+#else                    // defined(WINLOCALE)
             "%h=' 1月'\t"
-#endif                   // defined(_WIN32)
+#endif                   // defined(WINLOCALE)
             "%y='70'\t"
             "%Y='1970'\t"
-#if defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
             "%EC='19'\t"
             "%Ey='70'\t"
             "%EY='1970'\t"
             "%Oy='70'\t"
-#else  // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#else  // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
             "%EC='昭和'\t"
             "%Ey='45'\t"
             "%EY='昭和45年'\t"
             "%Oy='七十'\t"
-#endif // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#endif // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
             "\n"),
         lfmt,
         std::chrono::year_month{std::chrono::year{1970}, std::chrono::January});
@@ -206,39 +209,39 @@ static void test_valid_values() {
   check(loc,
         SV(
 
-#if defined(_WIN32)
+#if defined(WINLOCALE)
             "%b='5'\t"
-#elif defined(_AIX)      // defined(_WIN32)
+#elif defined(_AIX)      // defined(WINLOCALE)
             "%b='5月'\t"
-#elif defined(__APPLE__) // defined(_WIN32)
+#elif defined(__APPLE__) // defined(WINLOCALE)
             "%b=' 5'\t"
-#else                    // defined(_WIN32)
+#else                    // defined(WINLOCALE)
             "%b=' 5月'\t"
-#endif                   // defined(_WIN32)
+#endif                   // defined(WINLOCALE)
             "%B='5月'\t"
             "%C='20'\t"
-#if defined(_WIN32)
+#if defined(WINLOCALE)
             "%h='5'\t"
-#elif defined(_AIX)      // defined(_WIN32)
+#elif defined(_AIX)      // defined(WINLOCALE)
             "%h='5月'\t"
-#elif defined(__APPLE__) // defined(_WIN32)
+#elif defined(__APPLE__) // defined(WINLOCALE)
             "%h=' 5'\t"
-#else                    // defined(_WIN32)
+#else                    // defined(WINLOCALE)
             "%h=' 5月'\t"
-#endif                   // defined(_WIN32)
+#endif                   // defined(WINLOCALE)
             "%y='04'\t"
             "%Y='2004'\t"
-#if defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
             "%EC='20'\t"
             "%Ey='04'\t"
             "%EY='2004'\t"
             "%Oy='04'\t"
-#else  // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#else  // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
             "%EC='平成'\t"
             "%Ey='16'\t"
             "%EY='平成16年'\t"
             "%Oy='四'\t"
-#endif // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#endif // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
             "\n"),
         lfmt,
         std::chrono::year_month{std::chrono::year{2004}, std::chrono::May});

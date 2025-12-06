@@ -17,6 +17,9 @@
 // XFAIL: LIBCXX-ANDROID-FIXME
 // XFAIL: FROZEN-CXX03-HEADERS-FIXME
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.en_US.UTF-8
 
 #include <locale>
@@ -79,7 +82,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), false, ios, '*', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "(0.01)");
 #else
         assert(ex == "-0.01");
@@ -97,7 +100,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), false, ios, '*', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "(1,234,567.89)");
 #else
         assert(ex == "-1,234,567.89");
@@ -117,7 +120,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), false, ios, '*', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "($0.01)");
 #else
         assert(ex == "-$0.01");
@@ -137,7 +140,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), false, ios, '*', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "($1,234,567.89)");
 #else
         assert(ex == "-$1,234,567.89");
@@ -151,7 +154,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), false, ios, ' ', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "($1,234,567.89)     ");
 #else
         assert(ex == "-$1,234,567.89      ");
@@ -166,7 +169,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), false, ios, ' ', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "($     1,234,567.89)");
 #else
         assert(ex == "-$      1,234,567.89");
@@ -181,7 +184,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), false, ios, ' ', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "     ($1,234,567.89)");
 #else
         assert(ex == "      -$1,234,567.89");
@@ -204,7 +207,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), true, ios, '*', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "(0.01)");
 #else
         assert(ex == "-0.01");
@@ -222,7 +225,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), true, ios, '*', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "(1,234,567.89)");
 #else
         assert(ex == "-1,234,567.89");
@@ -234,7 +237,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), true, ios, '*', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "USD0.00");
 #else
         assert(ex == "USD 0.00");
@@ -246,7 +249,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), true, ios, '*', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "(USD0.01)");
 #else
         assert(ex == "-USD 0.01");
@@ -258,7 +261,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), true, ios, '*', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "USD1,234,567.89");
 #else
         assert(ex == "USD 1,234,567.89");
@@ -270,7 +273,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), true, ios, '*', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "(USD1,234,567.89)");
 #else
         assert(ex == "-USD 1,234,567.89");
@@ -284,7 +287,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), true, ios, ' ', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "(USD1,234,567.89)   ");
 #else
         assert(ex == "-USD 1,234,567.89   ");
@@ -299,7 +302,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), true, ios, ' ', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "(USD   1,234,567.89)");
 #else
         assert(ex == "-USD    1,234,567.89");
@@ -314,7 +317,7 @@ int main(int, char**)
         char str[100];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), true, ios, ' ', v);
         std::string ex(str, base(iter));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(ex == "   (USD1,234,567.89)");
 #else
         assert(ex == "   -USD 1,234,567.89");
@@ -340,7 +343,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), false, ios, '*', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"(0.01)");
 #else
         assert(ex == L"-0.01");
@@ -358,7 +361,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), false, ios, '*', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"(1,234,567.89)");
 #else
         assert(ex == L"-1,234,567.89");
@@ -378,7 +381,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), false, ios, '*', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"($0.01)");
 #else
         assert(ex == L"-$0.01");
@@ -398,7 +401,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), false, ios, '*', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"($1,234,567.89)");
 #else
         assert(ex == L"-$1,234,567.89");
@@ -412,7 +415,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), false, ios, ' ', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"($1,234,567.89)     ");
 #else
         assert(ex == L"-$1,234,567.89      ");
@@ -427,7 +430,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), false, ios, ' ', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"($     1,234,567.89)");
 #else
         assert(ex == L"-$      1,234,567.89");
@@ -442,7 +445,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), false, ios, ' ', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"     ($1,234,567.89)");
 #else
         assert(ex == L"      -$1,234,567.89");
@@ -465,7 +468,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), true, ios, '*', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"(0.01)");
 #else
         assert(ex == L"-0.01");
@@ -483,7 +486,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), true, ios, '*', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"(1,234,567.89)");
 #else
         assert(ex == L"-1,234,567.89");
@@ -495,7 +498,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), true, ios, '*', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"USD0.00");
 #else
         assert(ex == L"USD 0.00");
@@ -507,7 +510,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), true, ios, '*', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"(USD0.01)");
 #else
         assert(ex == L"-USD 0.01");
@@ -519,7 +522,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), true, ios, '*', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"USD1,234,567.89");
 #else
         assert(ex == L"USD 1,234,567.89");
@@ -531,7 +534,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), true, ios, '*', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"(USD1,234,567.89)");
 #else
         assert(ex == L"-USD 1,234,567.89");
@@ -545,7 +548,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), true, ios, ' ', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"(USD1,234,567.89)   ");
 #else
         assert(ex == L"-USD 1,234,567.89   ");
@@ -560,7 +563,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), true, ios, ' ', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"(USD   1,234,567.89)");
 #else
         assert(ex == L"-USD    1,234,567.89");
@@ -575,7 +578,7 @@ int main(int, char**)
         wchar_t str[100];
         cpp17_output_iterator<wchar_t*> iter = f.put(cpp17_output_iterator<wchar_t*>(str), true, ios, ' ', v);
         std::wstring ex(str, base(iter));
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(ex == L"   (USD1,234,567.89)");
 #else
         assert(ex == L"   -USD 1,234,567.89");

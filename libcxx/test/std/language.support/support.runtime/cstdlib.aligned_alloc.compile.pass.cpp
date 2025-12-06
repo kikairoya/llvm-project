@@ -16,7 +16,7 @@
 // XFAIL: target={{.+}}-apple-macosx10.{{13|14}}
 
 // ::aligned_alloc is not implemented on Windows
-// XFAIL: target={{.+}}-windows-{{.+}}
+// XFAIL: target={{.+}}-windows-{{.+}} && !cygwin
 
 // ::aligned_alloc is available starting with Android P (API 28)
 // XFAIL: target={{.+}}-android{{(eabi)?(21|22|23|24|25|26|27)}}

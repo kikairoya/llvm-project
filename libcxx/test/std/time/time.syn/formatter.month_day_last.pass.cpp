@@ -13,6 +13,9 @@
 // TODO FMT This test should not require std::to_chars(floating-point)
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -158,11 +161,11 @@ static void test_valid_values() {
         lfmt,
         std::chrono::month_day_last{std::chrono::March});
   check(
-#  if defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  if defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
       SV("%b='avr.'\t%B='avril'\t%h='avr.'\t%m='04'\t%Om='04'\n"),
-#  else  // defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  else  // defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
       SV("%b='avril'\t%B='avril'\t%h='avril'\t%m='04'\t%Om='04'\n"),
-#  endif // defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  endif // defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
       lfmt,
       std::chrono::month_day_last{std::chrono::April});
   check(SV("%b='mai'\t%B='mai'\t%h='mai'\t%m='05'\t%Om='05'\n"), lfmt, std::chrono::month_day_last{std::chrono::May});
@@ -189,7 +192,7 @@ static void test_valid_values() {
 #endif   // defined(__APPLE__)
 
   // Use supplied locale (ja_JP)
-#ifdef _WIN32
+#ifdef WINLOCALE
   check(loc,
         SV("%b='1'\t%B='1月'\t%h='1'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -223,7 +226,7 @@ static void test_valid_values() {
         SV("%b='12'\t%B='12月'\t%h='12'\t%m='12'\t%Om='12'\n"),
         lfmt,
         std::chrono::month_day_last{std::chrono::December});
-#elif defined(__APPLE__) // defined(_WIN32)
+#elif defined(__APPLE__)   // defined(WINLOCALE)
   check(loc,
         SV("%b=' 1'\t%B='1月'\t%h=' 1'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -266,7 +269,7 @@ static void test_valid_values() {
         SV("%b='12'\t%B='12月'\t%h='12'\t%m='12'\t%Om='12'\n"),
         lfmt,
         std::chrono::month_day_last{std::chrono::December});
-#elif defined(_AIX)      // defined(_WIN32)
+#elif defined(_AIX)        // defined(WINLOCALE)
   check(loc,
         SV("%b='1月'\t%B='1月'\t%h='1月'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -315,7 +318,7 @@ static void test_valid_values() {
         SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='12'\n"),
         lfmt,
         std::chrono::month_day_last{std::chrono::December});
-#elif defined(__FreeBSD__) // defined(_WIN32)
+#elif defined(__FreeBSD__) // defined(WINLOCALE)
   check(loc,
         SV("%b=' 1月'\t%B='1月'\t%h=' 1月'\t%m='01'\t%Om='01'\n"),
         lfmt,
@@ -364,7 +367,7 @@ static void test_valid_values() {
         SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='12'\n"),
         lfmt,
         std::chrono::month_day_last{std::chrono::December});
-#else                    // defined(_WIN32)
+#else                      // defined(WINLOCALE)
   check(loc,
         SV("%b=' 1月'\t%B='1月'\t%h=' 1月'\t%m='01'\t%Om='一'\n"),
         lfmt,
@@ -413,7 +416,7 @@ static void test_valid_values() {
         SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='十二'\n"),
         lfmt,
         std::chrono::month_day_last{std::chrono::December});
-#endif                   // defined(_WIN32)
+#endif                     // defined(WINLOCALE)
 
   std::locale::global(std::locale::classic());
 }

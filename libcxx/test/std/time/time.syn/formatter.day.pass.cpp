@@ -16,6 +16,9 @@
 // TODO FMT Investigate Windows issues.
 // XFAIL: msvc
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -63,14 +66,14 @@ static void test_valid_values() {
   std::locale::global(std::locale(LOCALE_fr_FR_UTF_8));
 
   // Non localized output using C-locale
-#if defined(_WIN32)
+#if defined(WINLOCALE)
   check(SV("%d=''\t%Od=''\t%e=''\t%Oe=''\n"), fmt, 0d);
 #else
   check(SV("%d='00'\t%Od='00'\t%e=' 0'\t%Oe=' 0'\n"), fmt, 0d);
 #endif
   check(SV("%d='01'\t%Od='01'\t%e=' 1'\t%Oe=' 1'\n"), fmt, 1d);
   check(SV("%d='31'\t%Od='31'\t%e='31'\t%Oe='31'\n"), fmt, 31d);
-#if defined(_WIN32)
+#if defined(WINLOCALE)
   check(SV("%d=''\t%Od=''\t%e=''\t%Oe=''\n"), fmt, 0d);
 #elif defined(_AIX)
   check(SV("%d='55'\t%Od='55'\t%e='55'\t%Oe='55'\n"), fmt, 255d);
@@ -79,14 +82,14 @@ static void test_valid_values() {
 #endif
 
   // Use the global locale (fr_FR)
-#if defined(_WIN32)
+#if defined(WINLOCALE)
   check(SV("%d=''\t%Od=''\t%e=''\t%Oe=''\n"), lfmt, 0d);
 #else
   check(SV("%d='00'\t%Od='00'\t%e=' 0'\t%Oe=' 0'\n"), lfmt, 0d);
 #endif
   check(SV("%d='01'\t%Od='01'\t%e=' 1'\t%Oe=' 1'\n"), lfmt, 1d);
   check(SV("%d='31'\t%Od='31'\t%e='31'\t%Oe='31'\n"), lfmt, 31d);
-#if defined(_WIN32)
+#if defined(WINLOCALE)
   check(SV("%d=''\t%Od=''\t%e=''\t%Oe=''\n"), lfmt, 255d);
 #elif defined(_AIX)
   check(SV("%d='55'\t%Od='55'\t%e='55'\t%Oe='55'\n"), lfmt, 255d);
@@ -95,27 +98,27 @@ static void test_valid_values() {
 #endif
 
   // Use supplied locale (ja_JP). This locale has a different alternate on some platforms.
-#if defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
-#  if defined(_WIN32)
+#if defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
+#  if defined(WINLOCALE)
   check(loc, SV("%d=''\t%Od=''\t%e=''\t%Oe=''\n"), lfmt, 0d);
 #  else
   check(loc, SV("%d='00'\t%Od='00'\t%e=' 0'\t%Oe=' 0'\n"), lfmt, 0d);
 #  endif
   check(loc, SV("%d='01'\t%Od='01'\t%e=' 1'\t%Oe=' 1'\n"), lfmt, 1d);
   check(loc, SV("%d='31'\t%Od='31'\t%e='31'\t%Oe='31'\n"), lfmt, 31d);
-#  if defined(_WIN32)
+#  if defined(WINLOCALE)
   check(SV("%d=''\t%Od=''\t%e=''\t%Oe=''\n"), fmt, 255d);
 #  elif defined(_AIX)
   check(SV("%d='55'\t%Od='55'\t%e='55'\t%Oe='55'\n"), fmt, 255d);
 #  else
   check(SV("%d='255'\t%Od='255'\t%e='255'\t%Oe='255'\n"), fmt, 255d);
 #  endif
-#else  // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#else  // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
   check(loc, SV("%d='00'\t%Od='〇'\t%e=' 0'\t%Oe='〇'\n"), lfmt, 0d);
   check(loc, SV("%d='01'\t%Od='一'\t%e=' 1'\t%Oe='一'\n"), lfmt, 1d);
   check(loc, SV("%d='31'\t%Od='三十一'\t%e='31'\t%Oe='三十一'\n"), lfmt, 31d);
   check(loc, SV("%d='255'\t%Od='255'\t%e='255'\t%Oe='255'\n"), lfmt, 255d);
-#endif // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#endif // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
 
   std::locale::global(std::locale::classic());
 }

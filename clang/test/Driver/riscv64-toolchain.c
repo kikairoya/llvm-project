@@ -1,4 +1,4 @@
-// UNSUPPORTED: system-windows
+// UNSUPPORTED: system-windows, system-cygwin
 // A basic clang -cc1 command-line, and simple environment check.
 
 // RUN: %clang -### %s --target=riscv64 \

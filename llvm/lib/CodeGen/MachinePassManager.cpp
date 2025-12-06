@@ -25,7 +25,7 @@ AnalysisKey FunctionAnalysisManagerMachineFunctionProxy::Key;
 
 namespace llvm {
 template class LLVM_EXPORT_TEMPLATE AnalysisManager<MachineFunction>;
-template class PassManager<MachineFunction>;
+template class LLVM_EXPORT_TEMPLATE PassManager<MachineFunction>;
 template class LLVM_EXPORT_TEMPLATE
     InnerAnalysisManagerProxy<MachineFunctionAnalysisManager, Module>;
 template class LLVM_EXPORT_TEMPLATE
@@ -167,3 +167,5 @@ PreservedAnalyses llvm::getMachineFunctionPassPreservedAnalyses() {
   PA.template preserveSet<AllAnalysesOn<Function>>();
   return PA;
 }
+
+template class LLVM_EXPORT_TEMPLATE llvm::AllAnalysesOn<MachineFunction>;

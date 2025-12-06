@@ -2,6 +2,7 @@
 
 ;; Creating read-only directories with `chmod 400` isn't supported on Windows
 ; UNSUPPORTED: system-windows
+; UNSUPPORTED: system-cygwin
 
 ;; -object_path_lto specifies a directory that cannot be created
 ; RUN: rm -rf %t && mkdir %t && mkdir %t/dir

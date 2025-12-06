@@ -19,10 +19,10 @@
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/PartialDiagnostic.h"
 #include "clang/Basic/SourceLocation.h"
+#include "clang/Support/Compiler.h"
 #include "llvm/ADT/DenseMapInfo.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/Support/Compiler.h"
 #include "llvm/Support/type_traits.h"
 #include <cassert>
 #include <cstdint>
@@ -366,12 +366,7 @@ public:
       : Ptr(reinterpret_cast<uintptr_t>(Sel.InfoPtr.getOpaqueValue())) {}
 
   /// Returns the name for all C++ using-directives.
-  static DeclarationName getUsingDirectiveName() {
-    // Single instance of DeclarationNameExtra for using-directive
-    static detail::DeclarationNameExtra UDirExtra(
-        detail::DeclarationNameExtra::CXXUsingDirective);
-    return DeclarationName(&UDirExtra);
-  }
+  CLANG_ABI static DeclarationName getUsingDirectiveName();
 
   /// Evaluates true when this declaration name is non-empty.
   explicit operator bool() const {

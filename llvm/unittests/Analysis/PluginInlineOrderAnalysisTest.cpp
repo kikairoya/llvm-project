@@ -223,7 +223,9 @@ define i32 @fib_check(){
 // The custom order drops any functions named "foo" so all tests
 // should contain at least one function named foo.
 TEST(PluginInlineOrderTest, NoInlineFoo) {
-#if !defined(LLVM_ENABLE_PLUGINS)
+#if !defined(LLVM_ENABLE_PLUGINS) ||                                           \
+    ((defined(_WIN32) || defined(__CYGWIN__)) &&                               \
+     defined(LLVM_BUILD_SHARED_LIBS))
   // Skip the test if plugins are disabled.
   GTEST_SKIP();
 #endif
