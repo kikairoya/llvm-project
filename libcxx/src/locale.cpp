@@ -909,6 +909,9 @@ const ctype<char>::mask* ctype<char>::classic_table() noexcept {
   return __pctype_func();
 #  elif defined(__EMSCRIPTEN__)
   return *__ctype_b_loc();
+#  elif defined(__CYGWIN__)
+  // Cygwin uses newlib but need a casting to unsigned to avoid sign-extension
+  return (const unsigned char *)_ctype_ + 1;
 #  elif _LIBCPP_LIBC_NEWLIB
   // Newlib has a 257-entry table in ctype_.c, where (char)0 starts at [1].
   return _ctype_ + 1;

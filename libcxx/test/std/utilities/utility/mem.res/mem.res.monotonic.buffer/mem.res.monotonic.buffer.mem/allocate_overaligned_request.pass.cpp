@@ -10,6 +10,9 @@
 // TODO: Change to XFAIL once https://llvm.org/PR40995 is fixed
 // UNSUPPORTED: availability-pmr-missing
 
+// Cygwin runtime has hack to able override operator-new defined in DLL from EXE but it don't works for align_val_t overloads.
+// XFAIL: cygwin
+
 // <memory_resource>
 
 // class monotonic_buffer_resource

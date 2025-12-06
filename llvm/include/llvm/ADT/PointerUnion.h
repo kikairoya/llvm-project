@@ -135,7 +135,7 @@ class PointerUnionMembers;
 template <typename Derived, int Idx> class PointerUnionMembers<Derived, Idx> {
 protected:
   detail::PunnedPointer<void *> Val;
-  PointerUnionMembers() : Val(uintptr_t(0)) {}
+  constexpr PointerUnionMembers() = default;
 
   template <typename To, typename From, typename Enable>
   friend struct ::llvm::CastInfo;
@@ -149,7 +149,7 @@ class PointerUnionMembers<Derived, Idx, Type, Types...>
 
 public:
   using Base::Base;
-  PointerUnionMembers() = default;
+  constexpr PointerUnionMembers() = default;
 
   PointerUnionMembers(Type V) { this->Val = Derived::encode(V); }
 
@@ -270,8 +270,8 @@ class PointerUnion
   }
 
 public:
-  PointerUnion() = default;
-  PointerUnion(std::nullptr_t) : PointerUnion() {}
+  constexpr PointerUnion() = default;
+  constexpr PointerUnion(std::nullptr_t) : PointerUnion() {}
   using Base::Base;
   using Base::operator=;
 

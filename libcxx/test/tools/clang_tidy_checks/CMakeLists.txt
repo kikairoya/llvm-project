@@ -27,7 +27,9 @@ message(STATUS "Found system-installed LLVM ${LLVM_PACKAGE_VERSION} with headers
 
 # Link only against clangTidy itself, not anything that clangTidy uses; otherwise we run setup code multiple times
 # which results in clang-tidy crashing
-set_target_properties(clangTidy PROPERTIES INTERFACE_LINK_LIBRARIES "")
+if(NOT (WIN32 OR CYGWIN))
+  set_target_properties(clangTidy PROPERTIES INTERFACE_LINK_LIBRARIES "")
+endif()
 # ClangTargets.cmake doesn't set the include paths, so we have to do it
 target_include_directories(clangTidy INTERFACE
                            ${CLANG_INCLUDE_DIRS}

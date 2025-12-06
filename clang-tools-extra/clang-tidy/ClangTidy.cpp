@@ -50,7 +50,7 @@ using namespace clang::driver;
 using namespace clang::tooling;
 using namespace llvm;
 
-LLVM_INSTANTIATE_REGISTRY(clang::tidy::ClangTidyModuleRegistry)
+LLVM_DEFINE_REGISTRY(clang::tidy::ClangTidyModuleRegistry)
 
 namespace clang::tidy {
 

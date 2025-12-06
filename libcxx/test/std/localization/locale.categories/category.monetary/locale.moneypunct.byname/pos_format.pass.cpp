@@ -191,7 +191,7 @@ int main(int, char**)
     {
         Fnt f(LOCALE_zh_CN_UTF_8, 1);
         std::money_base::pattern p = f.pos_format();
-#ifdef _WIN32
+#ifdef WINLOCALE
         assert_symbol_sign_none_value(p);
 #else
         assert_sign_symbol_none_value(p);
@@ -210,7 +210,7 @@ int main(int, char**)
     {
         Fwt f(LOCALE_zh_CN_UTF_8, 1);
         std::money_base::pattern p = f.pos_format();
-#ifdef _WIN32
+#  ifdef WINLOCALE
         assert_symbol_sign_none_value(p);
 #else
         assert_sign_symbol_none_value(p);

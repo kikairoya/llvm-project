@@ -92,8 +92,12 @@ set_target_properties(ClangReplInterpreterTests PROPERTIES
 )
 endif()
 
+if ((MINGW OR CYGWIN) AND NOT (CLANG_LINK_CLANG_DYLIB OR BUILD_SHARED_LIBS))
+  target_link_options(ClangReplInterpreterTests PRIVATE "-Wl,-S")
+endif()
+
 # Exceptions on Windows are not yet supported.
-if(NOT WIN32)
+if(NOT WIN32 AND NOT CYGWIN)
   add_subdirectory(ExceptionTests)
 endif()
 

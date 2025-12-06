@@ -67,8 +67,15 @@ clang_target_link_libraries(clang
   clangSerialization
   )
 
-if(WIN32 AND NOT CYGWIN)
+if(WIN32)
   # Prevent versioning if the buildhost is targeting for Win32.
+elseif(CYGWIN AND CMAKE_CROSSCOMPILING)
+  # When cross-compiling targeting Cygwin, CMake makes output-name like "clang.exe-22"
+  # unless name it explicitly.
+  set_target_properties(clang PROPERTIES OUTPUT_NAME "clang-${CLANG_VERSION_MAJOR}")
+  # We need to geneate the symlink `clang.exe` points to `clang-22.exe` but `add_clang_symlink`
+  # generates a self recurring symlink `clang.exe`.
+  llvm_install_symlink(CLANG clang "clang-${CLANG_VERSION_MAJOR}" ALWAYS_GENERATE)
 else()
   set_target_properties(clang PROPERTIES VERSION ${CLANG_EXECUTABLE_VERSION})
 endif()

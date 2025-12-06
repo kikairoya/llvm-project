@@ -148,7 +148,7 @@ static void path_ctor_dne() {
 
 static void path_ctor_cannot_resolve() {
   using namespace fs;
-#ifdef _WIN32
+#ifdef TEST_WIN_NO_FILESYSTEM_PERMS_NONE
   // Windows doesn't support setting perms::none to trigger failures
   // reading directories; test using a special inaccessible directory
   // instead.

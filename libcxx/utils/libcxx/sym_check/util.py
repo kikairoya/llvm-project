@@ -78,6 +78,12 @@ def is_elf(filename):
     return magic_bytes == b"\x7fELF"
 
 
+def is_dll(filename):
+    with open(filename, "rb") as f:
+        magic_bytes = f.read(2)
+    return magic_bytes == b"MZ"
+
+
 def is_mach_o(filename):
     with open(filename, "rb") as f:
         magic_bytes = f.read(4)
@@ -106,7 +112,7 @@ def is_library_file(filename):
     elif sys.platform.startswith("aix"):
         return is_xcoff_or_big_ar(filename)
     else:
-        return is_elf(filename)
+        return is_elf(filename) or is_dll(filename)
 
 
 def extract_or_load(filename):

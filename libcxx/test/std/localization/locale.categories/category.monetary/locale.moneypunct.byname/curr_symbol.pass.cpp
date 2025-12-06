@@ -9,6 +9,9 @@
 // NetBSD does not support LC_MONETARY at the moment
 // XFAIL: netbsd
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.en_US.UTF-8
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ru_RU.UTF-8

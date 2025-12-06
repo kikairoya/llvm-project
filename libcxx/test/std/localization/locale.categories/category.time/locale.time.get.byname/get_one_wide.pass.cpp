@@ -9,6 +9,9 @@
 // NetBSD does not support LC_TIME at the moment
 // XFAIL: netbsd
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // XFAIL: no-wide-characters
 
 // REQUIRES: locale.en_US.UTF-8

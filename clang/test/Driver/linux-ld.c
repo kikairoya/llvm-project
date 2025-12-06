@@ -1,4 +1,4 @@
-// UNSUPPORTED: system-windows
+// UNSUPPORTED: system-windows, system-cygwin
 /// Tests for Linux toolchain discovery and start/end-file selection in
 /// gnutools::Linker::ConstructJob: crt*.o selection, -L search paths, multilib,
 /// -m elf_* per triple, --hash-style per target, -lgcc chains, and per-triple

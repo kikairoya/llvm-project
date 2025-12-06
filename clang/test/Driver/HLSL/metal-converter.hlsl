@@ -1,3 +1,7 @@
+// Windows (including Cygwin) cannot set PATH empty
+// UNSUPPORTED: system-cygwin
+// REQUIRES: !system-windows || static-libs
+
 // RUN: mkdir -p %t.dir
 // RUN: echo "dxv" > %t.dir/dxv && chmod 754 %t.dir/dxv
 

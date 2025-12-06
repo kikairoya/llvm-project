@@ -82,7 +82,7 @@ protected:
   ArrayRef<StringRef> getEnviron() const { return EnvTable; }
 };
 
-#ifndef _WIN32 // windows doesn't support logging yet.
+#if !defined(_WIN32) && !defined(__CYGWIN__) // windows doesn't support logging yet.
 
 static void writeToLog(OnDiskCASLogger *Logger, int NumOpens, int NumEntries) {
   StringRef Path = "/fake_cas/index";

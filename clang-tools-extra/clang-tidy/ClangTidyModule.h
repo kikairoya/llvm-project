@@ -100,8 +100,6 @@ using ClangTidyModuleRegistry = llvm::Registry<ClangTidyModule>;
 
 } // namespace clang::tidy
 
-namespace llvm {
-extern template class Registry<clang::tidy::ClangTidyModule>;
-} // namespace llvm
+LLVM_DECLARE_REGISTRY(clang::tidy::ClangTidyModuleRegistry)
 
 #endif // LLVM_CLANG_TOOLS_EXTRA_CLANG_TIDY_CLANGTIDYMODULE_H

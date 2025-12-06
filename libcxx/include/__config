@@ -53,6 +53,10 @@
 #      define _LIBCPP_MSVCRT // Using Microsoft's C Runtime library
 #    endif
 #    define _LIBCPP_HAS_OPEN_WITH_WCHAR 1
+#  elif defined(__CYGWIN__)
+#    define _LIBCPP_SHORT_WCHAR 1
+#    define _LIBCPP_HAS_OPEN_WITH_WCHAR 0
+#    define _LIBCPP_HAS_BITSCAN64 1
 #  else
 #    define _LIBCPP_HAS_OPEN_WITH_WCHAR 0
 #  endif // defined(_WIN32)
@@ -219,6 +223,7 @@ typedef __char32_t char32_t;
         defined(__APPLE__) ||                                                                                          \
         defined(__MVS__) ||                                                                                            \
         defined(_AIX) ||                                                                                               \
+        defined(__CYGWIN__) ||                                                                                         \
         defined(__EMSCRIPTEN__)
 // clang-format on
 #      undef _LIBCPP_HAS_THREAD_API_PTHREAD
@@ -337,7 +342,7 @@ typedef __char32_t char32_t;
 // the latter depends on internal GNU libc details that are not appropriate
 // to depend on here, so any declarations present when __cpp_char8_t is not
 // defined are ignored.
-#  if _LIBCPP_GLIBC_PREREQ(2, 36) && defined(__cpp_char8_t)
+#  if (_LIBCPP_GLIBC_PREREQ(2, 36) || defined(__CYGWIN__)) && defined(__cpp_char8_t)
 #    define _LIBCPP_HAS_C8RTOMB_MBRTOC8 1
 #  else
 #    define _LIBCPP_HAS_C8RTOMB_MBRTOC8 0

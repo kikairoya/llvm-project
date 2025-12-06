@@ -1,4 +1,5 @@
 // A simple fork results in two processes writing to the same file
+// XFAIL: cygwin
 // RUN: rm -fr %t.profdir
 // RUN: %clang_pgogen=%t.profdir -o %t -O2 %s
 // RUN: %run %t
