@@ -38,8 +38,9 @@ set(CLANG_LINKER_WRAPPER_LIB_DEPS
   clangBasic
   )
 
-target_link_libraries(clang-linker-wrapper
+clang_target_link_libraries(clang-linker-wrapper
   PRIVATE
+  DISABLE_CLANG_LINK_CLANG_DYLIB
   ${CLANG_LINKER_WRAPPER_LIB_DEPS}
   )
 

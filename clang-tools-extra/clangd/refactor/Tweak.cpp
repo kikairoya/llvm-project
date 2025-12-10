@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-LLVM_INSTANTIATE_REGISTRY(llvm::Registry<clang::clangd::Tweak>)
+LLVM_DEFINE_REGISTRY(llvm::Registry<clang::clangd::Tweak>)
 
 namespace clang {
 namespace clangd {

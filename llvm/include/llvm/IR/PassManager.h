@@ -602,7 +602,7 @@ using FunctionAnalysisManager = AnalysisManager<Function>;
 /// Note that the proxy's result is a move-only RAII object.  The validity of
 /// the analyses in the inner analysis manager is tied to its lifetime.
 template <typename AnalysisManagerT, typename IRUnitT, typename... ExtraArgTs>
-class LLVM_TEMPLATE_ABI InnerAnalysisManagerProxy
+class InnerAnalysisManagerProxy
     : public AnalysisInfoMixin<
           InnerAnalysisManagerProxy<AnalysisManagerT, IRUnitT>> {
 public:
@@ -674,20 +674,10 @@ private:
   friend AnalysisInfoMixin<
       InnerAnalysisManagerProxy<AnalysisManagerT, IRUnitT>>;
 
-  static AnalysisKey Key;
+  static inline AnalysisKey Key{};
 
   AnalysisManagerT *InnerAM;
 };
-
-// NOTE: The LLVM_ABI annotation cannot be used here because MSVC disallows
-// storage-class specifiers on class members outside of the class declaration
-// (C2720). LLVM_ATTRIBUTE_VISIBILITY_DEFAULT only applies to non-Windows
-// targets so it is used instead. Without this annotation, compiling LLVM as a
-// shared library with -fvisibility=hidden using GCC fails to export the symbol
-// even though InnerAnalysisManagerProxy is already annotated with LLVM_ABI.
-template <typename AnalysisManagerT, typename IRUnitT, typename... ExtraArgTs>
-LLVM_ATTRIBUTE_VISIBILITY_DEFAULT AnalysisKey
-    InnerAnalysisManagerProxy<AnalysisManagerT, IRUnitT, ExtraArgTs...>::Key;
 
 /// Provide the \c FunctionAnalysisManager to \c Module proxy.
 using FunctionAnalysisManagerModuleProxy =
@@ -702,8 +692,8 @@ LLVM_ABI bool FunctionAnalysisManagerModuleProxy::Result::invalidate(
 
 // Ensure the \c FunctionAnalysisManagerModuleProxy is provided as an extern
 // template.
-extern template class InnerAnalysisManagerProxy<FunctionAnalysisManager,
-                                                Module>;
+extern template class LLVM_TEMPLATE_ABI
+    InnerAnalysisManagerProxy<FunctionAnalysisManager, Module>;
 
 /// An analysis over an "inner" IR unit that provides access to an
 /// analysis manager over a "outer" IR unit.  The inner unit must be contained
@@ -832,14 +822,10 @@ private:
   friend AnalysisInfoMixin<
       OuterAnalysisManagerProxy<AnalysisManagerT, IRUnitT, ExtraArgTs...>>;
 
-  static AnalysisKey Key;
+  static inline AnalysisKey Key{};
 
   const AnalysisManagerT *OuterAM;
 };
-
-template <typename AnalysisManagerT, typename IRUnitT, typename... ExtraArgTs>
-AnalysisKey
-    OuterAnalysisManagerProxy<AnalysisManagerT, IRUnitT, ExtraArgTs...>::Key;
 
 extern template class LLVM_TEMPLATE_ABI
     OuterAnalysisManagerProxy<ModuleAnalysisManager, Function>;

@@ -52,7 +52,7 @@
 #include <system_error>
 using namespace clang;
 
-LLVM_INSTANTIATE_REGISTRY(FrontendPluginRegistry)
+LLVM_DEFINE_REGISTRY(FrontendPluginRegistry)
 
 namespace {
 

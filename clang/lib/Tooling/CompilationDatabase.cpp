@@ -50,7 +50,7 @@
 using namespace clang;
 using namespace tooling;
 
-LLVM_INSTANTIATE_REGISTRY(CompilationDatabasePluginRegistry)
+LLVM_DEFINE_REGISTRY(CompilationDatabasePluginRegistry)
 
 CompilationDatabase::~CompilationDatabase() = default;
 
