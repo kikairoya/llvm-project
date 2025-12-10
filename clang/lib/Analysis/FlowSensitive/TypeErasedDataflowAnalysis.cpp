@@ -26,9 +26,11 @@
 #include "clang/Analysis/Analyses/PostOrderCFGView.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/CFGBackEdges.h"
+#include "clang/Analysis/FlowSensitive/CachedConstAccessorsLattice.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "clang/Analysis/FlowSensitive/DataflowWorklist.h"
+#include "clang/Analysis/FlowSensitive/NoopLattice.h"
 #include "clang/Analysis/FlowSensitive/Transfer.h"
 #include "clang/Analysis/FlowSensitive/TypeErasedDataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
@@ -44,18 +46,14 @@
 
 #define DEBUG_TYPE "clang-dataflow"
 
-namespace clang {
-namespace dataflow {
-class NoopLattice;
-}
-} // namespace clang
-
 namespace llvm {
 // This needs to be exported for ClangAnalysisFlowSensitiveTests so any_cast
 // uses the correct address of Any::TypeId from the clang shared library instead
 // of creating one in the test executable. when building with
 // CLANG_LINK_CLANG_DYLIB
 template struct CLANG_EXPORT_TEMPLATE Any::TypeId<clang::dataflow::NoopLattice>;
+template struct CLANG_EXPORT_TEMPLATE Any::TypeId<
+    clang::dataflow::CachedConstAccessorsLattice<clang::dataflow::NoopLattice>>;
 } // namespace llvm
 
 namespace clang {

@@ -37,6 +37,13 @@
 
 using namespace clang;
 
+DeclarationName DeclarationName::getUsingDirectiveName() {
+  // Single instance of DeclarationNameExtra for using-directive
+  static detail::DeclarationNameExtra UDirExtra(
+      detail::DeclarationNameExtra::CXXUsingDirective);
+  return DeclarationName(&UDirExtra);
+}
+
 static int compareInt(unsigned A, unsigned B) {
   return (A < B ? -1 : (A > B ? 1 : 0));
 }
