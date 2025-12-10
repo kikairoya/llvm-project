@@ -2075,15 +2075,7 @@ template <> struct GraphTraits<ValueInfo> {
 
 template <>
 struct GraphTraits<ModuleSummaryIndex *> : public GraphTraits<ValueInfo> {
-  static NodeRef getEntryNode(ModuleSummaryIndex *I) {
-    std::unique_ptr<GlobalValueSummary> Root =
-        std::make_unique<FunctionSummary>(I->calculateCallGraphRoot());
-    GlobalValueSummaryInfo G(I->haveGVs());
-    G.addSummary(std::move(Root));
-    static auto P =
-        GlobalValueSummaryMapTy::value_type(GlobalValue::GUID(0), std::move(G));
-    return ValueInfo(I->haveGVs(), &P);
-  }
+  LLVM_ABI static NodeRef getEntryNode(ModuleSummaryIndex *I);
 };
 } // end namespace llvm
 

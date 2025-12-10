@@ -108,8 +108,8 @@ template <>
 LLVM_ABI bool MachineFunctionAnalysisManagerModuleProxy::Result::invalidate(
     Module &M, const PreservedAnalyses &PA,
     ModuleAnalysisManager::Invalidator &Inv);
-extern template class InnerAnalysisManagerProxy<MachineFunctionAnalysisManager,
-                                                Module>;
+extern template class LLVM_TEMPLATE_ABI
+    InnerAnalysisManagerProxy<MachineFunctionAnalysisManager, Module>;
 using MachineFunctionAnalysisManagerFunctionProxy =
     InnerAnalysisManagerProxy<MachineFunctionAnalysisManager, Function>;
 
@@ -117,8 +117,8 @@ template <>
 LLVM_ABI bool MachineFunctionAnalysisManagerFunctionProxy::Result::invalidate(
     Function &F, const PreservedAnalyses &PA,
     FunctionAnalysisManager::Invalidator &Inv);
-extern template class InnerAnalysisManagerProxy<MachineFunctionAnalysisManager,
-                                                Function>;
+extern template class LLVM_TEMPLATE_ABI
+    InnerAnalysisManagerProxy<MachineFunctionAnalysisManager, Function>;
 
 extern template class LLVM_TEMPLATE_ABI
     OuterAnalysisManagerProxy<ModuleAnalysisManager, MachineFunction>;
@@ -225,7 +225,7 @@ createFunctionToMachineFunctionPassAdaptor(MachineFunctionPassT &&Pass) {
 template <>
 LLVM_ABI PreservedAnalyses PassManager<MachineFunction>::run(
     MachineFunction &, AnalysisManager<MachineFunction> &);
-extern template class PassManager<MachineFunction>;
+extern template class LLVM_TEMPLATE_ABI PassManager<MachineFunction>;
 
 /// Convenience typedef for a pass manager over functions.
 using MachineFunctionPassManager = PassManager<MachineFunction>;
