@@ -679,8 +679,8 @@ LLVM_ABI bool FunctionAnalysisManagerModuleProxy::Result::invalidate(
 
 // Ensure the \c FunctionAnalysisManagerModuleProxy is provided as an extern
 // template.
-extern template class InnerAnalysisManagerProxy<FunctionAnalysisManager,
-                                                Module>;
+extern template class LLVM_TEMPLATE_ABI
+    InnerAnalysisManagerProxy<FunctionAnalysisManager, Module>;
 
 /// An analysis over an "inner" IR unit that provides access to an
 /// analysis manager over a "outer" IR unit.  The inner unit must be contained
