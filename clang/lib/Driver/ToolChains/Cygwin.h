@@ -34,6 +34,8 @@ public:
                         BoundArch BA,
                         Action::OffloadKind DeviceOffloadKind) const override;
 
+  unsigned GetDefaultDwarfVersion() const override { return 4; }
+
 protected:
   Tool *buildLinker() const override;
 };
