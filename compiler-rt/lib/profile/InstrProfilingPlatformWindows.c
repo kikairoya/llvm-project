@@ -7,11 +7,12 @@
 \*===----------------------------------------------------------------------===*/
 
 #include <stddef.h>
+#include <string.h>
 
 #include "InstrProfiling.h"
 #include "InstrProfilingInternal.h"
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(__CYGWIN__)
 
 #if defined(_MSC_VER)
 /* Merge read-write sections into .data. */

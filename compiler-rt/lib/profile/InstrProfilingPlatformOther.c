@@ -16,7 +16,7 @@
 #if !defined(__APPLE__) && !defined(__linux__) && !defined(__FreeBSD__) &&     \
     !defined(__Fuchsia__) && !(defined(__sun__) && defined(__svr4__)) &&       \
     !defined(__NetBSD__) && !defined(_WIN32) && !defined(_AIX) &&              \
-    !defined(__wasm__) && !defined(__HAIKU__) &&                               \
+    !defined(__wasm__) && !defined(__HAIKU__) && !defined(__CYGWIN__) &&       \
     !defined(COMPILER_RT_PROFILE_BAREMETAL)
 
 #include <stdlib.h>

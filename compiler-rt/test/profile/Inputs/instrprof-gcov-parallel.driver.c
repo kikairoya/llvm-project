@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 #include <sys/mman.h>

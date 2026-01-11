@@ -163,6 +163,7 @@ if config.target_os not in [
     "SunOS",
     "AIX",
     "Haiku",
+    "CYGWIN",
 ]:
     config.unsupported = True
 
