@@ -45,6 +45,11 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(MINGW_LIBRARIES mingw32 moldname mingwex msvcrt advapi32 shell32
                         user32 kernel32 mingw32 moldname mingwex msvcrt)
    endif()
+  if(CYGWIN)
+    # Simplified version of what's set in cmake/config-ix.cmake; not including
+    # builtins, which are linked separately.
+    set(CYGWIN_LIBRARIES cygwin advapi32 shell32 user32 kernel32 cygwin)
+   endif()
 endif()
 
 if (COMPILER_RT_STANDALONE_BUILD)
@@ -341,7 +346,7 @@ if (NOT MSVC)
     x86_64/floatdidf.c
     x86_64/floatdisf.c
   )
-  if (NOT WIN32)
+  if (NOT WIN32 AND NOT CYGWIN)
     set(x86_64_SOURCES
       ${x86_64_SOURCES}
       x86_64/floatundidf.S
@@ -355,10 +360,7 @@ if (NOT MSVC)
       ${x86_80_BIT_SOURCES}
       x86_64/floatdixf.c
     )
-
-    # TODO(compnerd) floatundixf.S currently implements the SysV calling
-    # convention, this must be ported to the Windows ABI.
-    if(NOT WIN32)
+    if (NOT WIN32 AND NOT CYGWIN)
       set(x86_64_SOURCES
         ${x86_64_SOURCES}
         x86_64/floatundixf.S
@@ -369,7 +371,7 @@ if (NOT MSVC)
   # Darwin x86_64 Haswell
   set(x86_64h_SOURCES ${x86_64_SOURCES})
 
-  if (WIN32)
+  if (WIN32 OR CYGWIN)
     set(x86_64_SOURCES
       ${x86_64_SOURCES}
       x86_64/chkstk.S
@@ -401,7 +403,7 @@ if (NOT MSVC)
     )
   endif()
 
-  if (WIN32)
+  if (WIN32 OR CYGWIN)
     set(i386_SOURCES
       ${i386_SOURCES}
       i386/chkstk.S
@@ -684,7 +686,7 @@ set(arm_min_SOURCES
   ${arm_EABI_SOURCES}
 )
 
-if(MINGW)
+if(MINGW OR CYGWIN)
   set(arm_SOURCES
     arm/aeabi_idivmod.S
     arm/aeabi_ldivmod.S
@@ -795,7 +797,7 @@ foreach(pat cas swp ldadd ldclr ldeor ldset)
   endforeach(size)
 endforeach(pat)
 
-if (MINGW)
+if (MINGW OR CYGWIN)
   set(aarch64_SOURCES
     ${aarch64_SOURCES}
     aarch64/chkstk.S
