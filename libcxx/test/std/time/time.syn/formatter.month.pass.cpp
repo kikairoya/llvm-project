@@ -13,6 +13,9 @@
 // TODO FMT This test should not require std::to_chars(floating-point)
 // XFAIL: availability-fp_to_chars-missing
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -100,7 +103,7 @@ static void test_valid_values() {
   check(SV("%b='janv.'\t%B='janvier'\t%h='janv.'\t%m='01'\t%Om='01'\n"), lfmt, std::chrono::January);
   check(SV("%b='févr.'\t%B='février'\t%h='févr.'\t%m='02'\t%Om='02'\n"), lfmt, std::chrono::February);
   check(SV("%b='mars'\t%B='mars'\t%h='mars'\t%m='03'\t%Om='03'\n"), lfmt, std::chrono::March);
-#  if defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  if defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
   check(SV("%b='avr.'\t%B='avril'\t%h='avr.'\t%m='04'\t%Om='04'\n"), lfmt, std::chrono::April);
 #  else
   check(SV("%b='avril'\t%B='avril'\t%h='avril'\t%m='04'\t%Om='04'\n"), lfmt, std::chrono::April);
@@ -116,7 +119,7 @@ static void test_valid_values() {
 #endif // defined(__APPLE__)
 
   // Use supplied locale (ja_JP)
-#if defined(_WIN32)
+#if defined(WINLOCALE)
   check(loc, SV("%b='1'\t%B='1月'\t%h='1'\t%m='01'\t%Om='01'\n"), lfmt, std::chrono::January);
   check(loc, SV("%b='2'\t%B='2月'\t%h='2'\t%m='02'\t%Om='02'\n"), lfmt, std::chrono::February);
   check(loc, SV("%b='3'\t%B='3月'\t%h='3'\t%m='03'\t%Om='03'\n"), lfmt, std::chrono::March);
@@ -129,7 +132,7 @@ static void test_valid_values() {
   check(loc, SV("%b='10'\t%B='10月'\t%h='10'\t%m='10'\t%Om='10'\n"), lfmt, std::chrono::October);
   check(loc, SV("%b='11'\t%B='11月'\t%h='11'\t%m='11'\t%Om='11'\n"), lfmt, std::chrono::November);
   check(loc, SV("%b='12'\t%B='12月'\t%h='12'\t%m='12'\t%Om='12'\n"), lfmt, std::chrono::December);
-#elif defined(_AIX)      // defined(_WIN32)
+#elif defined(_AIX)        // defined(WINLOCALE)
   check(loc, SV("%b='1月'\t%B='1月'\t%h='1月'\t%m='01'\t%Om='01'\n"), lfmt, std::chrono::January);
   check(loc, SV("%b='2月'\t%B='2月'\t%h='2月'\t%m='02'\t%Om='02'\n"), lfmt, std::chrono::February);
   check(loc, SV("%b='3月'\t%B='3月'\t%h='3月'\t%m='03'\t%Om='03'\n"), lfmt, std::chrono::March);
@@ -142,7 +145,7 @@ static void test_valid_values() {
   check(loc, SV("%b='10月'\t%B='10月'\t%h='10月'\t%m='10'\t%Om='10'\n"), lfmt, std::chrono::October);
   check(loc, SV("%b='11月'\t%B='11月'\t%h='11月'\t%m='11'\t%Om='11'\n"), lfmt, std::chrono::November);
   check(loc, SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='12'\n"), lfmt, std::chrono::December);
-#elif defined(__FreeBSD__) // defined(_WIN32)
+#elif defined(__FreeBSD__) // defined(WINLOCALE)
   check(loc, SV("%b=' 1月'\t%B='1月'\t%h=' 1月'\t%m='01'\t%Om='01'\n"), lfmt, std::chrono::January);
   check(loc, SV("%b=' 2月'\t%B='2月'\t%h=' 2月'\t%m='02'\t%Om='02'\n"), lfmt, std::chrono::February);
   check(loc, SV("%b=' 3月'\t%B='3月'\t%h=' 3月'\t%m='03'\t%Om='03'\n"), lfmt, std::chrono::March);
@@ -155,7 +158,7 @@ static void test_valid_values() {
   check(loc, SV("%b='10月'\t%B='10月'\t%h='10月'\t%m='10'\t%Om='10'\n"), lfmt, std::chrono::October);
   check(loc, SV("%b='11月'\t%B='11月'\t%h='11月'\t%m='11'\t%Om='11'\n"), lfmt, std::chrono::November);
   check(loc, SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='12'\n"), lfmt, std::chrono::December);
-#elif defined(__APPLE__) // defined(_WIN32)
+#elif defined(__APPLE__)   // defined(WINLOCALE)
   check(loc, SV("%b=' 1'\t%B='1月'\t%h=' 1'\t%m='01'\t%Om='01'\n"), lfmt, std::chrono::January);
   check(loc, SV("%b=' 2'\t%B='2月'\t%h=' 2'\t%m='02'\t%Om='02'\n"), lfmt, std::chrono::February);
   check(loc, SV("%b=' 3'\t%B='3月'\t%h=' 3'\t%m='03'\t%Om='03'\n"), lfmt, std::chrono::March);
@@ -168,7 +171,7 @@ static void test_valid_values() {
   check(loc, SV("%b='10'\t%B='10月'\t%h='10'\t%m='10'\t%Om='10'\n"), lfmt, std::chrono::October);
   check(loc, SV("%b='11'\t%B='11月'\t%h='11'\t%m='11'\t%Om='11'\n"), lfmt, std::chrono::November);
   check(loc, SV("%b='12'\t%B='12月'\t%h='12'\t%m='12'\t%Om='12'\n"), lfmt, std::chrono::December);
-#else                    // defined(_WIN32)
+#else                      // defined(WINLOCALE)
   check(loc, SV("%b=' 1月'\t%B='1月'\t%h=' 1月'\t%m='01'\t%Om='一'\n"), lfmt, std::chrono::January);
   check(loc, SV("%b=' 2月'\t%B='2月'\t%h=' 2月'\t%m='02'\t%Om='二'\n"), lfmt, std::chrono::February);
   check(loc, SV("%b=' 3月'\t%B='3月'\t%h=' 3月'\t%m='03'\t%Om='三'\n"), lfmt, std::chrono::March);
@@ -181,7 +184,7 @@ static void test_valid_values() {
   check(loc, SV("%b='10月'\t%B='10月'\t%h='10月'\t%m='10'\t%Om='十'\n"), lfmt, std::chrono::October);
   check(loc, SV("%b='11月'\t%B='11月'\t%h='11月'\t%m='11'\t%Om='十一'\n"), lfmt, std::chrono::November);
   check(loc, SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='十二'\n"), lfmt, std::chrono::December);
-#endif                   //  defined(_WIN32)
+#endif                     //  defined(WINLOCALE)
 
   std::locale::global(std::locale::classic());
 }

@@ -16,6 +16,9 @@
 // TODO FMT Investigate Windows issues.
 // XFAIL: msvc
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -396,7 +399,7 @@ static void test_valid_md_values() {
   std::locale::global(std::locale(LOCALE_fr_FR_UTF_8));
 
   // Non localized output using C-locale
-#ifdef _WIN32
+#ifdef WINLOCALE
   check(SV("%b='Jan'\t%B='January'\t%h='Jan'\t%m='01'\t%Om='01'\t%d=''\t%e=''\t%Od=''\t%Oe=''\n"),
         fmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::January, std::chrono::day{0}});
@@ -426,7 +429,7 @@ static void test_valid_md_values() {
   check(SV("%b='Aug'\t%B='August'\t%h='Aug'\t%m='08'\t%Om='08'\t%d='31'\t%e='31'\t%Od='31'\t%Oe='31'\n"),
         fmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::August, std::chrono::day{31}});
-#ifdef _WIN32
+#ifdef WINLOCALE
   check(SV("%b='Sep'\t%B='September'\t%h='Sep'\t%m='09'\t%Om='09'\t%d=''\t%e=''\t%Od=''\t%Oe=''\n"),
         fmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::September, std::chrono::day{32}});
@@ -439,7 +442,7 @@ static void test_valid_md_values() {
   check(SV("%b='Dec'\t%B='December'\t%h='Dec'\t%m='12'\t%Om='12'\t%d=''\t%e=''\t%Od=''\t%Oe=''\n"),
         fmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::December, std::chrono::day{255}});
-#else // _WIN32
+#else // WINLOCALE
   check(SV("%b='Sep'\t%B='September'\t%h='Sep'\t%m='09'\t%Om='09'\t%d='32'\t%e='32'\t%Od='32'\t%Oe='32'\n"),
         fmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::September, std::chrono::day{32}});
@@ -461,7 +464,7 @@ static void test_valid_md_values() {
         fmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::December, std::chrono::day{255}});
 #  endif //  defined(_AIX)
-#endif   // _WIN32
+#endif   // WINLOCALE
 
   // Use the global locale (fr_FR)
 #if defined(__APPLE__)
@@ -502,7 +505,7 @@ static void test_valid_md_values() {
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::December, std::chrono::day{255}});
 #else // defined(__APPLE__)
-#  ifdef _WIN32
+#  ifdef WINLOCALE
   check(SV("%b='janv.'\t%B='janvier'\t%h='janv.'\t%m='01'\t%Om='01'\t%d=''\t%e=''\t%Od=''\t%Oe=''\n"),
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::January, std::chrono::day{0}});
@@ -518,11 +521,11 @@ static void test_valid_md_values() {
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::March, std::chrono::day{9}});
   check(
-#  if defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  if defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
       SV("%b='avr.'\t%B='avril'\t%h='avr.'\t%m='04'\t%Om='04'\t%d='10'\t%e='10'\t%Od='10'\t%Oe='10'\n"),
-#  else  // defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  else  // defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
       SV("%b='avril'\t%B='avril'\t%h='avril'\t%m='04'\t%Om='04'\t%d='10'\t%e='10'\t%Od='10'\t%Oe='10'\n"),
-#  endif // defined(_WIN32) || defined(_AIX) || defined(__FreeBSD__)
+#  endif // defined(WINLOCALE) || defined(_AIX) || defined(__FreeBSD__)
       lfmt,
       std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::April, std::chrono::day{10}});
   check(SV("%b='mai'\t%B='mai'\t%h='mai'\t%m='05'\t%Om='05'\t%d='28'\t%e='28'\t%Od='28'\t%Oe='28'\n"),
@@ -537,7 +540,7 @@ static void test_valid_md_values() {
   check(SV("%b='août'\t%B='août'\t%h='août'\t%m='08'\t%Om='08'\t%d='31'\t%e='31'\t%Od='31'\t%Oe='31'\n"),
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::August, std::chrono::day{31}});
-#  ifdef _WIN32
+#  ifdef WINLOCALE
   check(SV("%b='sept.'\t%B='septembre'\t%h='sept.'\t%m='09'\t%Om='09'\t%d=''\t%e=''\t%Od=''\t%Oe=''\n"),
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::September, std::chrono::day{32}});
@@ -550,7 +553,7 @@ static void test_valid_md_values() {
   check(SV("%b='déc.'\t%B='décembre'\t%h='déc.'\t%m='12'\t%Om='12'\t%d=''\t%e=''\t%Od=''\t%Oe=''\n"),
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::December, std::chrono::day{255}});
-#  else // _WIN32
+#  else // WINLOCALE
   check(SV("%b='sept.'\t%B='septembre'\t%h='sept.'\t%m='09'\t%Om='09'\t%d='32'\t%e='32'\t%Od='32'\t%Oe='32'\n"),
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::September, std::chrono::day{32}});
@@ -572,11 +575,11 @@ static void test_valid_md_values() {
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::December, std::chrono::day{255}});
 #    endif //   defined(_AIX)
-#  endif   // _WIN32
+#  endif   // WINLOCALE
 #endif     // defined(__APPLE__)
 
   // Use supplied locale (ja_JP)
-#if defined(_WIN32)
+#if defined(WINLOCALE)
   check(loc,
         SV("%b='1'\t%B='1月'\t%h='1'\t%m='01'\t%Om='01'\t%d=''\t%e=''\t%Od=''\t%Oe=''\n"),
         lfmt,
@@ -625,7 +628,7 @@ static void test_valid_md_values() {
         SV("%b='12'\t%B='12月'\t%h='12'\t%m='12'\t%Om='12'\t%d=''\t%e=''\t%Od=''\t%Oe=''\n"),
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::December, std::chrono::day{255}});
-#elif defined(_AIX)      // defined(_WIN32)
+#elif defined(_AIX)        // defined(WINLOCALE)
   check(loc,
         SV("%b='1月'\t%B='1月'\t%h='1月'\t%m='01'\t%Om='01'\t%d='00'\t%e=' 0'\t%Od='00'\t%Oe=' 0'\n"),
         lfmt,
@@ -674,7 +677,7 @@ static void test_valid_md_values() {
         SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='12'\t%d='55'\t%e='55'\t%Od='55'\t%Oe='55'\n"),
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::December, std::chrono::day{255}});
-#elif defined(__FreeBSD__) // defined(_WIN32)
+#elif defined(__FreeBSD__) // defined(WINLOCALE)
   check(loc,
         SV("%b=' 1月'\t%B='1月'\t%h=' 1月'\t%m='01'\t%Om='01'\t%d='00'\t%e=' 0'\t%Od='00'\t%Oe=' 0'\n"),
         lfmt,
@@ -723,7 +726,7 @@ static void test_valid_md_values() {
         SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='12'\t%d='255'\t%e='255'\t%Od='255'\t%Oe='255'\n"),
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::December, std::chrono::day{255}});
-#elif defined(__APPLE__) // defined(_WIN32)
+#elif defined(__APPLE__)   // defined(WINLOCALE)
   check(loc,
         SV("%b=' 1'\t%B='1月'\t%h=' 1'\t%m='01'\t%Om='01'\t%d='00'\t%e=' 0'\t%Od='00'\t%Oe=' 0'\n"),
         lfmt,
@@ -772,7 +775,7 @@ static void test_valid_md_values() {
         SV("%b='12'\t%B='12月'\t%h='12'\t%m='12'\t%Om='12'\t%d='255'\t%e='255'\t%Od='255'\t%Oe='255'\n"),
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::December, std::chrono::day{255}});
-#else                    // defined(_WIN32)
+#else                      // defined(WINLOCALE)
   check(loc,
         SV("%b=' 1月'\t%B='1月'\t%h=' 1月'\t%m='01'\t%Om='一'\t%d='00'\t%e=' 0'\t%Od='〇'\t%Oe='〇'\n"),
         lfmt,
@@ -821,7 +824,7 @@ static void test_valid_md_values() {
         SV("%b='12月'\t%B='12月'\t%h='12月'\t%m='12'\t%Om='十二'\t%d='255'\t%e='255'\t%Od='255'\t%Oe='255'\n"),
         lfmt,
         std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::December, std::chrono::day{255}});
-#endif                   //  defined(_WIN32)
+#endif                     //  defined(WINLOCALE)
 
   std::locale::global(std::locale::classic());
 }
@@ -1035,14 +1038,14 @@ static void test_valid_ymd_values() {
          "%V='01'\t"
          "%w='4'\t"
          "%W='00'\t"
-#if defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "%x='1970/01/01'\t"
-#else  // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#else  // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "%x='1970年01月01日'\t"
-#endif // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#endif // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "%y='70'\t"
          "%Y='1970'\t"
-#if defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "%Ex='1970/01/01'\t"
          "%EC='19'\t"
          "%Ey='70'\t"
@@ -1053,7 +1056,7 @@ static void test_valid_ymd_values() {
          "%Ow='4'\t"
          "%OW='00'\t"
          "%Oy='70'\t"
-#else  // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#else  // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "%Ex='昭和45年01月01日'\t"
          "%EC='昭和'\t"
          "%Ey='45'\t"
@@ -1064,7 +1067,7 @@ static void test_valid_ymd_values() {
          "%Ow='四'\t"
          "%OW='〇'\t"
          "%Oy='七十'\t"
-#endif // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#endif // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "\n"),
       lfmt,
       std::chrono::year_month_day{std::chrono::year{1970}, std::chrono::January, std::chrono::day{1}});
@@ -1082,14 +1085,14 @@ static void test_valid_ymd_values() {
          "%V='22'\t"
          "%w='6'\t"
          "%W='21'\t"
-#if defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "%x='2004/05/29'\t"
-#else  // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#else  // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "%x='2004年05月29日'\t"
-#endif // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#endif // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "%y='04'\t"
          "%Y='2004'\t"
-#if defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "%Ex='2004/05/29'\t"
          "%EC='20'\t"
          "%Ey='04'\t"
@@ -1100,7 +1103,7 @@ static void test_valid_ymd_values() {
          "%Ow='6'\t"
          "%OW='21'\t"
          "%Oy='04'\t"
-#else  // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#else  // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "%Ex='平成16年05月29日'\t"
          "%EC='平成'\t"
          "%Ey='16'\t"
@@ -1111,7 +1114,7 @@ static void test_valid_ymd_values() {
          "%Ow='六'\t"
          "%OW='二十一'\t"
          "%Oy='四'\t"
-#endif // defined(__APPLE__) || defined(_AIX) || defined(_WIN32) || defined(__FreeBSD__)
+#endif // defined(__APPLE__) || defined(_AIX) || defined(WINLOCALE) || defined(__FreeBSD__)
          "\n"),
       lfmt,
       std::chrono::year_month_day{std::chrono::year{2004}, std::chrono::May, std::chrono::day{29}});

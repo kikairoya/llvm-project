@@ -16,6 +16,9 @@
 // TODO FMT Investigate Windows issues.
 // XFAIL: msvc
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ja_JP.UTF-8
 
@@ -92,7 +95,7 @@ static void test_valid_values() {
 
   // Use supplied locale (ja_JP).
   // This locale has a different alternate, but not on all platforms
-#if defined(_WIN32) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
+#if defined(WINLOCALE) || defined(__APPLE__) || defined(_AIX) || defined(__FreeBSD__)
   check(loc, SV("%u='7'\t%Ou='7'\t%w='0'\t%Ow='0'\t%a='日'\t%A='日曜日'\n"), lfmt, std::chrono::weekday(0));
   check(loc, SV("%u='1'\t%Ou='1'\t%w='1'\t%Ow='1'\t%a='月'\t%A='月曜日'\n"), lfmt, std::chrono::weekday(1));
   check(loc, SV("%u='2'\t%Ou='2'\t%w='2'\t%Ow='2'\t%a='火'\t%A='火曜日'\n"), lfmt, std::chrono::weekday(2));
@@ -153,7 +156,7 @@ static void test_invalid_values() {
   // Use supplied locale (ja_JP). This locale has a different alternate.
   check(loc, SV("%u='8'\t%Ou='8'\t%w='8'\t%Ow='8'\n"), lfmt, std::chrono::weekday(8));
   check(loc, SV("%u='5'\t%Ou='5'\t%w='5'\t%Ow='5'\n"), lfmt, std::chrono::weekday(255));
-#elif defined(_WIN32) // defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(WINLOCALE) // defined(__APPLE__) || defined(__FreeBSD__)
   // Non localized output using C-locale
   check(SV("%u=''\t%Ou=''\t%w=''\t%Ow=''\n"), fmt, std::chrono::weekday(8));
   check(SV("%u=''\t%Ou=''\t%w=''\t%Ow=''\n"), fmt, std::chrono::weekday(255));

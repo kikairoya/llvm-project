@@ -12,6 +12,7 @@
 
 // UNSUPPORTED: no-wide-characters
 // REQUIRES: target={{.+}}-windows-{{.+}}
+// XFAIL: cygwin
 
 // FILE_DEPENDENCIES: test.dat
 // RUN: %{build}

@@ -11,6 +11,9 @@
 
 // XFAIL: LIBCXX-FREEBSD-FIXME
 
+// Cygwin's locale slightly differs from others
+// XFAIL: LIBCXX-CYGWIN-FIXME
+
 // REQUIRES: locale.en_US.UTF-8
 // REQUIRES: locale.fr_FR.UTF-8
 // REQUIRES: locale.ru_RU.UTF-8
@@ -52,7 +55,7 @@ int main(int, char**)
     std::tm t;
     {
         const my_facet f(LOCALE_en_US_UTF_8, 1);
-#ifdef _WIN32
+#ifdef WINLOCALE
         // On Windows, the "%c" format lacks the leading week day, which
         // means that t.tm_wday doesn't get set when parsing the string.
         const char in[] = "12/31/2061 11:55:59 PM";
@@ -73,14 +76,14 @@ int main(int, char**)
         assert(t.tm_mday == 31);
         assert(t.tm_mon == 11);
         assert(t.tm_year == 161);
-#if !defined(_WIN32) && !defined(_AIX)
+#if !defined(WINLOCALE) && !defined(_AIX)
         assert(t.tm_wday == 6);
 #endif
         assert(err == std::ios_base::eofbit);
     }
     {
         const my_facet f(LOCALE_en_US_UTF_8, 1);
-#if defined(_WIN32) || defined(TEST_HAS_GLIBC) || defined(_AIX)
+#if defined(WINLOCALE) || defined(TEST_HAS_GLIBC) || defined(_AIX)
         const char in[] = "11:55:59 PM";
 #else
         const char in[] = "23:55:59";
@@ -96,7 +99,7 @@ int main(int, char**)
     }
     {
         const my_facet f(LOCALE_fr_FR_UTF_8, 1);
-#ifdef _WIN32
+#ifdef WINLOCALE
         const char in[] = "31/12/2061 23:55:59";
 #elif defined(TEST_HAS_GLIBC)
         const char in[] = "sam. 31 d""\xC3\xA9""c. 2061 23:55:59";
@@ -115,7 +118,7 @@ int main(int, char**)
         assert(t.tm_mday == 31);
         assert(t.tm_mon == 11);
         assert(t.tm_year == 161);
-#if !defined(_WIN32) && !defined(_AIX)
+#if !defined(WINLOCALE) && !defined(_AIX)
         assert(t.tm_wday == 6);
 #endif
         assert(err == std::ios_base::eofbit);
@@ -136,7 +139,7 @@ int main(int, char**)
         const my_facet f(LOCALE_ru_RU_UTF_8, 1);
 #ifdef TEST_HAS_GLIBC
         const char in[] = "\xD0\xA1\xD0\xB1 31 \xD0\xB4\xD0\xB5\xD0\xBA 2061 23:55:59";
-#elif defined(_WIN32)
+#elif defined(WINLOCALE)
         const char in[] = "31.12.2061 23:55:59";
 #elif defined(_AIX)
         const char in[] = "31 \xD0\xB4\xD0\xB5\xD0\xBA. 2061 \xD0\xB3., 23:55:59";
@@ -160,7 +163,7 @@ int main(int, char**)
         assert(t.tm_mday == 31);
         assert(t.tm_mon == 11);
         assert(t.tm_year == 161);
-#if !defined(_WIN32) && !defined(_AIX)
+#if !defined(WINLOCALE) && !defined(_AIX)
         assert(t.tm_wday == 6);
 #endif
         assert(err == std::ios_base::eofbit);
@@ -185,7 +188,7 @@ int main(int, char**)
                           "\xE6\x98\x9F\xE6\x9c\x9F\xE5\x85\xAD"
                           " 23" "\xE6\x97\xB6" "55" "\xE5\x88\x86" "59"
                           "\xE7\xA7\x92";
-#elif defined(_WIN32)
+#elif defined(WINLOCALE)
         const char in[] = "2061/12/31 23:55:59";
 #elif defined(_AIX)
         // The time field is omitted in the definition below because in the
@@ -210,7 +213,7 @@ int main(int, char**)
         assert(t.tm_mday == 31);
         assert(t.tm_mon == 11);
         assert(t.tm_year == 161);
-#if !defined(_WIN32) && !defined(_AIX)
+#if !defined(WINLOCALE) && !defined(_AIX)
         assert(t.tm_wday == 6);
 #endif
 #if !defined(_AIX)
@@ -219,7 +222,7 @@ int main(int, char**)
     }
     {
         const my_facet f(LOCALE_zh_CN_UTF_8, 1);
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         const char in[] = "23:55:59";
 #elif defined(_AIX)
         const char in[] = "\xE4\xB8\x8B\xE5\x8D\x88" "11:55:59";

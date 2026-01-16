@@ -81,7 +81,7 @@ int main(int, char**)
 
     {
         Fnf f(LOCALE_en_US_UTF_8, 1);
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(f.negative_sign() == "()");
 #else
         assert(f.negative_sign() == "-");
@@ -89,7 +89,7 @@ int main(int, char**)
     }
     {
         Fnt f(LOCALE_en_US_UTF_8, 1);
-#if defined(_WIN32)
+#if defined(WINLOCALE)
         assert(f.negative_sign() == "()");
 #else
         assert(f.negative_sign() == "-");
@@ -98,7 +98,7 @@ int main(int, char**)
 #ifndef TEST_HAS_NO_WIDE_CHARACTERS
     {
         Fwf f(LOCALE_en_US_UTF_8, 1);
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(f.negative_sign() == L"()");
 #else
         assert(f.negative_sign() == L"-");
@@ -106,7 +106,7 @@ int main(int, char**)
     }
     {
         Fwt f(LOCALE_en_US_UTF_8, 1);
-#if defined(_WIN32)
+#  if defined(WINLOCALE)
         assert(f.negative_sign() == L"()");
 #else
         assert(f.negative_sign() == L"-");

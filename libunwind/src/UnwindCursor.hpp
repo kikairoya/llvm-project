@@ -17,9 +17,9 @@
 #include <stdlib.h>
 #include <unwind.h>
 
-#ifdef _WIN32
-  #include <windows.h>
-  #include <ntverp.h>
+#if defined(_WIN32) || defined(__CYGWIN__)
+#include <windows.h>
+#include <ntverp.h>
 #endif
 #ifdef __APPLE__
   #include <mach-o/dyld.h>
@@ -514,7 +514,8 @@ public:
 #endif
 };
 
-#if defined(_LIBUNWIND_SUPPORT_SEH_UNWIND) && defined(_WIN32)
+#if defined(_LIBUNWIND_SUPPORT_SEH_UNWIND) &&                                  \
+    (defined(_WIN32) || defined(__CYGWIN__))
 
 /// \c UnwindCursor contains all state (including all register values) during
 /// an unwind.  This is normally stack-allocated inside a unw_cursor_t.
@@ -2094,7 +2095,7 @@ bool UnwindCursor<A, R>::getInfoFromSEH(pint_t pc) {
   pint_t base;
   RUNTIME_FUNCTION *unwindEntry = lookUpSEHUnwindInfo(pc, &base);
   if (!unwindEntry) {
-    _LIBUNWIND_DEBUG_LOG("\tpc not in table, pc=0x%llX", (uint64_t) pc);
+    _LIBUNWIND_DEBUG_LOG("\tpc not in table, pc=0x%llX", (unsigned long long) pc);
     return false;
   }
   _info.gp = 0;
@@ -2765,7 +2766,8 @@ void UnwindCursor<A, R>::setInfoBasedOnIPRegister(bool isReturnAddress) {
     --pc;
 #endif
 
-#if !(defined(_LIBUNWIND_SUPPORT_SEH_UNWIND) && defined(_WIN32)) &&            \
+#if !(defined(_LIBUNWIND_SUPPORT_SEH_UNWIND) &&                                \
+      (defined(_WIN32) || defined(__CYGWIN__))) &&                             \
     !defined(_LIBUNWIND_SUPPORT_TBTAB_UNWIND)
   // In case of this is frame of signal handler, the IP saved in the signal
   // handler points to first non-executed instruction, while FDE/CIE expects IP
