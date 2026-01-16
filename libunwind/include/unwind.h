@@ -18,7 +18,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#if defined(__SEH__) && !defined(__USING_SJLJ_EXCEPTIONS__) && defined(_WIN32)
+#if defined(__SEH__) && !defined(__USING_SJLJ_EXCEPTIONS__) &&                 \
+    (defined(_WIN32) || defined(__CYGWIN__))
 #include <windows.h>
 #include <ntverp.h>
 #endif

@@ -157,7 +157,7 @@ int main(int, char**)
             assert(!(m[0] & F::punct));
             assert(!(m[0] & F::xdigit));
             assert(!(m[0] & F::blank));
-#if defined(_WIN32)
+#if defined(WINLOCALE)
             // On Windows, these wchars are classified according to their
             // Unicode interpretation even in the "C" locale.
             assert( (m[0] & F::alpha));

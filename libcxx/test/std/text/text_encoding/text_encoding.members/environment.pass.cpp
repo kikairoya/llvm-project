@@ -28,7 +28,7 @@
 
 int main(int, char**) {
   auto check_env = []() {
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(__CYGWIN__)
     constexpr std::text_encoding::id expected_id = std::text_encoding::UTF8;
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
     constexpr std::text_encoding::id expected_id = std::text_encoding::ASCII;

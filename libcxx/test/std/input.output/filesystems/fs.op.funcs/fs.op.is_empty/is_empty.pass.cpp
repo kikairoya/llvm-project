@@ -72,7 +72,7 @@ static void test_is_empty_file()
 static void test_is_empty_fails()
 {
     scoped_test_env env;
-#ifdef _WIN32
+#ifdef TEST_WIN_NO_FILESYSTEM_PERMS_NONE
     // Windows doesn't support setting perms::none to trigger failures
     // reading directories; test using a special inaccessible directory
     // instead.
@@ -95,7 +95,7 @@ static void test_is_empty_fails()
 static void test_directory_access_denied()
 {
     scoped_test_env env;
-#ifdef _WIN32
+#ifdef TEST_WIN_NO_FILESYSTEM_PERMS_NONE
     // Windows doesn't support setting perms::none to trigger failures
     // reading directories; test using a special inaccessible directory
     // instead.

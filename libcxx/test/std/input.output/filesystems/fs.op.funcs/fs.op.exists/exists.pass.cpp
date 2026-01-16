@@ -84,13 +84,13 @@ static void test_exist_not_found()
 
 static void test_exists_fails()
 {
-#ifdef _WIN32
-    // Windows doesn't support setting perms::none to trigger failures
-    // reading directories; test using a special inaccessible directory
-    // instead.
-    const path p = GetWindowsInaccessibleDir();
-    if (p.empty())
-        return;
+#ifdef TEST_WIN_NO_FILESYSTEM_PERMS_NONE
+  // Windows doesn't support setting perms::none to trigger failures
+  // reading directories; test using a special inaccessible directory
+  // instead.
+  const path p = GetWindowsInaccessibleDir();
+  if (p.empty())
+    return;
 #else
     scoped_test_env env;
     const path dir = env.create_dir("dir");

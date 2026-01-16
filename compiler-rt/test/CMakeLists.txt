@@ -132,7 +132,7 @@ if(COMPILER_RT_CAN_EXECUTE_TESTS)
   if(COMPILER_RT_BUILD_BUILTINS OR COMPILER_RT_TEST_EXTERNAL_BUILTINS)
     compiler_rt_test_runtime(builtins NO_COMPILER_RT_HAS_GUARD)
   endif()
-  if(COMPILER_RT_BUILD_SANITIZERS)
+  if(COMPILER_RT_BUILD_SANITIZERS AND COMPILER_RT_HAS_SANITIZER_COMMON)
     compiler_rt_test_runtime(interception)
 
     compiler_rt_test_runtime(lsan)
