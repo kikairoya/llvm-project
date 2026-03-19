@@ -74,7 +74,7 @@ void useBaseCase() {
 
   BasicCase<WithImportTag>::nestedType().noAttrMethod();
   // MSC-DAG: define linkonce_odr dso_local void @"?noAttrMethod@nestedType@?$BasicCase@UWithImportTag@@@@QEAAXXZ"
-  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI13WithImportTagE10nestedType12noAttrMethodEv
+  // GNU-DAG: declare dllimport void @_ZN9BasicCaseI13WithImportTagE10nestedType12noAttrMethodEv
 
   BasicCase<WithImportTag>::nestedType().importedMethod();
   // MSC-DAG: declare dllimport void @"?importedMethod@nestedType@?$BasicCase@UWithImportTag@@@@QEAAXXZ"
@@ -82,7 +82,7 @@ void useBaseCase() {
 
   BasicCase<WithImportTag>::nestedType().importedInlineMethod();
   // MSC-DAG: declare dllimport void @"?importedInlineMethod@nestedType@?$BasicCase@UWithImportTag@@@@QEAAXXZ"
-  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI13WithImportTagE10nestedType20importedInlineMethodEv
+  // GNU-DAG: declare dllimport void @_ZN9BasicCaseI13WithImportTagE10nestedType20importedInlineMethodEv
 
   BasicCase<WithImportTag>::nestedType().excludedMethod();
   // MSC-DAG: define linkonce_odr dso_local void @"?excludedMethod@nestedType@?$BasicCase@UWithImportTag@@@@QEAAXXZ"
@@ -122,7 +122,7 @@ void useBaseCase() {
 
   BasicCase<NoAttrTag>::nestedType().noAttrMethod();
   // MSC-DAG: define linkonce_odr dso_local void @"?noAttrMethod@nestedType@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
-  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI9NoAttrTagE10nestedType12noAttrMethodEv
+  // GNU-DAG: declare dso_local void @_ZN9BasicCaseI9NoAttrTagE10nestedType12noAttrMethodEv
 
   BasicCase<NoAttrTag>::nestedType().importedMethod();
   // MSC-DAG: declare dllimport void @"?importedMethod@nestedType@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
@@ -130,7 +130,7 @@ void useBaseCase() {
 
   BasicCase<NoAttrTag>::nestedType().importedInlineMethod();
   // MSC-DAG: declare dllimport void @"?importedInlineMethod@nestedType@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
-  // GNU-DAG: define linkonce_odr dso_local void @_ZN9BasicCaseI9NoAttrTagE10nestedType20importedInlineMethodEv
+  // GNU-DAG: declare dso_local void @_ZN9BasicCaseI9NoAttrTagE10nestedType20importedInlineMethodEv
 
   BasicCase<NoAttrTag>::nestedType().excludedMethod();
   // MSC-DAG: define linkonce_odr dso_local void @"?excludedMethod@nestedType@?$BasicCase@UNoAttrTag@@@@QEAAXXZ"
@@ -230,7 +230,7 @@ void useImportWholeTemplate() {
 
   ImportWholeTemplate<NoAttrTag>::nestedType().noAttrMethod();
   // MSC-DAG: define linkonce_odr dso_local void @"?noAttrMethod@nestedType@?$ImportWholeTemplate@UNoAttrTag@@@@QEAAXXZ"
-  // GNU-DAG: define linkonce_odr dso_local void @_ZN19ImportWholeTemplateI9NoAttrTagE10nestedType12noAttrMethodEv
+  // GNU-DAG: declare dllimport void @_ZN19ImportWholeTemplateI9NoAttrTagE10nestedType12noAttrMethodEv
 
   ImportWholeTemplate<NoAttrTag>::nestedExcludedType().noAttrMethod();
   // MSC-DAG: define linkonce_odr dso_local void @"?noAttrMethod@nestedExcludedType@?$ImportWholeTemplate@UNoAttrTag@@@@QEAAXXZ"

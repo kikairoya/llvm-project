@@ -73,14 +73,14 @@ template struct __declspec(dllexport) Class<ExportDefinition>;
 // CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI16ExportDefinitionE7InlinedEv
 // VAR: @_ZN5ClassI16ExportDefinitionE9StaticVarE = weak_odr dso_local dllexport global
 // VAR: @_ZN5ClassI16ExportDefinitionE9InlineVarE = weak_odr dso_local dllexport global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI16ExportDefinitionE6Nested7MemfuncEv
-// CHECK: define weak_odr dso_local void @_ZN5ClassI16ExportDefinitionE6Nested7InlinedEv
-// VAR: @_ZN5ClassI16ExportDefinitionE6Nested9StaticVarE = weak_odr dso_local global
-// VAR: @_ZN5ClassI16ExportDefinitionE6Nested9InlineVarE = weak_odr dso_local global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI16ExportDefinitionE6Nested10DeepNested7MemfuncEv
-// CHECK: define weak_odr dso_local void @_ZN5ClassI16ExportDefinitionE6Nested10DeepNested7InlinedEv
-// VAR: @_ZN5ClassI16ExportDefinitionE6Nested10DeepNested9StaticVarE = weak_odr dso_local global
-// VAR: @_ZN5ClassI16ExportDefinitionE6Nested10DeepNested9InlineVarE = weak_odr dso_local global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI16ExportDefinitionE6Nested7MemfuncEv
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI16ExportDefinitionE6Nested7InlinedEv
+// VAR: @_ZN5ClassI16ExportDefinitionE6Nested9StaticVarE = weak_odr dso_local dllexport global
+// VAR: @_ZN5ClassI16ExportDefinitionE6Nested9InlineVarE = weak_odr dso_local dllexport global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI16ExportDefinitionE6Nested10DeepNested7MemfuncEv
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI16ExportDefinitionE6Nested10DeepNested7InlinedEv
+// VAR: @_ZN5ClassI16ExportDefinitionE6Nested10DeepNested9StaticVarE = weak_odr dso_local dllexport global
+// VAR: @_ZN5ClassI16ExportDefinitionE6Nested10DeepNested9InlineVarE = weak_odr dso_local dllexport global
 
 //
 // Basic usage:
@@ -94,16 +94,14 @@ template struct Class<ExportDeclaration>;
 // CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI17ExportDeclarationE7InlinedEv
 // VAR: @_ZN5ClassI17ExportDeclarationE9StaticVarE = weak_odr dso_local dllexport global
 // VAR: @_ZN5ClassI17ExportDeclarationE9InlineVarE = weak_odr dso_local dllexport global
-
-// dllexport doesn't affect nested classes.
-// CHECK: define weak_odr dso_local void @_ZN5ClassI17ExportDeclarationE6Nested7MemfuncEv
-// CHECK: define weak_odr dso_local void @_ZN5ClassI17ExportDeclarationE6Nested7InlinedEv
-// VAR: @_ZN5ClassI17ExportDeclarationE6Nested9StaticVarE = weak_odr dso_local global
-// VAR: @_ZN5ClassI17ExportDeclarationE6Nested9InlineVarE = weak_odr dso_local global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI17ExportDeclarationE6Nested10DeepNested7MemfuncEv
-// CHECK: define weak_odr dso_local void @_ZN5ClassI17ExportDeclarationE6Nested10DeepNested7InlinedEv
-// VAR: @_ZN5ClassI17ExportDeclarationE6Nested10DeepNested9StaticVarE = weak_odr dso_local global
-// VAR: @_ZN5ClassI17ExportDeclarationE6Nested10DeepNested9InlineVarE = weak_odr dso_local global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI17ExportDeclarationE6Nested7MemfuncEv
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI17ExportDeclarationE6Nested7InlinedEv
+// VAR: @_ZN5ClassI17ExportDeclarationE6Nested9StaticVarE = weak_odr dso_local dllexport global
+// VAR: @_ZN5ClassI17ExportDeclarationE6Nested9InlineVarE = weak_odr dso_local dllexport global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI17ExportDeclarationE6Nested10DeepNested7MemfuncEv
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI17ExportDeclarationE6Nested10DeepNested7InlinedEv
+// VAR: @_ZN5ClassI17ExportDeclarationE6Nested10DeepNested9StaticVarE = weak_odr dso_local dllexport global
+// VAR: @_ZN5ClassI17ExportDeclarationE6Nested10DeepNested9InlineVarE = weak_odr dso_local dllexport global
 
 //
 // Wrong usage:
@@ -128,10 +126,10 @@ extern template struct __declspec(dllexport) Class<ImpInstMethod>;
 template struct Class<ImpInstMethod>;
 // CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI13ImpInstMethodE7InlinedEv
 // VAR: @_ZN5ClassI13ImpInstMethodE9InlineVarE = weak_odr dso_local dllexport global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI13ImpInstMethodE6Nested7MemfuncEv
-// VAR: @_ZN5ClassI13ImpInstMethodE6Nested9StaticVarE = weak_odr dso_local global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI13ImpInstMethodE6Nested10DeepNested7MemfuncEv
-// VAR: @_ZN5ClassI13ImpInstMethodE6Nested10DeepNested9StaticVarE = weak_odr dso_local global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI13ImpInstMethodE6Nested7InlinedEv
+// VAR: @_ZN5ClassI13ImpInstMethodE6Nested9StaticVarE = weak_odr dso_local dllexport global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI13ImpInstMethodE6Nested10DeepNested7InlinedEv
+// VAR: @_ZN5ClassI13ImpInstMethodE6Nested10DeepNested9InlineVarE = weak_odr dso_local dllexport global
 
 //
 // Export after specialization:
@@ -143,10 +141,10 @@ extern template struct __declspec(dllexport) Class<ExpSpecMethod>;
 template struct Class<ExpSpecMethod>;
 // CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI13ExpSpecMethodE7InlinedEv
 // VAR: @_ZN5ClassI13ExpSpecMethodE9InlineVarE = weak_odr dso_local dllexport global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI13ExpSpecMethodE6Nested7MemfuncEv
-// VAR: @_ZN5ClassI13ExpSpecMethodE6Nested9StaticVarE = weak_odr dso_local global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI13ExpSpecMethodE6Nested10DeepNested7MemfuncEv
-// VAR: @_ZN5ClassI13ExpSpecMethodE6Nested10DeepNested9StaticVarE = weak_odr dso_local global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI13ExpSpecMethodE6Nested7InlinedEv
+// VAR: @_ZN5ClassI13ExpSpecMethodE6Nested9InlineVarE = weak_odr dso_local dllexport global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI13ExpSpecMethodE6Nested10DeepNested7InlinedEv
+// VAR: @_ZN5ClassI13ExpSpecMethodE6Nested10DeepNested9InlineVarE = weak_odr dso_local dllexport global
 
 //
 // Exported specialization:
