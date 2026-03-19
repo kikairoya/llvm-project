@@ -54,7 +54,7 @@ template struct __declspec(dllexport) BasicCase<WithExportTag>;
 // GNU-DAG: define weak_odr dso_local dllexport void @_ZN9BasicCaseI13WithExportTagE12noAttrMethodEv
 
 // MSC-DAG: define weak_odr dso_local void @"?noAttrMethod@nestedType@?$BasicCase@UWithExportTag@@@@QEAAXXZ"
-// GNU-DAG: define weak_odr dso_local void @_ZN9BasicCaseI13WithExportTagE10nestedType12noAttrMethodEv
+// GNU-DAG: define weak_odr dso_local dllexport void @_ZN9BasicCaseI13WithExportTagE10nestedType12noAttrMethodEv
 
 // MSC-DAG: define weak_odr dso_local dllexport void @"?exportedMethod@nestedType@?$BasicCase@UWithExportTag@@@@QEAAXXZ"
 // GNU-DAG: define weak_odr dso_local dllexport void @_ZN9BasicCaseI13WithExportTagE10nestedType14exportedMethodEv
@@ -169,7 +169,7 @@ template struct ExportWholeTemplate<NoAttrTag>;
 // MSC-DAG: define weak_odr dso_local dllexport void @"?noAttrMethod@?$ExportWholeTemplate@UNoAttrTag@@@@QEAAXXZ"
 // GNU-DAG: define weak_odr dso_local dllexport void @_ZN19ExportWholeTemplateI9NoAttrTagE12noAttrMethodEv
 // MSC-DAG: define weak_odr dso_local void @"?noAttrMethod@nestedType@?$ExportWholeTemplate@UNoAttrTag@@@@QEAAXXZ"
-// GNU-DAG: define weak_odr dso_local void @_ZN19ExportWholeTemplateI9NoAttrTagE10nestedType12noAttrMethodEv
+// GNU-DAG: define weak_odr dso_local dllexport void @_ZN19ExportWholeTemplateI9NoAttrTagE10nestedType12noAttrMethodEv
 
 void useExportWholeTemplate() {
   ExportWholeTemplate<NoAttrTag>().excludedMethod();
