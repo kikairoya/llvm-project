@@ -6605,12 +6605,13 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
       cast<DLLImportAttr>(ClassAttr)->wasPropagatedToBaseTemplate();
 
   TemplateSpecializationKind TSK = Class->getTemplateSpecializationKind();
+  const TargetInfo &TI = Context.getTargetInfo();
 
   // Ignore explicit dllexport on explicit class template instantiation
   // declarations, except in MinGW mode.
   if (ClassExported && !ClassAttr->isInherited() &&
       TSK == TSK_ExplicitInstantiationDeclaration &&
-      !Context.getTargetInfo().getTriple().isOSCygMing()) {
+      !TI.getTriple().isOSCygMing()) {
     if (auto *DEA = Class->getAttr<DLLExportAttr>()) {
       Class->addAttr(DLLExportOnDeclAttr::Create(Context, DEA->getLoc()));
       Class->dropAttr<DLLExportAttr>();
@@ -6654,13 +6655,29 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
 
     VarDecl *VD = dyn_cast<VarDecl>(Member);
     CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(Member);
+    CXXRecordDecl *RD = dyn_cast<CXXRecordDecl>(Member);
     TemplateSpecializationKind MemberTSK =
         VD   ? VD->getTemplateSpecializationKind()
         : MD ? MD->getTemplateSpecializationKind()
+        : RD ? RD->getTemplateSpecializationKind()
              : TSK_Undeclared;
 
     if (MemberTSK == TSK_ExplicitSpecialization)
       continue;
+
+    // Inherit dllexport to nested class in MinGW mode.
+    if (RD) {
+      if (TI.getTriple().isOSCygMing() && !getDLLAttr(Member) &&
+          (TSK == TSK_ExplicitInstantiationDeclaration ||
+           TSK == TSK_ExplicitInstantiationDefinition) &&
+          isTemplateInstantiation(MemberTSK)) {
+        auto *NewAttr =
+            cast<InheritableAttr>(ClassAttr->clone(getASTContext()));
+        NewAttr->setInherited(true);
+        Member->addAttr(NewAttr);
+      }
+      continue;
+    }
 
     // Only methods and static fields inherit the attributes.
     if (!VD && !MD)
@@ -6725,7 +6742,7 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
         // MinGW does not import or export inline methods. But do it for
         // template instantiations and inherited constructors (which are
         // marked inline but must be exported to match MSVC behavior).
-        if (!Context.getTargetInfo().shouldDLLImportComdatSymbols() &&
+        if (!TI.shouldDLLImportComdatSymbols() &&
             TSK != TSK_ExplicitInstantiationDeclaration &&
             TSK != TSK_ExplicitInstantiationDefinition) {
           if (auto *CD = dyn_cast<CXXConstructorDecl>(MD);
