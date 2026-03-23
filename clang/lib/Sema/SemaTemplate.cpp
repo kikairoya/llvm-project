@@ -10195,8 +10195,8 @@ static bool ScopeSpecifierHasTemplateId(const CXXScopeSpec &SS) {
 
 /// Make a dllexport or dllimport attr on a class template specialization take
 /// effect.
-static void dllExportImportClassTemplateSpecialization(
-    Sema &S, ClassTemplateSpecializationDecl *Def) {
+static void dllExportImportClassTemplateSpecialization(Sema &S,
+                                                       CXXRecordDecl *Def) {
   auto *A = cast_or_null<InheritableAttr>(getDLLAttr(Def));
   assert(A && "dllExportImportClassTemplateSpecialization called "
               "on Def without dllexport or dllimport");
@@ -10507,21 +10507,23 @@ DeclResult Sema::ActOnExplicitInstantiation(
     }
 
     if ((NewlyDLLExported && PreviouslyDLLImported) ||
-        (NewlyDLLImported && PreviouslyDLLExported))
+        (NewlyDLLImported && PreviouslyDLLExported) ||
+        (!NewlyDLLExported && !NewlyDLLImported))
       ShouldIgnoreDLLAttr = true;
 
     // Set the template specialization kind. Make sure it is set before
     // instantiating the members which will trigger ASTConsumer callbacks.
     Specialization->setTemplateSpecializationKind(TSK);
 
+    SmallVector<CXXRecordDecl *, 4> NestedClasses{Specialization};
     // An explicit instantiation can add a dll attribute to a template with a
     // previous implicit instantiation.
-    if (!ShouldIgnoreDLLAttr && (NewlyDLLExported || NewlyDLLImported)) {
+    if (!ShouldIgnoreDLLAttr) {
       // For the dllimport attribute, we ignore it if any implicitly instantiate
       // member is already odr-used, to prevent the codegen for the method call
       // will not respect the dllimport, while it will with cl.
-      bool MemberAlreadyUsed =
-          NewlyDLLImported && llvm::any_of(Def->decls(), [](Decl *Member) {
+      static constexpr auto isUsedImplicitlyInstantiatedMember =
+          [](Decl *Member) {
             if (Member->hasAttr<ExcludeFromExplicitInstantiationAttr>())
               return false;
             auto *VD = dyn_cast<VarDecl>(Member);
@@ -10530,9 +10532,36 @@ DeclResult Sema::ActOnExplicitInstantiation(
                              : MD ? MD->getTemplateSpecializationKind()
                                   : TSK_Undeclared;
             return MemberTSK == TSK_ImplicitInstantiation && Member->isUsed();
-          });
+          };
 
+      bool MemberAlreadyUsed = false;
+      if (Context.getTargetInfo().getTriple().isOSCygMing()) {
+        // Apply to nested classes recursively in MinGW mode only.
+        for (size_t i = 0; i < NestedClasses.size() && !MemberAlreadyUsed;
+             ++i) {
+          CXXRecordDecl *Class = NestedClasses[i];
+          for (Decl *Member : Class->decls()) {
+            if (Member->hasAttr<ExcludeFromExplicitInstantiationAttr>())
+              continue;
+            if (NewlyDLLImported) {
+              MemberAlreadyUsed = isUsedImplicitlyInstantiatedMember(Member);
+              if (MemberAlreadyUsed)
+                break;
+            }
+            if (auto *NestedRD = dyn_cast<CXXRecordDecl>(Member);
+                NestedRD && NestedRD->hasDefinition() &&
+                NestedRD->getTemplateSpecializationKind() ==
+                    TSK_ImplicitInstantiation)
+              NestedClasses.push_back(NestedRD);
+          }
+        }
+      } else {
+        MemberAlreadyUsed =
+            NewlyDLLImported &&
+            llvm::any_of(Def->decls(), isUsedImplicitlyInstantiatedMember);
+      }
       if (MemberAlreadyUsed) {
+        ShouldIgnoreDLLAttr = true;
         if (Context.getTargetInfo().getTriple().isOSCygMing() &&
             TSK == TSK_ExplicitInstantiationDeclaration && NewlyDLLImported) {
           // In MinGW mode, all undefined symbols are also searched from DLLs
@@ -10548,6 +10577,7 @@ DeclResult Sema::ActOnExplicitInstantiation(
               << /*implicit|explicit=*/0;
         }
       } else {
+        NestedClasses.erase(NestedClasses.begin());
         dllExportImportClassTemplateSpecialization(*this, Specialization);
         if (Def != Specialization) {
           if (!getDLLAttr(Def)) {
@@ -10562,6 +10592,16 @@ DeclResult Sema::ActOnExplicitInstantiation(
     }
 
     InstantiateClassTemplateSpecializationMembers(TemplateNameLoc, Def, TSK);
+    if (!ShouldIgnoreDLLAttr) {
+      for (CXXRecordDecl *RD : NestedClasses) {
+        if (getDLLAttr(RD)) {
+          // Affect DLLAttr to nested classes which was implicitly instantiated
+          // before.
+          RD->setTemplateSpecializationKind(TSK);
+          dllExportImportClassTemplateSpecialization(*this, RD);
+        }
+      }
+    }
   } else {
 
     // Set the template specialization kind.

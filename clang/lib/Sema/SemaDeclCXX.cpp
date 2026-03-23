@@ -6675,6 +6675,9 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
             cast<InheritableAttr>(ClassAttr->clone(getASTContext()));
         NewAttr->setInherited(true);
         Member->addAttr(NewAttr);
+        if (MemberTSK == TSK_ExplicitInstantiationDeclaration ||
+            MemberTSK == TSK_ExplicitInstantiationDefinition)
+          checkClassLevelDLLAttribute(RD);
       }
       continue;
     }
