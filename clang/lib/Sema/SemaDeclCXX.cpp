@@ -6654,6 +6654,13 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
 
     VarDecl *VD = dyn_cast<VarDecl>(Member);
     CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(Member);
+    TemplateSpecializationKind MemberTSK =
+        VD   ? VD->getTemplateSpecializationKind()
+        : MD ? MD->getTemplateSpecializationKind()
+             : TSK_Undeclared;
+
+    if (MemberTSK == TSK_ExplicitSpecialization)
+      continue;
 
     // Only methods and static fields inherit the attributes.
     if (!VD && !MD)
