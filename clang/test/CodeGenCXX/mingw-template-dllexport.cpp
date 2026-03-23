@@ -166,16 +166,16 @@ template struct Class<ExpSpecMethodNonExportDecl>;
 // Export after instantiation: an implicitly instantiated member of nested class doesn't prevent other members of its enclosing type to be dllexport-ed.
 //
 USE(&Class<ImpInstNestedMember>::Nested::Specialized);
-// CHECK: define weak_odr dso_local void @_ZN5ClassI19ImpInstNestedMemberE6Nested11SpecializedEv
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI19ImpInstNestedMemberE6Nested11SpecializedEv
 
 extern template struct __declspec(dllexport) Class<ImpInstNestedMember>;
 template struct Class<ImpInstNestedMember>;
 // CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI19ImpInstNestedMemberE7InlinedEv
 // VAR: @_ZN5ClassI19ImpInstNestedMemberE9InlineVarE = weak_odr dso_local dllexport global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI19ImpInstNestedMemberE6Nested7MemfuncEv
-// VAR: @_ZN5ClassI19ImpInstNestedMemberE6Nested9StaticVarE = weak_odr dso_local global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI19ImpInstNestedMemberE6Nested10DeepNested7MemfuncEv
-// VAR: @_ZN5ClassI19ImpInstNestedMemberE6Nested10DeepNested9StaticVarE = weak_odr dso_local global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI19ImpInstNestedMemberE6Nested7InlinedEv
+// VAR: @_ZN5ClassI19ImpInstNestedMemberE6Nested9InlineVarE = weak_odr dso_local dllexport global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI19ImpInstNestedMemberE6Nested10DeepNested7InlinedEv
+// VAR: @_ZN5ClassI19ImpInstNestedMemberE6Nested10DeepNested9InlineVarE = weak_odr dso_local dllexport global
 
 //
 // Export after specialization: a specialized member of nested class doesn't prevent other members to be dllexport-ed.
@@ -187,10 +187,10 @@ extern template struct __declspec(dllexport) Class<ExpSpecNestedMember>;
 template struct Class<ExpSpecNestedMember>;
 // CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI19ExpSpecNestedMemberE7InlinedEv
 // VAR: @_ZN5ClassI19ExpSpecNestedMemberE9InlineVarE = weak_odr dso_local dllexport global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI19ExpSpecNestedMemberE6Nested7MemfuncEv
-// VAR: @_ZN5ClassI19ExpSpecNestedMemberE6Nested9StaticVarE = weak_odr dso_local global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI19ExpSpecNestedMemberE6Nested10DeepNested7MemfuncEv
-// VAR: @_ZN5ClassI19ExpSpecNestedMemberE6Nested10DeepNested9StaticVarE = weak_odr dso_local global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI19ExpSpecNestedMemberE6Nested7InlinedEv
+// VAR: @_ZN5ClassI19ExpSpecNestedMemberE6Nested9InlineVarE = weak_odr dso_local dllexport global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI19ExpSpecNestedMemberE6Nested10DeepNested7InlinedEv
+// VAR: @_ZN5ClassI19ExpSpecNestedMemberE6Nested10DeepNested9InlineVarE = weak_odr dso_local dllexport global
 
 //
 // Export after instantiation of nested class:
@@ -202,10 +202,10 @@ extern template struct __declspec(dllexport) Class<ImpInstNested>;
 template struct Class<ImpInstNested>;
 // CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI13ImpInstNestedE7InlinedEv
 // VAR: @_ZN5ClassI13ImpInstNestedE9InlineVarE = weak_odr dso_local dllexport global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI13ImpInstNestedE6Nested7MemfuncEv
-// VAR: @_ZN5ClassI13ImpInstNestedE6Nested9StaticVarE = weak_odr dso_local global
-// CHECK: define weak_odr dso_local void @_ZN5ClassI13ImpInstNestedE6Nested10DeepNested7MemfuncEv
-// VAR: @_ZN5ClassI13ImpInstNestedE6Nested10DeepNested9StaticVarE = weak_odr dso_local global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI13ImpInstNestedE6Nested7InlinedEv
+// VAR: @_ZN5ClassI13ImpInstNestedE6Nested9InlineVarE = weak_odr dso_local dllexport global
+// CHECK: define weak_odr dso_local dllexport void @_ZN5ClassI13ImpInstNestedE6Nested10DeepNested7InlinedEv
+// VAR: @_ZN5ClassI13ImpInstNestedE6Nested10DeepNested9InlineVarE = weak_odr dso_local dllexport global
 
 //
 // Exported specialization of nested class:

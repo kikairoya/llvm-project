@@ -202,10 +202,10 @@ USE(&Class<ImpInstNestedMember>::Nested::Specialized);
 // CHECK: declare dso_local void @_ZN5ClassI19ImpInstNestedMemberE6Nested11SpecializedEv
 
 extern template struct __declspec(dllimport) Class<ImpInstNestedMember>;
-USE(&Class<ImpInstNestedMember>::Inlined);
-USE(&Class<ImpInstNestedMember>::InlineVar);
-// CHECK: declare dllimport void @_ZN5ClassI19ImpInstNestedMemberE7InlinedEv
-// VAR: @_ZN5ClassI19ImpInstNestedMemberE9InlineVarE = external dllimport global
+USE(&Class<ImpInstNestedMember>::Memfunc);
+USE(&Class<ImpInstNestedMember>::StaticVar);
+// CHECK: declare dso_local void @_ZN5ClassI19ImpInstNestedMemberE7MemfuncEv
+// VAR: @_ZN5ClassI19ImpInstNestedMemberE9StaticVarE = external global
 USE(&Class<ImpInstNestedMember>::Nested::Memfunc);
 USE(&Class<ImpInstNestedMember>::Nested::StaticVar);
 // CHECK: declare dso_local void @_ZN5ClassI19ImpInstNestedMemberE6Nested7MemfuncEv
@@ -226,14 +226,14 @@ USE(&Class<ExpSpecNestedMember>::Inlined);
 USE(&Class<ExpSpecNestedMember>::InlineVar);
 // CHECK: declare dllimport void @_ZN5ClassI19ExpSpecNestedMemberE7InlinedEv
 // VAR: @_ZN5ClassI19ExpSpecNestedMemberE9InlineVarE = external dllimport global
-USE(&Class<ExpSpecNestedMember>::Nested::Memfunc);
-USE(&Class<ExpSpecNestedMember>::Nested::StaticVar);
-// CHECK: declare dso_local void @_ZN5ClassI19ExpSpecNestedMemberE6Nested7MemfuncEv
-// VAR: @_ZN5ClassI19ExpSpecNestedMemberE6Nested9StaticVarE = external global
-USE(&Class<ExpSpecNestedMember>::Nested::DeepNested::Memfunc);
-USE(&Class<ExpSpecNestedMember>::Nested::DeepNested::StaticVar);
-// CHECK: declare dso_local void @_ZN5ClassI19ExpSpecNestedMemberE6Nested10DeepNested7MemfuncEv
-// VAR: @_ZN5ClassI19ExpSpecNestedMemberE6Nested10DeepNested9StaticVarE = external global
+USE(&Class<ExpSpecNestedMember>::Nested::Inlined);
+USE(&Class<ExpSpecNestedMember>::Nested::InlineVar);
+// CHECK: declare dllimport void @_ZN5ClassI19ExpSpecNestedMemberE6Nested7InlinedEv
+// VAR: @_ZN5ClassI19ExpSpecNestedMemberE6Nested9InlineVarE = external dllimport global
+USE(&Class<ExpSpecNestedMember>::Nested::DeepNested::Inlined);
+USE(&Class<ExpSpecNestedMember>::Nested::DeepNested::InlineVar);
+// CHECK: declare dllimport void @_ZN5ClassI19ExpSpecNestedMemberE6Nested10DeepNested7InlinedEv
+// VAR: @_ZN5ClassI19ExpSpecNestedMemberE6Nested10DeepNested9InlineVarE = external dllimport global
 
 //
 // Import after instantiation of nested class:
@@ -246,14 +246,14 @@ USE(&Class<ImpInstNested>::Inlined);
 USE(&Class<ImpInstNested>::InlineVar);
 // CHECK: declare dllimport void @_ZN5ClassI13ImpInstNestedE7InlinedEv
 // VAR: @_ZN5ClassI13ImpInstNestedE9InlineVarE = external dllimport global
-USE(&Class<ImpInstNested>::Nested::Memfunc);
-USE(&Class<ImpInstNested>::Nested::StaticVar);
-// CHECK: declare dso_local void @_ZN5ClassI13ImpInstNestedE6Nested7MemfuncEv
-// VAR: @_ZN5ClassI13ImpInstNestedE6Nested9StaticVarE = external global
-USE(&Class<ImpInstNested>::Nested::DeepNested::Memfunc);
-USE(&Class<ImpInstNested>::Nested::DeepNested::StaticVar);
-// CHECK: declare dso_local void @_ZN5ClassI13ImpInstNestedE6Nested10DeepNested7MemfuncEv
-// VAR: @_ZN5ClassI13ImpInstNestedE6Nested10DeepNested9StaticVarE = external global
+USE(&Class<ImpInstNested>::Nested::Inlined);
+USE(&Class<ImpInstNested>::Nested::InlineVar);
+// CHECK: declare dllimport void @_ZN5ClassI13ImpInstNestedE6Nested7InlinedEv
+// VAR: @_ZN5ClassI13ImpInstNestedE6Nested9InlineVarE = external dllimport global
+USE(&Class<ImpInstNested>::Nested::DeepNested::Inlined);
+USE(&Class<ImpInstNested>::Nested::DeepNested::InlineVar);
+// CHECK: declare dllimport void @_ZN5ClassI13ImpInstNestedE6Nested10DeepNested7InlinedEv
+// VAR: @_ZN5ClassI13ImpInstNestedE6Nested10DeepNested9InlineVarE = external dllimport global
 
 //
 // Imported specialization of nested class:
