@@ -19,6 +19,8 @@ struct ImpInstMethod;
 struct ExpSpecMethodNonImportDecl;
 struct ExpSpecNested;
 struct ImpInstNested;
+struct ExpSpecNestedMember;
+struct ImpInstNestedMember;
 struct SpecializeWholeClass;
 
 template <typename T>
@@ -34,6 +36,15 @@ struct Class {
   static inline int InlineVar = 0;
   struct Nested {
     static void Memfunc();
+    static void Inlined() {}
+    static int StaticVar;
+    static inline int InlineVar = 0;
+    struct DeepNested {
+      static void Memfunc();
+      static void Inlined() {}
+      static int StaticVar;
+      static inline int InlineVar = 0;
+    };
     static void Specialized() {}
   };
   static void Specialized() {}
@@ -43,7 +54,13 @@ void Class<T>::Memfunc() {}
 template <typename T>
 void Class<T>::Nested::Memfunc() {}
 template <typename T>
+void Class<T>::Nested::DeepNested::Memfunc() {}
+template <typename T>
 int Class<T>::StaticVar = 0;
+template <typename T>
+int Class<T>::Nested::StaticVar = 0;
+template <typename T>
+int Class<T>::Nested::DeepNested::StaticVar = 0;
 
 template <typename T> inline Class<T> *ptrOuter = nullptr;
 template <typename T> T &&move(T &&x);
@@ -87,7 +104,21 @@ USE(&Class<ImportDeclaration>::InlineVar);
 
 // dllimport doesn't affect nested classes.
 USE(&Class<ImportDeclaration>::Nested::Memfunc);
+USE(&Class<ImportDeclaration>::Nested::Inlined);
+USE(&Class<ImportDeclaration>::Nested::StaticVar);
+USE(&Class<ImportDeclaration>::Nested::InlineVar);
 // CHECK: define linkonce_odr dso_local void @_ZN5ClassI17ImportDeclarationE6Nested7MemfuncEv
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI17ImportDeclarationE6Nested7InlinedEv
+// VAR: @_ZN5ClassI17ImportDeclarationE6Nested9StaticVarE = linkonce_odr dso_local global
+// VAR: @_ZN5ClassI17ImportDeclarationE6Nested9InlineVarE = linkonce_odr dso_local global
+USE(&Class<ImportDeclaration>::Nested::DeepNested::Memfunc);
+USE(&Class<ImportDeclaration>::Nested::DeepNested::Inlined);
+USE(&Class<ImportDeclaration>::Nested::DeepNested::StaticVar);
+USE(&Class<ImportDeclaration>::Nested::DeepNested::InlineVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI17ImportDeclarationE6Nested10DeepNested7MemfuncEv
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI17ImportDeclarationE6Nested10DeepNested7InlinedEv
+// VAR: @_ZN5ClassI17ImportDeclarationE6Nested10DeepNested9StaticVarE = linkonce_odr dso_local global
+// VAR: @_ZN5ClassI17ImportDeclarationE6Nested10DeepNested9InlineVarE = linkonce_odr dso_local global
 
 //
 // Wrong usage:
@@ -115,6 +146,14 @@ USE(&Class<ImpInstMethod>::Memfunc);
 USE(&Class<ImpInstMethod>::StaticVar);
 // CHECK: declare dso_local void @_ZN5ClassI13ImpInstMethodE7MemfuncEv
 // VAR: @_ZN5ClassI13ImpInstMethodE9StaticVarE = external global
+USE(&Class<ImpInstMethod>::Nested::Memfunc);
+USE(&Class<ImpInstMethod>::Nested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI13ImpInstMethodE6Nested7MemfuncEv
+// VAR: @_ZN5ClassI13ImpInstMethodE6Nested9StaticVarE = linkonce_odr dso_local global
+USE(&Class<ImpInstMethod>::Nested::DeepNested::Memfunc);
+USE(&Class<ImpInstMethod>::Nested::DeepNested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI13ImpInstMethodE6Nested10DeepNested7MemfuncEv
+// VAR: @_ZN5ClassI13ImpInstMethodE6Nested10DeepNested9StaticVarE = linkonce_odr dso_local global
 
 //
 // Import after specialization:
@@ -127,6 +166,14 @@ USE(&Class<ExpSpecMethod>::Inlined);
 USE(&Class<ExpSpecMethod>::InlineVar);
 // CHECK: declare dllimport void @_ZN5ClassI13ExpSpecMethodE7InlinedEv
 // VAR: @_ZN5ClassI13ExpSpecMethodE9InlineVarE = external dllimport global
+USE(&Class<ExpSpecMethod>::Nested::Memfunc);
+USE(&Class<ExpSpecMethod>::Nested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI13ExpSpecMethodE6Nested7MemfuncEv
+// VAR: @_ZN5ClassI13ExpSpecMethodE6Nested9StaticVarE = linkonce_odr dso_local global
+USE(&Class<ExpSpecMethod>::Nested::DeepNested::Memfunc);
+USE(&Class<ExpSpecMethod>::Nested::DeepNested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI13ExpSpecMethodE6Nested10DeepNested7MemfuncEv
+// VAR: @_ZN5ClassI13ExpSpecMethodE6Nested10DeepNested9StaticVarE = linkonce_odr dso_local global
 
 //
 // Imported specialization:
@@ -141,6 +188,54 @@ USE(&Class<ExpSpecMethodNonImportDecl>::Memfunc);
 USE(&Class<ExpSpecMethodNonImportDecl>::StaticVar);
 // CHECK: declare dso_local void @_ZN5ClassI26ExpSpecMethodNonImportDeclE7MemfuncEv
 // VAR: @_ZN5ClassI26ExpSpecMethodNonImportDeclE9StaticVarE = external global
+USE(&Class<ExpSpecMethodNonImportDecl>::Nested::Memfunc);
+USE(&Class<ExpSpecMethodNonImportDecl>::Nested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI26ExpSpecMethodNonImportDeclE6Nested7MemfuncEv
+// VAR: @_ZN5ClassI26ExpSpecMethodNonImportDeclE6Nested9StaticVarE = linkonce_odr dso_local global
+USE(&Class<ExpSpecMethodNonImportDecl>::Nested::DeepNested::Memfunc);
+USE(&Class<ExpSpecMethodNonImportDecl>::Nested::DeepNested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI26ExpSpecMethodNonImportDeclE6Nested10DeepNested7MemfuncEv
+// VAR: @_ZN5ClassI26ExpSpecMethodNonImportDeclE6Nested10DeepNested9StaticVarE = linkonce_odr dso_local global
+
+//
+// Import after instantiation: an implicitly instantiated member of nested class prevents other members of its enclosing type to be dllimport-ed.
+//
+USE(&Class<ImpInstNestedMember>::Nested::Specialized);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI19ImpInstNestedMemberE6Nested11SpecializedEv
+
+extern template struct __declspec(dllimport) Class<ImpInstNestedMember>;
+USE(&Class<ImpInstNestedMember>::Inlined);
+USE(&Class<ImpInstNestedMember>::InlineVar);
+// CHECK: declare dllimport void @_ZN5ClassI19ImpInstNestedMemberE7InlinedEv
+// VAR: @_ZN5ClassI19ImpInstNestedMemberE9InlineVarE = external dllimport global
+USE(&Class<ImpInstNestedMember>::Nested::Memfunc);
+USE(&Class<ImpInstNestedMember>::Nested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI19ImpInstNestedMemberE6Nested7MemfuncEv
+// VAR: @_ZN5ClassI19ImpInstNestedMemberE6Nested9StaticVarE = linkonce_odr dso_local global
+USE(&Class<ImpInstNestedMember>::Nested::DeepNested::Memfunc);
+USE(&Class<ImpInstNestedMember>::Nested::DeepNested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI19ImpInstNestedMemberE6Nested10DeepNested7MemfuncEv
+// VAR: @_ZN5ClassI19ImpInstNestedMemberE6Nested10DeepNested9StaticVarE = linkonce_odr dso_local global
+
+//
+// Import after specialization: an explicitly specialized member of nested class prevents other members of its enclosing type to be dllimport-ed.
+//
+template <> void Class<ExpSpecNestedMember>::Nested::Specialized() {}
+// CHECK: define dso_local void @_ZN5ClassI19ExpSpecNestedMemberE6Nested11SpecializedEv
+
+extern template struct __declspec(dllimport) Class<ExpSpecNestedMember>;
+USE(&Class<ExpSpecNestedMember>::Inlined);
+USE(&Class<ExpSpecNestedMember>::InlineVar);
+// CHECK: declare dllimport void @_ZN5ClassI19ExpSpecNestedMemberE7InlinedEv
+// VAR: @_ZN5ClassI19ExpSpecNestedMemberE9InlineVarE = external dllimport global
+USE(&Class<ExpSpecNestedMember>::Nested::Memfunc);
+USE(&Class<ExpSpecNestedMember>::Nested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI19ExpSpecNestedMemberE6Nested7MemfuncEv
+// VAR: @_ZN5ClassI19ExpSpecNestedMemberE6Nested9StaticVarE = linkonce_odr dso_local global
+USE(&Class<ExpSpecNestedMember>::Nested::DeepNested::Memfunc);
+USE(&Class<ExpSpecNestedMember>::Nested::DeepNested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI19ExpSpecNestedMemberE6Nested10DeepNested7MemfuncEv
+// VAR: @_ZN5ClassI19ExpSpecNestedMemberE6Nested10DeepNested9StaticVarE = linkonce_odr dso_local global
 
 //
 // Import after instantiation of nested class:
@@ -153,6 +248,14 @@ USE(&Class<ImpInstNested>::Inlined);
 USE(&Class<ImpInstNested>::InlineVar);
 // CHECK: declare dllimport void @_ZN5ClassI13ImpInstNestedE7InlinedEv
 // VAR: @_ZN5ClassI13ImpInstNestedE9InlineVarE = external dllimport global
+USE(&Class<ImpInstNested>::Nested::Memfunc);
+USE(&Class<ImpInstNested>::Nested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI13ImpInstNestedE6Nested7MemfuncEv
+// VAR: @_ZN5ClassI13ImpInstNestedE6Nested9StaticVarE = linkonce_odr dso_local global
+USE(&Class<ImpInstNested>::Nested::DeepNested::Memfunc);
+USE(&Class<ImpInstNested>::Nested::DeepNested::StaticVar);
+// CHECK: define linkonce_odr dso_local void @_ZN5ClassI13ImpInstNestedE6Nested10DeepNested7MemfuncEv
+// VAR: @_ZN5ClassI13ImpInstNestedE6Nested10DeepNested9StaticVarE = linkonce_odr dso_local global
 
 //
 // Imported specialization of nested class:
