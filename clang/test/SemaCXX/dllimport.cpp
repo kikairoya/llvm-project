@@ -1013,11 +1013,10 @@ struct ClassTmplSpecializedMember {
   void member() {}
 };
 
-template <> void ClassTmplSpecializedMember<false, InstTrig::Spec>::specializedMember1(); // non-gnu-note{{implicit instantiation first required here}}
-extern template struct __declspec(dllimport) ClassTmplSpecializedMember<false, InstTrig::Spec>; // non-gnu-warning{{'dllimport' attribute ignored; class template is already instantiated}}
-template <> void ClassTmplSpecializedMember<true, InstTrig::Spec>::specializedMember1(); // non-gnu-note{{implicit instantiation first required here}}
-template struct __declspec(dllimport) ClassTmplSpecializedMember<true, InstTrig::Spec>; // non-gnu-warning{{'dllimport' attribute ignored; class template is already instantiated}} \
-                                                                                           gnu-warning{{'dllimport' attribute ignored on explicit instantiation definition}}
+template <> void ClassTmplSpecializedMember<false, InstTrig::Spec>::specializedMember1();
+extern template struct __declspec(dllimport) ClassTmplSpecializedMember<false, InstTrig::Spec>;
+template <> void ClassTmplSpecializedMember<true, InstTrig::Spec>::specializedMember1();
+template struct __declspec(dllimport) ClassTmplSpecializedMember<true, InstTrig::Spec>; // gnu-warning{{'dllimport' attribute ignored on explicit instantiation definition}}
 
 void anchor(ClassTmplSpecializedMember<false, InstTrig::Impl> &x) { x.instantiatedMember1(); } // non-gnu-note{{implicit instantiation first required here}}
 extern template struct __declspec(dllimport) ClassTmplSpecializedMember<false, InstTrig::Impl>; // non-gnu-warning{{'dllimport' attribute ignored; class template is already instantiated}}
@@ -1025,13 +1024,12 @@ void anchor(ClassTmplSpecializedMember<true, InstTrig::Impl> &x) { x.instantiate
 template struct __declspec(dllimport) ClassTmplSpecializedMember<true, InstTrig::Impl>; // non-gnu-warning{{'dllimport' attribute ignored; class template is already instantiated}} \
                                                                                            gnu-warning{{'dllimport' attribute ignored on explicit instantiation definition}}
 
-template <> void ClassTmplSpecializedMember<false, InstTrig::Spec, InstTrig::Spec>::specializedMember1(); // non-gnu-note{{implicit instantiation first required here}}
+template <> void ClassTmplSpecializedMember<false, InstTrig::Spec, InstTrig::Spec>::specializedMember1();
 template <> void ClassTmplSpecializedMember<false, InstTrig::Spec, InstTrig::Spec>::specializedMember2();
-extern template struct __declspec(dllimport) ClassTmplSpecializedMember<false, InstTrig::Spec, InstTrig::Spec>; // non-gnu-warning{{'dllimport' attribute ignored; class template is already instantiated}}
-template <> void ClassTmplSpecializedMember<true, InstTrig::Spec, InstTrig::Spec>::specializedMember1(); // non-gnu-note{{implicit instantiation first required here}}
+extern template struct __declspec(dllimport) ClassTmplSpecializedMember<false, InstTrig::Spec, InstTrig::Spec>;
+template <> void ClassTmplSpecializedMember<true, InstTrig::Spec, InstTrig::Spec>::specializedMember1();
 template <> void ClassTmplSpecializedMember<true, InstTrig::Spec, InstTrig::Spec>::specializedMember2();
-template struct __declspec(dllimport) ClassTmplSpecializedMember<true, InstTrig::Spec, InstTrig::Spec>; // non-gnu-warning{{'dllimport' attribute ignored; class template is already instantiated}} \
-                                                                                                           gnu-warning{{'dllimport' attribute ignored on explicit instantiation definition}}
+template struct __declspec(dllimport) ClassTmplSpecializedMember<true, InstTrig::Spec, InstTrig::Spec>; // gnu-warning{{'dllimport' attribute ignored on explicit instantiation definition}}
 
 template <> void ClassTmplSpecializedMember<false, InstTrig::Spec, InstTrig::Impl>::specializedMember1(); // non-gnu-note{{implicit instantiation first required here}}
 void anchor(ClassTmplSpecializedMember<false, InstTrig::Spec, InstTrig::Impl> &x) { x.instantiatedMember1(); }

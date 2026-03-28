@@ -123,10 +123,10 @@ USE(&Class<ImpInstMethod>::StaticVar);
 template <> void Class<ExpSpecMethod>::Specialized() {}
 // CHECK: define dso_local void @_ZN5ClassI13ExpSpecMethodE11SpecializedEv
 extern template struct __declspec(dllimport) Class<ExpSpecMethod>;
-USE(&Class<ExpSpecMethod>::Memfunc);
-USE(&Class<ExpSpecMethod>::StaticVar);
-// CHECK: declare dso_local void @_ZN5ClassI13ExpSpecMethodE7MemfuncEv
-// VAR: @_ZN5ClassI13ExpSpecMethodE9StaticVarE = external global
+USE(&Class<ExpSpecMethod>::Inlined);
+USE(&Class<ExpSpecMethod>::InlineVar);
+// CHECK: declare dllimport void @_ZN5ClassI13ExpSpecMethodE7InlinedEv
+// VAR: @_ZN5ClassI13ExpSpecMethodE9InlineVarE = external dllimport global
 
 //
 // Imported specialization:
@@ -149,10 +149,10 @@ USE(&Class<ExpSpecMethodNonImportDecl>::StaticVar);
 USE(sizeof(Class<ImpInstNested>::Nested));
 
 extern template struct __declspec(dllimport) Class<ImpInstNested>;
-USE(&Class<ImpInstNested>::Memfunc);
-USE(&Class<ImpInstNested>::StaticVar);
-// CHECK: declare dso_local void @_ZN5ClassI13ImpInstNestedE7MemfuncEv
-// VAR: @_ZN5ClassI13ImpInstNestedE9StaticVarE = external global
+USE(&Class<ImpInstNested>::Inlined);
+USE(&Class<ImpInstNested>::InlineVar);
+// CHECK: declare dllimport void @_ZN5ClassI13ImpInstNestedE7InlinedEv
+// VAR: @_ZN5ClassI13ImpInstNestedE9InlineVarE = external dllimport global
 
 //
 // Imported specialization of nested class:
@@ -166,10 +166,10 @@ struct __declspec(dllimport) Class<ExpSpecNested>::Nested {
   static inline int InlineVar = 0;
 };
 extern template struct __declspec(dllimport) Class<ExpSpecNested>;
-USE(&Class<ExpSpecNested>::Memfunc);
-USE(&Class<ExpSpecNested>::StaticVar);
-// CHECK: declare dso_local void @_ZN5ClassI13ExpSpecNestedE7MemfuncEv
-// VAR: @_ZN5ClassI13ExpSpecNestedE9StaticVarE = external global
+USE(&Class<ExpSpecNested>::Inlined);
+USE(&Class<ExpSpecNested>::InlineVar);
+// CHECK: declare dllimport void @_ZN5ClassI13ExpSpecNestedE7InlinedEv
+// VAR: @_ZN5ClassI13ExpSpecNestedE9InlineVarE = external dllimport global
 
 // A fully-specialized nested class isn't an explicit instantation, so an inline method won't be imported.
 USE(&Class<ExpSpecNested>::Nested::Memfunc);
