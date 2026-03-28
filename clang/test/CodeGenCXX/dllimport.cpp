@@ -870,9 +870,9 @@ template <> void ExplicitInstantiationAfterMemberSpecialization<int>::g() {}
 extern template struct __declspec(dllimport) ExplicitInstantiationAfterMemberSpecialization<int>;
 template struct __declspec(dllimport) ExplicitInstantiationAfterMemberSpecialization<int>;
 USEMEMFUNC(ExplicitInstantiationAfterMemberSpecialization<int>, f);
-// M32-DAG: declare dso_local x86_thiscallcc void @"?f@?$ExplicitInstantiationAfterMemberSpecialization@H@@QAEXXZ"
-// G32-DAG: define weak_odr dso_local x86_thiscallcc void @_ZN46ExplicitInstantiationAfterMemberSpecializationIiE1fEv
-// C32-DAG: define weak_odr dso_local void @_ZN46ExplicitInstantiationAfterMemberSpecializationIiE1fEv
+// M32-DAG: declare dllimport x86_thiscallcc void @"?f@?$ExplicitInstantiationAfterMemberSpecialization@H@@QAEXXZ"
+// G32-DAG: declare dllimport x86_thiscallcc void @_ZN46ExplicitInstantiationAfterMemberSpecializationIiE1fEv
+// C32-DAG: declare dllimport void @_ZN46ExplicitInstantiationAfterMemberSpecializationIiE1fEv
 
 USEMEMFUNC(ExplicitInstantiationAfterMemberSpecialization<long>, h);
 // M32-DAG: declare dso_local x86_thiscallcc void @"?h@?$ExplicitInstantiationAfterMemberSpecialization@J@@QAEXXZ"
