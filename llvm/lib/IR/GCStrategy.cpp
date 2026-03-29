@@ -17,7 +17,7 @@
 
 using namespace llvm;
 
-LLVM_INSTANTIATE_REGISTRY(GCRegistry)
+LLVM_DEFINE_REGISTRY(GCRegistry)
 
 GCStrategy::GCStrategy() = default;
 

@@ -149,8 +149,6 @@ extern volatile int MDMustacheGeneratorAnchorSource;
 } // namespace doc
 } // namespace clang
 
-namespace llvm {
-extern template class Registry<clang::doc::Generator>;
-} // namespace llvm
+LLVM_DECLARE_REGISTRY(clang::doc::GeneratorRegistry)
 
 #endif // LLVM_CLANG_TOOLS_EXTRA_CLANG_DOC_GENERATOR_H

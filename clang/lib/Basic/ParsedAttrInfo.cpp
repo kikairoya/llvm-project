@@ -18,7 +18,7 @@
 
 using namespace clang;
 
-LLVM_INSTANTIATE_REGISTRY(ParsedAttrInfoRegistry)
+LLVM_DEFINE_REGISTRY(ParsedAttrInfoRegistry)
 
 static std::list<std::unique_ptr<ParsedAttrInfo>> instantiateEntries() {
   std::list<std::unique_ptr<ParsedAttrInfo>> Instances;

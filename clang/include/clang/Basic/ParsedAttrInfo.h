@@ -176,8 +176,6 @@ const std::list<std::unique_ptr<ParsedAttrInfo>> &getAttributePluginInstances();
 
 } // namespace clang
 
-namespace llvm {
-extern template class CLANG_TEMPLATE_ABI Registry<clang::ParsedAttrInfo>;
-} // namespace llvm
+LLVM_DECLARE_REGISTRY(clang::ParsedAttrInfoRegistry)
 
 #endif // LLVM_CLANG_BASIC_PARSEDATTRINFO_H
