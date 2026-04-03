@@ -49,4 +49,4 @@ FeatureModuleSet FeatureModuleSet::fromRegistry() {
 } // namespace clangd
 } // namespace clang
 
-LLVM_INSTANTIATE_REGISTRY(clang::clangd::FeatureModuleRegistry)
+LLVM_DEFINE_REGISTRY(clang::clangd::FeatureModuleRegistry)
