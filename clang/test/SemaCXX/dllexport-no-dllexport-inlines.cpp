@@ -1,16 +1,15 @@
 // RUN: %clang_cc1 %s -fms-extensions -triple x86_64-win32 -fno-dllexport-inlines -verify=noexport
 // RUN: %clang_cc1 %s -fms-extensions -triple x86_64-win32                        -verify=msvc
-// RUN: %clang_cc1 %s -fms-extensions -triple x86_64-mingw                        -verify=gnu
-// RUN: %clang_cc1 %s -fms-extensions -triple x86_64-cygwin                       -verify=gnu
+// RUN: %clang_cc1 %s -fms-extensions -triple x86_64-mingw                        -verify=noexport
+// RUN: %clang_cc1 %s -fms-extensions -triple x86_64-cygwin                       -verify=noexport
 
-// noexport-no-diagnostics
 // msvc-no-diagnostics
 
 __declspec(dllexport) void LaterInlineExportedFunc();
 inline void LaterInlineExportedFunc() {}
 
 __declspec(dllimport) void LaterInlineImportedFunc();
-inline void LaterInlineImportedFunc() {} // gnu-warning{{'LaterInlineImportedFunc' redeclared inline; 'dllimport' attribute ignored}}
+inline void LaterInlineImportedFunc() {} // noexport-warning{{'LaterInlineImportedFunc' redeclared inline; 'dllimport' attribute ignored}}
 
 struct __declspec(dllexport) ExportedClass {
   void InclassDefFunc() {}
@@ -31,4 +30,4 @@ struct __declspec(dllimport) ImportedClass {
 };
 
 inline void ImportedClass::InlineOutclassDefFunc() {}
-inline void ImportedClass::LaterInlineOutclassDefFunc() {} // gnu-warning{{'ImportedClass::LaterInlineOutclassDefFunc' redeclared inline; 'dllimport' attribute ignored}}
+inline void ImportedClass::LaterInlineOutclassDefFunc() {}
