@@ -626,6 +626,17 @@ function(llvm_add_library name)
     if(NOT LLVM_ENABLE_PIC)
       set(ARG_DISABLE_PCH_REUSE TRUE)
     endif()
+    if(ARG_PLUGIN_TOOL AND (WIN32 OR CYGWIN))
+      if (TARGET ${ARG_PLUGIN_TOOL})
+        get_target_property(plugin_tool_exporting ${ARG_PLUGIN_TOOL} ENABLE_EXPORTS)
+        if(NOT plugin_tool_exporting)
+          message(WARNING "PLUGIN_TOOL for ${name} is ignored -- ${ARG_PLUGIN_TOOL} is not configured as a plugin target.")
+          set(ARG_PLUGIN_TOOL)
+        endif()
+      else()
+        message(STATUS "PLUGIN_TOOL ${ARG_PLUGIN_TOOL} for ${name} is not a valid target -- assuming that will be defined later.")
+      endif()
+    endif()
   else()
     if(ARG_PLUGIN_TOOL)
       message(WARNING "PLUGIN_TOOL without MODULE doesn't make sense.")
@@ -858,7 +869,7 @@ function(llvm_add_library name)
     set(libtype PRIVATE)
   endif()
 
-  if(ARG_MODULE AND LLVM_EXPORT_SYMBOLS_FOR_PLUGINS AND ARG_PLUGIN_TOOL AND (WIN32 OR CYGWIN))
+  if(ARG_MODULE AND ARG_PLUGIN_TOOL AND (WIN32 OR CYGWIN))
     # On DLL platforms symbols are imported from the tool by linking against it.
     set(llvm_libs ${ARG_PLUGIN_TOOL})
   elseif (NOT ARG_COMPONENT_LIB)
@@ -1534,6 +1545,21 @@ function(do_export_executable_symbols_for_plugins target exported_symbol_file)
   set_target_properties(${target} PROPERTIES INTERFACE_LINK_LIBRARIES "${other_libs}")
 endfunction()
 
+function(do_export_all_symbols_for_plugins target)
+  target_link_options(${target} PRIVATE "LINKER:--export-all-symbols")
+  get_target_property(libs ${target} LINK_LIBRARIES)
+  set(shared_libs)
+  foreach(lib ${libs})
+    if(TARGET ${lib})
+      get_target_property(lib_type ${lib} TYPE)
+      if(${lib_type} STREQUAL "SHARED_LIBRARY")
+        list(APPEND shared_libs ${lib})
+      endif()
+    endif()
+  endforeach(lib)
+  set_target_properties(${target} PROPERTIES INTERFACE_LINK_LIBRARIES "${shared_libs}")
+endfunction()
+
 function(export_executable_symbols target)
   if (LLVM_EXPORTED_SYMBOL_FILE)
     # The symbol file should contain the symbols we want the executable to
@@ -1552,10 +1578,21 @@ function(export_executable_symbols target)
         CALL do_export_executable_symbols_for_plugins [[${target}]] [[${exported_symbol_file}]]
       )
     ")
+  elseif((MINGW OR CYGWIN) AND (BUILD_SHARED_LIBS OR LLVM_LINK_LLVM_DYLIB))
+    # On Windows auto-exporting everything from a static-linked executable
+    # doesn't work because of the limit on the size of the exported symbol table.
+    # Shared or dylib builds reduce symbols per image, therefore enable
+    # exporting when those conditions.
+    # Since MSVC-mode linkers (link.exe or lld-link) don't have "export everything",
+    # they require LLVM_EXPORT_SYMBOLS_FOR_PLUGINS.
+    set_target_properties(${target} PROPERTIES ENABLE_EXPORTS 1)
+    cmake_language(EVAL CODE "
+      cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR}
+        CALL do_export_all_symbols_for_plugins [[${target}]]
+      )
+    ")
   elseif(NOT (WIN32 OR CYGWIN))
-    # On Windows auto-exporting everything doesn't work because of the limit on
-    # the size of the exported symbol table, but on other platforms we can do
-    # it without any trouble.
+    # On non-Windows platforms, we can export everything without any trouble.
     set_target_properties(${target} PROPERTIES ENABLE_EXPORTS 1)
     # CMake doesn't set CMAKE_EXE_EXPORTS_${lang}_FLAG on Solaris, so
     # ENABLE_EXPORTS has no effect.  While Solaris ld defaults to -rdynamic
