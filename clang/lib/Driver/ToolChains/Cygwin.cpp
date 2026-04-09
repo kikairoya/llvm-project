@@ -372,19 +372,18 @@ void cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
       if (Args.hasArg(options::OPT_fsplit_stack))
         CmdArgs.push_back("--wrap=pthread_create");
 
-      if (!Args.hasArg(options::OPT_nolibc))
-        CmdArgs.push_back("-lc");
-
       // Cygwin specific
       CmdArgs.push_back("-lcygwin");
-      if (Args.hasArg(options::OPT_mwindows)) {
-        CmdArgs.push_back("-lgdi32");
-        CmdArgs.push_back("-lcomdlg32");
+      if (!Args.hasArg(options::OPT_nolibc)) {
+        if (Args.hasArg(options::OPT_mwindows)) {
+          CmdArgs.push_back("-lgdi32");
+          CmdArgs.push_back("-lcomdlg32");
+        }
+        CmdArgs.push_back("-ladvapi32");
+        CmdArgs.push_back("-lshell32");
+        CmdArgs.push_back("-luser32");
+        CmdArgs.push_back("-lkernel32");
       }
-      CmdArgs.push_back("-ladvapi32");
-      CmdArgs.push_back("-lshell32");
-      CmdArgs.push_back("-luser32");
-      CmdArgs.push_back("-lkernel32");
 
       if (IsStatic)
         CmdArgs.push_back("--end-group");
