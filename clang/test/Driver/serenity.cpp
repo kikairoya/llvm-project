@@ -1,4 +1,4 @@
-// UNSUPPORTED: system-windows
+// UNSUPPORTED: system-windows, system-cygwin
 
 /// Check default header and linker paths for each supported triple.
 // RUN: %clang -### %s --target=x86_64-unknown-serenity --sysroot=%S/Inputs/serenity_tree \

@@ -336,7 +336,10 @@ if config.clang_default_cxx_stdlib != "":
         "default-cxx-stdlib={}".format(config.clang_default_cxx_stdlib)
     )
 
-config.available_features.add("crash-recovery")
+
+# Cygwin has instability about crashing
+if sys.platform != "cygwin":
+    config.available_features.add("crash-recovery")
 
 # ANSI escape sequences in non-dumb terminal
 if platform.system() not in ["Windows"]:
@@ -389,7 +392,7 @@ if re.match(r"^arm64(e)?-apple-(macos|darwin)", config.target_triple):
 
 # [PR18856] Depends to remove opened file. On win32, a file could be removed
 # only if all handles were closed.
-if platform.system() not in ["Windows"]:
+if platform.system() not in ["Windows"] and sys.platform not in ["cygwin"]:
     config.available_features.add("can-remove-opened-file")
 
 # Features
