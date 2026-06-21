@@ -11,6 +11,7 @@
 #include "clang/Driver/CommonArgs.h"
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
+#include "clang/Driver/SanitizerArgs.h"
 #include "clang/Options/Options.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/VirtualFileSystem.h"
@@ -120,6 +121,15 @@ void Cygwin::addClangTargetOptions(
     CC1Args.push_back("-fno-use-init-array");
 }
 
+SanitizerMask
+Cygwin::getSupportedSanitizers(BoundArch BA,
+                               Action::OffloadKind DeviceOffloadKind) const {
+  SanitizerMask Res = ToolChain::getSupportedSanitizers(BA, DeviceOffloadKind);
+  if (getTriple().getArch() == llvm::Triple::x86_64)
+    Res |= SanitizerKind::Address;
+  return Res;
+}
+
 void cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                   const InputInfo &Output,
                                   const InputInfoList &Inputs,
@@ -127,6 +137,7 @@ void cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                   const char *LinkingOutput) const {
   const auto &ToolChain = getToolChain();
   const Driver &D = ToolChain.getDriver();
+  const SanitizerArgs &Sanitize = ToolChain.getSanitizerArgs(Args);
 
   const bool IsStatic = Args.hasArg(options::OPT_static);
 
@@ -233,8 +244,18 @@ void cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   if (!llvm::sys::path::has_extension(OutputFile)) {
     CmdArgs.push_back(Args.MakeArgString(Twine(OutputFile) + ".exe"));
     OutputFile = CmdArgs.back();
-  } else
+  } else {
     CmdArgs.push_back(OutputFile);
+  }
+
+  // Add asan_dynamic as the first import lib before other libs. This allows
+  // asan to be initialized as early as possible to increase its instrumentation
+  // coverage to include other user DLLs which has not been built with asan.
+  if (Sanitize.needsAsanRt() && !Args.hasArg(options::OPT_nostdlib) &&
+      !Args.hasArg(options::OPT_nodefaultlibs)) {
+    CmdArgs.push_back(
+        ToolChain.getCompilerRTArgString(Args, "asan", ToolChain::FT_Shared));
+  }
 
   if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nostartfiles,
                    options::OPT_r)) {
@@ -279,8 +300,6 @@ void cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   if (Args.hasArg(options::OPT_Z_Xlinker__no_demangle))
     CmdArgs.push_back("--no-demangle");
 
-  bool NeedsSanitizerDeps =
-      tools::addSanitizerRuntimes(ToolChain, Args, CmdArgs);
   bool NeedsXRayDeps = tools::addXRayRuntime(ToolChain, Args, CmdArgs);
   tools::addLinkerCompressDebugSectionsOption(ToolChain, Args, CmdArgs);
   tools::AddLinkerInputs(ToolChain, Inputs, Args, CmdArgs, JA);
@@ -342,9 +361,6 @@ void cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
       if (IsStatic)
         CmdArgs.push_back("--start-group");
 
-      if (NeedsSanitizerDeps)
-        tools::linkSanitizerRuntimeDeps(ToolChain, Args, CmdArgs);
-
       if (NeedsXRayDeps)
         tools::linkXRayRuntimeDeps(ToolChain, Args, CmdArgs);
 
@@ -371,6 +387,26 @@ void cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
 
       if (Args.hasArg(options::OPT_fsplit_stack))
         CmdArgs.push_back("--wrap=pthread_create");
+
+      if (Sanitize.needsAsanRt()) {
+        CmdArgs.push_back(ToolChain.getCompilerRTArgString(Args, "asan",
+                                                    ToolChain::FT_Shared));
+        //CmdArgs.push_back(
+        //    ToolChain.getCompilerRTArgString(Args, "asan_dynamic_runtime_thunk"));
+        //CmdArgs.push_back("--require-defined");
+        //CmdArgs.push_back(ToolChain.getArch() == llvm::Triple::x86
+        //                      ? "___asan_seh_interceptor"
+        //                      : "__asan_seh_interceptor");
+        // Make sure the linker consider all object files from the dynamic
+        // runtime thunk.
+        CmdArgs.push_back("--whole-archive");
+        CmdArgs.push_back(
+            ToolChain.getCompilerRTArgString(Args, "asan_dynamic_runtime_thunk"));
+        CmdArgs.push_back("--no-whole-archive");
+        CmdArgs.push_back("--wrap=DllMain");
+        if (!Args.hasArg(options::OPT_mdll, options::OPT_shared))
+          CmdArgs.push_back("--no-dynamicbase");
+      }
 
       // Cygwin specific
       CmdArgs.push_back("-lcygwin");

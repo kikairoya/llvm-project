@@ -36,6 +36,10 @@ public:
 
   unsigned GetDefaultDwarfVersion() const override { return 4; }
 
+  SanitizerMask
+    getSupportedSanitizers(BoundArch BA,
+                           Action::OffloadKind DeviceOffloadKind) const override;
+
 protected:
   Tool *buildLinker() const override;
 };
