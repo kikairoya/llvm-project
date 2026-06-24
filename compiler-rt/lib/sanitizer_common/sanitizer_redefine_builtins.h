@@ -15,7 +15,8 @@
 #    define SANITIZER_REDEFINE_BUILTINS_H
 
 // The asm hack only works with GCC and Clang.
-#    if !defined(_WIN32) && !defined(_AIX) && !defined(__APPLE__)
+#    if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(_AIX) && \
+        !defined(__APPLE__)
 
 #      if defined(__hexagon__)
 

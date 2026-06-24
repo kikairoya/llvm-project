@@ -288,7 +288,7 @@ SANITIZER_INTERFACE_WEAK_DEF(void, __sanitizer_cov_pcs_init, const uptr* beg,
 // FIXME: Figure out how this should work on Windows, exported thread_local
 // symbols are not supported:
 // "data with thread storage duration may not have dll interface"
-#if !SANITIZER_APPLE && !SANITIZER_WINDOWS
+#  if !SANITIZER_APPLE && !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
 SANITIZER_INTERFACE_ATTRIBUTE SANITIZER_WEAK_ATTRIBUTE
 thread_local uptr __sancov_lowest_stack;
 #endif

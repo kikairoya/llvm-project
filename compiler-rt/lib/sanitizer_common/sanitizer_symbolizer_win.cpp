@@ -12,10 +12,16 @@
 //===----------------------------------------------------------------------===//
 
 #include "sanitizer_platform.h"
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 
 #  include "sanitizer_dbghelp.h"
 #  include "sanitizer_symbolizer_internal.h"
+
+#  if SANITIZER_CYGWIN
+#    include <sys/cygwin.h>
+#  endif
+
+#  include <wchar.h>
 
 namespace __sanitizer {
 
@@ -115,7 +121,12 @@ void InitializeDbgHelpIfNeeded() {
   }
   size_t sz = wcslen(path_buffer);
   if (sz) {
+#  if SANITIZER_CYGWIN
+    wcscat(path_buffer, L";");
+    CHECK_EQ(sz + 1, wcslen(path_buffer));
+#  else
     CHECK_EQ(0, wcscat_s(path_buffer, L";"));
+#  endif
     sz++;
   }
   DWORD res = GetModuleFileNameW(NULL, path_buffer + sz, MAX_PATH);
@@ -176,6 +187,7 @@ const char *WinSymbolizerTool::Demangle(const char *name) {
     return name;
 }
 
+#  if !SANITIZER_CYGWIN
 const char *Symbolizer::PlatformDemangle(const char *name) { return nullptr; }
 
 namespace {
@@ -223,6 +235,13 @@ bool SymbolizerProcess::StartSymbolizerSubprocess() {
   // Compute the command line. Wrap double quotes around everything.
   const char *argv[kArgVMax];
   GetArgV(path_, argv);
+#    if SANITIZER_CYGWIN
+  InternalMmapVector<char> win_path(strlen(argv[0]) + 8);
+  if (cygwin_conv_path(CCP_POSIX_TO_WIN_A, argv[0], win_path.data(),
+                       win_path.size()) == 0) {
+    argv[0] = win_path.data();
+  }
+#    endif
   InternalScopedString command_line;
   for (int i = 0; argv[i]; i++) {
     const char *arg = argv[i];
@@ -301,9 +320,8 @@ static void ChooseSymbolizerTools(IntrusiveList<SymbolizerTool> *list,
   } else {
     VReport(2, "External symbolizer is not present.\n");
   }
-
   // Add the dbghelp based symbolizer.
-  list->push_back(new(*allocator) WinSymbolizerTool());
+  list->push_back(new (*allocator) WinSymbolizerTool());
 }
 
 Symbolizer *Symbolizer::PlatformInit() {
@@ -317,6 +335,7 @@ Symbolizer *Symbolizer::PlatformInit() {
 void Symbolizer::LateInitialize() {
   Symbolizer::GetOrInit();
 }
+#  endif
 
 }  // namespace __sanitizer
 

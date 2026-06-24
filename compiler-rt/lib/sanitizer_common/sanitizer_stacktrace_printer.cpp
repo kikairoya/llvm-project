@@ -47,7 +47,7 @@ const char *StackTracePrinter::StripFunctionName(const char *function) {
   if (SANITIZER_APPLE) {
     if (const char *s = try_strip("wrap_"))
       return s;
-  } else if (SANITIZER_WINDOWS) {
+  } else if (SANITIZER_WINDOWS || SANITIZER_CYGWIN) {
     if (const char *s = try_strip("__asan_wrap_"))
       return s;
   } else {

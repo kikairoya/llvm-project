@@ -212,6 +212,37 @@ struct InternalDeadlockDetector {
     return initialized > 0;
   }
 };
+#  if SANITIZER_CYGWIN
+extern "C" __declspec(stdcall) unsigned TlsAlloc();
+extern "C" __declspec(stdcall) void TlsFree(unsigned);
+extern "C" __declspec(stdcall) void* TlsGetValue(unsigned);
+extern "C" __declspec(stdcall) int TlsSetValue(unsigned, void*);
+InternalDeadlockDetector& get_detector() {
+  static atomic_uint32_t pkey{};
+  u32 key = atomic_load(&pkey, memory_order_seq_cst);
+  if (key == 0) {
+    u32 old = 0;
+    key = TlsAlloc();
+    if (!atomic_compare_exchange_strong(&pkey, &old, key,
+                                        memory_order_seq_cst)) {
+      TlsFree(key);
+      key = old;
+    }
+  }
+  void* p = TlsGetValue(key);
+  if (!p) {
+    p = GetGlobalLowLevelAllocator().Allocate(sizeof(InternalDeadlockDetector));
+    TlsSetValue(key, p);
+  }
+  return *(InternalDeadlockDetector*)p;
+}
+void CheckedMutex::LockImpl(uptr pc) { get_detector().Lock(type_, pc); }
+
+void CheckedMutex::UnlockImpl() { get_detector().Unlock(type_); }
+
+void CheckedMutex::CheckNoLocksImpl() { get_detector().CheckNoLocks(); }
+
+#  else
 // This variable is used by the __tls_get_addr interceptor, so cannot use the
 // global-dynamic TLS model, as that would result in crashes.
 __attribute__((tls_model("initial-exec"))) static THREADLOCAL
@@ -222,6 +253,8 @@ void CheckedMutex::LockImpl(uptr pc) { deadlock_detector.Lock(type_, pc); }
 void CheckedMutex::UnlockImpl() { deadlock_detector.Unlock(type_); }
 
 void CheckedMutex::CheckNoLocksImpl() { deadlock_detector.CheckNoLocks(); }
+#  endif
+
 #endif
 
 }  // namespace __sanitizer

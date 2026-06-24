@@ -38,9 +38,11 @@
 namespace __sanitizer {
 
 // ------------- sanitizer_common.h
+#  if !SANITIZER_CYGWIN
 uptr GetMmapGranularity() {
   return GetPageSize();
 }
+#  endif
 
 bool ErrorIsOOM(error_t err) { return err == ENOMEM; }
 
@@ -226,7 +228,7 @@ void *MapWritableFileToMemory(void *addr, uptr size, fd_t fd, OFF_T offset) {
   return (void *)p;
 }
 
-#  if !SANITIZER_APPLE
+#  if !SANITIZER_APPLE && !SANITIZER_CYGWIN
 // FIXME: this is thread-unsafe, but should not cause problems most of the time.
 // When the shadow is mapped only a single thread usually exists
 bool MemoryRangeIsAvailable(uptr range_start, uptr range_end) {
@@ -277,6 +279,7 @@ void ReportFile::Write(const char *buffer, uptr length) {
   internal_write(fd, buffer, length);
 }
 
+#  if !SANITIZER_CYGWIN
 bool GetCodeRangeForFile(const char *module, uptr *start, uptr *end) {
   MemoryMappingLayout proc_maps(/*cache_enabled*/false);
   InternalMmapVector<char> buff(kMaxPathLength);
@@ -291,6 +294,7 @@ bool GetCodeRangeForFile(const char *module, uptr *start, uptr *end) {
   }
   return false;
 }
+#endif
 
 uptr SignalContext::GetAddress() const {
   auto si = static_cast<const siginfo_t *>(siginfo);
@@ -406,7 +410,6 @@ uptr MmapNamed(void *addr, uptr length, int prot, int flags, const char *name) {
     DecorateMapping(res, length, name);
   return res;
 }
-
 
 } // namespace __sanitizer
 

@@ -120,9 +120,11 @@ bool MprotectReadWrite(uptr addr, uptr size);
 
 void MprotectMallocZones(void *addr, int prot);
 
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 // Zero previously mmap'd memory. Currently used only on Windows.
 bool ZeroMmapFixedRegion(uptr fixed_addr, uptr size) WARN_UNUSED_RESULT;
+void CopyShadowsAtForkHandler(void* ph);
+void RegisterTrampolineBufferForFork(uptr addr, uptr granurality);
 #endif
 
 #if SANITIZER_LINUX
@@ -412,11 +414,12 @@ const SymbolizedStack *SkipInternalFrames(const SymbolizedStack *frames);
 void ReportMmapWriteExec(int prot, int mflags);
 
 // Math
-#if SANITIZER_WINDOWS && !defined(__clang__) && !defined(__GNUC__)
+#if (SANITIZER_WINDOWS || SANITIZER_CYGWIN) && !defined(__clang__) && \
+    !defined(__GNUC__)
 extern "C" {
 unsigned char _BitScanForward(unsigned long *index, unsigned long mask);
 unsigned char _BitScanReverse(unsigned long *index, unsigned long mask);
-#if defined(_WIN64)
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
 unsigned char _BitScanForward64(unsigned long *index, unsigned __int64 mask);
 unsigned char _BitScanReverse64(unsigned long *index, unsigned __int64 mask);
 #endif
@@ -426,13 +429,14 @@ unsigned char _BitScanReverse64(unsigned long *index, unsigned __int64 mask);
 inline uptr MostSignificantSetBitIndex(uptr x) {
   CHECK_NE(x, 0U);
   unsigned long up;
-#if !SANITIZER_WINDOWS || defined(__clang__) || defined(__GNUC__)
-# ifdef _WIN64
+#if !(SANITIZER_WINDOWS || SANITIZER_CYGWIN) || defined(__clang__) || \
+    defined(__GNUC__)
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN
   up = SANITIZER_WORDSIZE - 1 - __builtin_clzll(x);
 # else
   up = SANITIZER_WORDSIZE - 1 - __builtin_clzl(x);
 # endif
-#elif defined(_WIN64)
+#elif SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   _BitScanReverse64(&up, x);
 #else
   _BitScanReverse(&up, x);
@@ -443,13 +447,14 @@ inline uptr MostSignificantSetBitIndex(uptr x) {
 inline uptr LeastSignificantSetBitIndex(uptr x) {
   CHECK_NE(x, 0U);
   unsigned long up;
-#if !SANITIZER_WINDOWS || defined(__clang__) || defined(__GNUC__)
-# ifdef _WIN64
+#if !(SANITIZER_WINDOWS || SANITIZER_CYGWIN) || defined(__clang__) || \
+    defined(__GNUC__)
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   up = __builtin_ctzll(x);
 # else
   up = __builtin_ctzl(x);
 # endif
-#elif defined(_WIN64)
+#elif SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   _BitScanForward64(&up, x);
 #else
   _BitScanForward(&up, x);
@@ -947,8 +952,8 @@ typedef void (*RangeIteratorCallback)(uptr begin, uptr end, void *arg);
 
 void WriteToSyslog(const char *buffer);
 
-#if defined(SANITIZER_WINDOWS) && defined(_MSC_VER) && !defined(__clang__)
-#define SANITIZER_WIN_TRACE 1
+#if SANITIZER_WINDOWS && defined(_MSC_VER) && !defined(__clang__)
+#  define SANITIZER_WIN_TRACE 1
 #else
 #define SANITIZER_WIN_TRACE 0
 #endif

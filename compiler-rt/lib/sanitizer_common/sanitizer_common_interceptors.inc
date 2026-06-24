@@ -4019,6 +4019,7 @@ INTERCEPTOR(char *, realpath, const char *path, char *resolved_path) {
   COMMON_INTERCEPTOR_ENTER(ctx, realpath, path, resolved_path);
   if (path) COMMON_INTERCEPTOR_READ_RANGE(ctx, path, internal_strlen(path) + 1);
 
+#  if !SANITIZER_CYGWIN
   // Workaround a bug in glibc where dlsym(RTLD_NEXT, ...) returns the oldest
   // version of a versioned symbol. For realpath(), this gives us something
   // (called __old_realpath) that does not handle NULL in the second argument.
@@ -4026,10 +4027,13 @@ INTERCEPTOR(char *, realpath, const char *path, char *resolved_path) {
   char *allocated_path = nullptr;
   if (!resolved_path)
     allocated_path = resolved_path = (char *)WRAP(malloc)(path_max + 1);
+#  endif
 
-  char *res = REAL(realpath)(path, resolved_path);
+  char* res = REAL(realpath)(path, resolved_path);
+#  if !SANITIZER_CYGWIN
   if (allocated_path && !res)
     WRAP(free)(allocated_path);
+#  endif
   if (res) COMMON_INTERCEPTOR_WRITE_RANGE(ctx, res, internal_strlen(res) + 1);
   return res;
 }
@@ -5388,8 +5392,15 @@ INTERCEPTOR(long double, remquol, long double x, long double y, int *quo) {
 #endif
 
 #if SANITIZER_INTERCEPT_LGAMMA
+#  if SANITIZER_CYGWIN
+extern "C" int* __signgam();
+#  else
 extern int signgam;
+#  endif
 INTERCEPTOR(double, lgamma, double x) {
+#  if SANITIZER_CYGWIN
+  int &signgam = *__signgam();
+#  endif
   void *ctx;
   COMMON_INTERCEPTOR_ENTER(ctx, lgamma, x);
   double res = REAL(lgamma)(x);
@@ -5397,6 +5408,9 @@ INTERCEPTOR(double, lgamma, double x) {
   return res;
 }
 INTERCEPTOR(float, lgammaf, float x) {
+#  if SANITIZER_CYGWIN
+  int &signgam = *__signgam();
+#  endif
   void *ctx;
   COMMON_INTERCEPTOR_ENTER(ctx, lgammaf, x);
   float res = REAL(lgammaf)(x);
@@ -5412,6 +5426,9 @@ INTERCEPTOR(float, lgammaf, float x) {
 
 #if SANITIZER_INTERCEPT_LGAMMAL
 INTERCEPTOR(long double, lgammal, long double x) {
+#  if SANITIZER_CYGWIN
+  int &signgam = *__signgam();
+#  endif
   void *ctx;
   COMMON_INTERCEPTOR_ENTER(ctx, lgammal, x);
   long double res = REAL(lgammal)(x);

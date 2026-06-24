@@ -25,6 +25,12 @@
 # include <sys/mman.h>
 #endif
 
+#  if SANITIZER_CYGWIN
+#  include <signal.h>
+#  include <pthread.h>
+#  include <windows.h>
+#  endif
+
 namespace __sanitizer {
 
 #if !SANITIZER_GO
@@ -281,14 +287,45 @@ static void ReportDeadlySignalImpl(const SignalContext &sig, u32 tid,
   ReportErrorSummary(description, stack);
 }
 
-void ReportDeadlySignal(const SignalContext &sig, u32 tid,
+#  if SANITIZER_CYGWIN
+void ReportDeadlySignal(const SignalContext& sig, u32 tid,
                         UnwindSignalStackCallbackType unwind,
-                        const void *unwind_context) {
+                        const void* unwind_context) {
+  auto f = [&]() {
+    if (sig.IsStackOverflow())
+      ReportStackOverflowImpl(sig, tid, unwind, unwind_context);
+    else
+      ReportDeadlySignalImpl(sig, tid, unwind, unwind_context);
+  };
+  stack_t s;
+  if (sigaltstack(nullptr, &s) != 0 || s.ss_flags == SS_ONSTACK) {
+    // Report routines may call fork(2) for llvm-symbolizer however forking from
+    // alt-stack causes to allocate more stack during startup on child process
+    // and causes an error in sanitized process. To prevent such error, run the
+    // report routine on a new thread with a system-allocated stack.
+    void *thr = CreateThread(
+      nullptr, 0,
+      [](void* g) -> unsigned {
+        (*(decltype(f)*)g)();
+        return 0;
+      },
+      &f, 0, nullptr);
+    WaitForSingleObject(thr, INFINITE);
+    CloseHandle(thr);
+  } else {
+    f();
+  }
+}
+#else
+void ReportDeadlySignal(const SignalContext& sig, u32 tid,
+                        UnwindSignalStackCallbackType unwind,
+                        const void* unwind_context) {
   if (sig.IsStackOverflow())
     ReportStackOverflowImpl(sig, tid, unwind, unwind_context);
   else
     ReportDeadlySignalImpl(sig, tid, unwind, unwind_context);
 }
+#endif
 
 void HandleDeadlySignal(void *siginfo, void *context, u32 tid,
                         UnwindSignalStackCallbackType unwind,

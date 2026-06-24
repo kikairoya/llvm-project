@@ -11,7 +11,7 @@
 // Windows-specific thread-safe and pre-CRT global initialization safe
 // infrastructure to create an object whose destructor is never called.
 //===----------------------------------------------------------------------===//
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 #  pragma once
 // Requires including sanitizer_placement_new.h (which is not allowed to be
 // included in headers).

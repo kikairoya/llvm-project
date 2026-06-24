@@ -10,9 +10,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "sanitizer_platform.h"
-#if SANITIZER_LINUX
-#include "sanitizer_common.h"
-#include "sanitizer_procmaps.h"
+#if SANITIZER_LINUX || SANITIZER_CYGWIN
+#  include "sanitizer_common.h"
+#  include "sanitizer_procmaps.h"
 
 namespace __sanitizer {
 
@@ -29,6 +29,10 @@ static bool IsOneOf(char c, char c1, char c2) {
   return c == c1 || c == c2;
 }
 
+static bool IsOneOf(char c, char c1, char c2, char c3) {
+  return c == c1 || c == c2 || c == c3;
+}
+
 bool MemoryMappingLayout::Next(MemoryMappedSegment *segment) {
   if (Error()) return false; // simulate empty maps
   char *last = data_.proc_self_maps.data + data_.proc_self_maps.len;
@@ -42,14 +46,14 @@ bool MemoryMappingLayout::Next(MemoryMappedSegment *segment) {
   CHECK_EQ(*data_.current++, '-');
   segment->end = ParseHex(&data_.current);
   CHECK_EQ(*data_.current++, ' ');
-  CHECK(IsOneOf(*data_.current, '-', 'r'));
+  CHECK(IsOneOf(*data_.current, '-', 'r', '='));
   segment->protection = 0;
   if (*data_.current++ == 'r') segment->protection |= kProtectionRead;
-  CHECK(IsOneOf(*data_.current, '-', 'w'));
+  CHECK(IsOneOf(*data_.current, '-', 'w', '='));
   if (*data_.current++ == 'w') segment->protection |= kProtectionWrite;
-  CHECK(IsOneOf(*data_.current, '-', 'x'));
+  CHECK(IsOneOf(*data_.current, '-', 'x', '='));
   if (*data_.current++ == 'x') segment->protection |= kProtectionExecute;
-  CHECK(IsOneOf(*data_.current, 's', 'p'));
+  CHECK(IsOneOf(*data_.current, 's', 'p', 'g'));
   if (*data_.current++ == 's') segment->protection |= kProtectionShared;
   CHECK_EQ(*data_.current++, ' ');
   segment->offset = ParseHex(&data_.current);

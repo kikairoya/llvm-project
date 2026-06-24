@@ -14,7 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "sanitizer_platform.h"
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 #  include <stddef.h>
 
 #  include "interception/interception.h"
@@ -24,6 +24,12 @@
 #  include "sanitizer_placement_new.h"
 #  include "sanitizer_win_immortalize.h"
 #  include "sanitizer_win_interception.h"
+
+#  if SANITIZER_CYGWIN
+#    define DLLEXPORT __attribute__((visibility("default")))
+#  else
+#    define DLLEXPORT __declspec(dllexport)
+#  endif
 
 using namespace __sanitizer;
 
@@ -85,9 +91,9 @@ static void RunWeakFunctionCallbacks(uptr export_address) {
 
 }  // namespace __sanitizer
 
-extern "C" __declspec(dllexport) bool __cdecl __sanitizer_override_function(
-    const char *export_name, const uptr user_function,
-    uptr *const old_user_function) {
+extern "C" DLLEXPORT bool __cdecl __sanitizer_override_function(
+    const char* export_name, const uptr user_function,
+    uptr* const old_user_function) {
   CHECK(export_name);
   CHECK(user_function);
 
@@ -106,10 +112,9 @@ extern "C" __declspec(dllexport) bool __cdecl __sanitizer_override_function(
   return function_overridden;
 }
 
-extern "C"
-    __declspec(dllexport) bool __cdecl __sanitizer_override_function_by_addr(
-        const uptr source_function, const uptr target_function,
-        uptr *const old_target_function) {
+extern "C" DLLEXPORT bool __cdecl __sanitizer_override_function_by_addr(
+    const uptr source_function, const uptr target_function,
+    uptr* const old_target_function) {
   CHECK(source_function);
   CHECK(target_function);
 
@@ -126,10 +131,9 @@ extern "C"
   return function_overridden;
 }
 
-extern "C"
-    __declspec(dllexport) bool __cdecl __sanitizer_register_weak_function(
-        const char *export_name, const uptr user_function,
-        uptr *const old_user_function) {
+extern "C" DLLEXPORT bool __cdecl __sanitizer_register_weak_function(
+    const char* export_name, const uptr user_function,
+    uptr* const old_user_function) {
   CHECK(export_name);
   CHECK(user_function);
 

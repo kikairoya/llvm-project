@@ -12,27 +12,27 @@
 //===----------------------------------------------------------------------===//
 
 #include "sanitizer_platform.h"
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 
-#define WIN32_LEAN_AND_MEAN
-#define NOGDI
-#include <windows.h>
-#include <io.h>
-#include <psapi.h>
-#include <stdlib.h>
+#  define WIN32_LEAN_AND_MEAN
+#  define NOGDI
+#  include <windows.h>
+#  include <io.h>
+#  include <psapi.h>
+#  include <stdlib.h>
 
-#include "sanitizer_common.h"
-#include "sanitizer_file.h"
-#include "sanitizer_libc.h"
-#include "sanitizer_mutex.h"
-#include "sanitizer_placement_new.h"
-#include "sanitizer_win_defs.h"
+#  include "sanitizer_common.h"
+#  include "sanitizer_file.h"
+#  include "sanitizer_libc.h"
+#  include "sanitizer_mutex.h"
+#  include "sanitizer_placement_new.h"
+#  include "sanitizer_win_defs.h"
 
-#if defined(PSAPI_VERSION) && PSAPI_VERSION == 1
-#pragma comment(lib, "psapi")
-#endif
-#if SANITIZER_WIN_TRACE
-#include <traceloggingprovider.h>
+#  if defined(PSAPI_VERSION) && PSAPI_VERSION == 1
+#    pragma comment(lib, "psapi")
+#  endif
+#  if SANITIZER_WIN_TRACE
+#    include <traceloggingprovider.h>
 //  Windows trace logging provider init
 #pragma comment(lib, "advapi32.lib")
 TRACELOGGING_DECLARE_PROVIDER(g_asan_provider);
@@ -44,8 +44,19 @@ TRACELOGGING_DEFINE_PROVIDER(g_asan_provider, "AddressSanitizerLoggingProvider",
 #define TraceLoggingUnregister(x)
 #endif
 
+#  if SANITIZER_CYGWIN
+#    include <errno.h>
+#    include <stdio.h>
+#    include <sys/cygwin.h>
+#    include <unistd.h>
+
+#    include "sanitizer_posix.h"
+__asm__(
+    ".section .drectve,\"yni\"\n  .ascii \" /DEFAULTLIB:synchronization.lib\"");
+#  else
 // For WaitOnAddress
-#  pragma comment(lib, "synchronization.lib")
+#    pragma comment(lib, "synchronization.lib")
+#  endif
 
 // A macro to tell the compiler that this part of the code cannot be reached,
 // if the compiler supports this feature. Since we're using this in
@@ -67,6 +78,7 @@ namespace __sanitizer {
 #include "sanitizer_syscall_generic.inc"
 
 // --------------------- sanitizer_common.h
+#  if !SANITIZER_CYGWIN
 uptr GetPageSize() {
   SYSTEM_INFO si;
   GetSystemInfo(&si);
@@ -78,6 +90,7 @@ uptr GetMmapGranularity() {
   GetSystemInfo(&si);
   return si.dwAllocationGranularity;
 }
+#  endif
 
 uptr GetMaxUserVirtualAddress() {
   SYSTEM_INFO si;
@@ -89,7 +102,8 @@ uptr GetMaxVirtualAddress() {
   return GetMaxUserVirtualAddress();
 }
 
-bool FileExists(const char *filename) {
+#  if !SANITIZER_CYGWIN
+bool FileExists(const char* filename) {
   return ::GetFileAttributesA(filename) != INVALID_FILE_ATTRIBUTES;
 }
 
@@ -105,16 +119,19 @@ uptr internal_getpid() {
 int internal_dlinfo(void *handle, int request, void *p) {
   UNIMPLEMENTED();
 }
+#  endif
 
 // In contrast to POSIX, on Windows GetCurrentThreadId()
 // returns a system-unique identifier.
 ThreadID GetTid() { return GetCurrentThreadId(); }
 
+#  if !SANITIZER_CYGWIN
 uptr GetThreadSelf() {
   return GetTid();
 }
+#  endif
 
-#if !SANITIZER_GO
+#  if !SANITIZER_GO
 void GetThreadStackTopAndBottom(bool at_initialization, uptr *stack_top,
                                 uptr *stack_bottom) {
   CHECK(stack_top);
@@ -129,6 +146,7 @@ void GetThreadStackTopAndBottom(bool at_initialization, uptr *stack_top,
 }
 #endif  // #if !SANITIZER_GO
 
+#  if !SANITIZER_CYGWIN
 bool ErrorIsOOM(error_t err) {
   // TODO: This should check which `err`s correspond to OOM.
   return false;
@@ -261,7 +279,7 @@ bool MmapFixedNoReserve(uptr fixed_addr, uptr size, const char *name) {
   // FIXME: is this really "NoReserve"? On Win32 this does not matter much,
   // but on Win64 it does.
   (void)name;  // unsupported
-#if !SANITIZER_GO && SANITIZER_WINDOWS64
+#    if !SANITIZER_GO && (SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64)
   // On asan/Windows64, use MEM_COMMIT would result in error
   // 1455:ERROR_COMMITMENT_LIMIT.
   // Asan uses exception handler to commit page on demand.
@@ -343,7 +361,6 @@ uptr ReservedAddressRange::Init(uptr size, const char *name, uptr fixed_addr) {
   return reinterpret_cast<uptr>(base_);
 }
 
-
 void *MmapFixedNoAccess(uptr fixed_addr, uptr size, const char *name) {
   (void)name; // unsupported
   void *res = VirtualAlloc((LPVOID)fixed_addr, size,
@@ -397,6 +414,7 @@ bool DontDumpShadowMemory(uptr addr, uptr length) {
   // FIXME: add madvise-analog when we move to 64-bits.
   return true;
 }
+#  endif
 
 uptr MapDynamicShadow(uptr shadow_size_bytes, uptr shadow_scale,
                       uptr min_shadow_base_alignment, UNUSED uptr &high_mem_end,
@@ -435,6 +453,7 @@ uptr FindAvailableMemoryRange(uptr size, uptr alignment, uptr left_padding,
   return 0;
 }
 
+#  if !SANITIZER_CYGWIN
 uptr MapDynamicShadowAndAliases(uptr shadow_size, uptr alias_size,
                                 uptr num_aliases, uptr ring_buffer_size) {
   CHECK(false && "HWASan aliasing is unimplemented on Windows");
@@ -455,6 +474,7 @@ void *MapFileToMemory(const char *file_name, uptr *buff_size) {
 void *MapWritableFileToMemory(void *addr, uptr size, fd_t fd, OFF_T offset) {
   UNIMPLEMENTED();
 }
+#  endif
 
 static const int kMaxEnvNameLength = 128;
 static const DWORD kMaxEnvValueLength = 32767;
@@ -468,11 +488,12 @@ struct EnvVariable {
 
 }  // namespace
 
+#  if !SANITIZER_CYGWIN
 static const int kEnvVariables = 5;
 static EnvVariable env_vars[kEnvVariables];
 static int num_env_vars;
 
-const char *GetEnv(const char *name) {
+const char* GetEnv(const char* name) {
   // Note: this implementation caches the values of the environment variables
   // and limits their quantity.
   for (int i = 0; i < num_env_vars; i++) {
@@ -498,6 +519,7 @@ const char *GetPwd() {
 u32 GetUid() {
   UNIMPLEMENTED();
 }
+#  endif
 
 namespace {
 struct ModuleInfo {
@@ -544,8 +566,8 @@ void DumpProcessMap() {
     }
   }
 }
-#endif
 
+#    if !SANITIZER_CYGWIN
 void DisableCoreDumperIfNecessary() {
   // Do nothing.
 }
@@ -585,7 +607,8 @@ bool IsAbsolutePath(const char *path) {
   return path != nullptr && IsAlpha(path[0]) && path[1] == ':' &&
          IsPathSeparator(path[2]);
 }
-
+#    endif
+#  endif
 void internal_usleep(u64 useconds) { Sleep(useconds / 1000); }
 
 u64 NanoTime() {
@@ -603,6 +626,7 @@ u64 NanoTime() {
 
 u64 MonotonicNanoTime() { return NanoTime(); }
 
+#  if !SANITIZER_CYGWIN
 void Abort() {
   internal__exit(3);
 }
@@ -610,8 +634,9 @@ void Abort() {
 bool CreateDir(const char *pathname) {
   return CreateDirectoryA(pathname, nullptr) != 0;
 }
+#  endif
 
-#if !SANITIZER_GO
+#  if !SANITIZER_GO
 // Read the file to extract the ImageBase field from the PE header. If ASLR is
 // disabled and this virtual address is available, the loader will typically
 // load the image at this address. Therefore, we call it the preferred base. Any
@@ -639,9 +664,14 @@ static uptr GetPreferredBase(const char *modname, char *buf, size_t buf_size) {
   // IMAGE_FILE_HEADER
   // IMAGE_OPTIONAL_HEADER
   // Seek to e_lfanew and read all that data.
+#    if SANITIZER_CYGWIN
+  if (lseek(fd, dos_header.e_lfanew, SEEK_SET) <= 0)
+    return 0;
+#    else
   if (::SetFilePointer(fd, dos_header.e_lfanew, nullptr, FILE_BEGIN) ==
       INVALID_SET_FILE_POINTER)
     return 0;
+#    endif
   if (!ReadFromFile(fd, buf, buf_size, &bytes_read) || bytes_read != buf_size)
     return 0;
 
@@ -729,6 +759,7 @@ void ListOfModules::init() {
 
 void ListOfModules::fallbackInit() { clear(); }
 
+#    if !SANITIZER_CYGWIN
 // We can't use atexit() directly at __asan_init time as the CRT is not fully
 // initialized at this point.  Place the functions into a vector and use
 // atexit() as soon as it is ready for use (i.e. after .CRT$XIC initializers).
@@ -763,6 +794,9 @@ static int RunAtexit() {
 __declspec(allocate(".CRT$XID")) int (*__run_atexit)() = RunAtexit;
 #endif
 
+#  endif  // SANITIZER_GO
+
+#  if !SANITIZER_CYGWIN
 // ------------------ sanitizer_libc.h
 fd_t OpenFile(const char *filename, FileAccessMode mode, error_t *last_error) {
   // FIXME: Use the wide variants to handle Unicode filenames.
@@ -794,7 +828,7 @@ bool ReadFromFile(fd_t fd, void *buff, uptr buff_size, uptr *bytes_read,
 
   // bytes_read can't be passed directly to ReadFile:
   // uptr is unsigned long long on 64-bit Windows.
-  unsigned long num_read_long;
+  DWORD num_read_long;
 
   bool success = ::ReadFile(fd, buff, buff_size, &num_read_long, nullptr);
   if (!success && error_p)
@@ -862,6 +896,7 @@ void internal__exit(int exitcode) {
 uptr internal_ftruncate(fd_t fd, uptr size) {
   UNIMPLEMENTED();
 }
+#  endif
 
 uptr GetRSS() {
   PROCESS_MEMORY_COUNTERS counters;
@@ -902,6 +937,7 @@ void GetThreadStackAndTls(bool main, uptr *stk_begin, uptr *stk_end,
 #  endif
 }
 
+#  if !SANITIZER_CYGWIN
 void ReportFile::Write(const char *buffer, uptr length) {
   SpinMutexLock l(mu);
   ReopenIfNecessary();
@@ -992,13 +1028,23 @@ bool TryMemCpy(void *dest, const void *src, uptr n) {
 bool SignalContext::IsStackOverflow() const {
   return (DWORD)GetType() == EXCEPTION_STACK_OVERFLOW;
 }
+#endif
 
 void SignalContext::InitPcSpBp() {
-  EXCEPTION_RECORD *exception_record = (EXCEPTION_RECORD *)siginfo;
+#  if SANITIZER_CYGWIN
+  static_assert(offsetof(mcontext_t, rip) == offsetof(CONTEXT, Rip), "mcontext_t must mimic CONTEXT.");
+  EXCEPTION_RECORD record_body;
+  EXCEPTION_RECORD *exception_record = &record_body;
+  if (cygwin_internal(CW_EXCEPTION_RECORD_FROM_SIGINFO_T, siginfo,
+                      &record_body) != 0)
+    return;
+#  else
+  EXCEPTION_RECORD* exception_record = (EXCEPTION_RECORD*)siginfo;
+#  endif
   CONTEXT *context_record = (CONTEXT *)context;
 
   pc = (uptr)exception_record->ExceptionAddress;
-#  if SANITIZER_WINDOWS64
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
 #    if SANITIZER_ARM64
   bp = (uptr)context_record->Fp;
   sp = (uptr)context_record->Sp;
@@ -1020,6 +1066,7 @@ void SignalContext::InitPcSpBp() {
 #  endif
 }
 
+#  if !SANITIZER_CYGWIN
 uptr SignalContext::GetAddress() const {
   EXCEPTION_RECORD *exception_record = (EXCEPTION_RECORD *)siginfo;
   if (exception_record->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
@@ -1031,11 +1078,21 @@ bool SignalContext::IsMemoryAccess() const {
   return ((EXCEPTION_RECORD *)siginfo)->ExceptionCode ==
          EXCEPTION_ACCESS_VIOLATION;
 }
+#  endif
 
 bool SignalContext::IsTrueFaultingAddress() const { return true; }
 
 SignalContext::WriteFlag SignalContext::GetWriteFlag() const {
+#  if SANITIZER_CYGWIN
+  __mcontext m;
+  EXCEPTION_RECORD record_body;
+  EXCEPTION_RECORD *exception_record = &record_body;
+  if (cygwin_internal(CW_EXCEPTION_RECORD_FROM_SIGINFO_T, siginfo,
+                      &record_body) != 0)
+    return SignalContext::Unknown;
+#  else
   EXCEPTION_RECORD *exception_record = (EXCEPTION_RECORD *)siginfo;
+#endif
 
   // The write flag is only available for access violation exceptions.
   if (exception_record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
@@ -1105,6 +1162,7 @@ void SignalContext::DumpAllRegisters(void *context) {
 #  endif
 }
 
+#if !SANITIZER_CYGWIN
 int SignalContext::GetType() const {
   return static_cast<const EXCEPTION_RECORD *>(siginfo)->ExceptionCode;
 }
@@ -1176,6 +1234,7 @@ uptr ReadBinaryName(/*out*/char *buf, uptr buf_len) {
 uptr ReadLongProcessName(/*out*/char *buf, uptr buf_len) {
   return ReadBinaryName(buf, buf_len);
 }
+#  endif
 
 void CheckVMASize() {
   // Do nothing.
@@ -1193,6 +1252,7 @@ void CheckMPROTECT() {
   // Do nothing
 }
 
+#  if !SANITIZER_CYGWIN
 char **GetArgv() {
   // FIXME: Actually implement this function.
   return 0;
@@ -1219,6 +1279,7 @@ bool IsProcessRunning(pid_t pid) {
 }
 
 int WaitForProcess(pid_t pid) { return -1; }
+#  endif
 
 // FIXME implement on this platform.
 void GetMemoryProfile(fill_profile_f cb, uptr *stats) {}

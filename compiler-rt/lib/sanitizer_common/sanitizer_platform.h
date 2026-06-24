@@ -16,7 +16,7 @@
     !defined(__APPLE__) && !defined(_WIN32) && !defined(__Fuchsia__) &&     \
     !(defined(__sun__) && defined(__svr4__)) && !defined(__HAIKU__) &&      \
     !defined(__wasi__) && !defined(__NVPTX__) && !defined(__AMDGPU__) &&    \
-    !defined(__SPIRV__) && !defined(_AIX)
+    !defined(__SPIRV__) && !defined(_AIX) && !defined(__CYGWIN__)
 #  error "This operating system is not supported"
 #endif
 
@@ -125,6 +125,18 @@
 #  define SANITIZER_DRIVERKIT 0
 #endif
 
+#if defined(__CYGWIN__)
+#  define SANITIZER_CYGWIN 1
+#else
+#  define SANITIZER_CYGWIN 0
+#endif
+
+#if defined(__CYGWIN64__)
+#  define SANITIZER_CYGWIN64 1
+#else
+#  define SANITIZER_CYGWIN64 0
+#endif
+
 #if defined(_WIN32)
 #  define SANITIZER_WINDOWS 1
 #else
@@ -156,9 +168,10 @@
 #  define SANITIZER_MUSL 0
 #endif
 
-#define SANITIZER_POSIX                                       \
-  (SANITIZER_FREEBSD || SANITIZER_LINUX || SANITIZER_APPLE || \
-   SANITIZER_NETBSD || SANITIZER_SOLARIS || SANITIZER_HAIKU || SANITIZER_AIX)
+#define SANITIZER_POSIX                                        \
+  (SANITIZER_FREEBSD || SANITIZER_LINUX || SANITIZER_APPLE ||  \
+   SANITIZER_NETBSD || SANITIZER_SOLARIS || SANITIZER_HAIKU || \
+   SANITIZER_AIX || SANITIZER_CYGWIN)
 
 #if __LP64__ || defined(_WIN64)
 #  define SANITIZER_WORDSIZE 64
@@ -278,6 +291,17 @@
 #  define SANITIZER_ARM64 1
 #else
 #  define SANITIZER_ARM64 0
+#endif
+
+#if SANITIZER_CYGWIN64 && SANITIZER_ARM64
+#  define SANITIZER_CYGWIN_ARM64 1
+#  define SANITIZER_CYGWIN_x64 0
+#elif SANITIZER_CYGWIN64 && !SANITIZER_ARM64
+#  define SANITIZER_CYGWIN_ARM64 0
+#  define SANITIZER_CYGWIN_x64 1
+#else
+#  define SANITIZER_CYGWIN_ARM64 0
+#  define SANITIZER_CYGWIN_x64 0
 #endif
 
 #if SANITIZER_WINDOWS64 && SANITIZER_ARM64

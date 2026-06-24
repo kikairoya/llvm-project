@@ -13,31 +13,31 @@
 #define SANITIZER_WIN_DEFS_H
 
 #include "sanitizer_platform.h"
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 
-#ifndef WINAPI
-#if defined(_M_IX86) || defined(__i386__)
-#define WINAPI __stdcall
-#else
-#define WINAPI
-#endif
-#endif
+#  ifndef WINAPI
+#    if defined(_M_IX86) || defined(__i386__)
+#      define WINAPI __stdcall
+#    else
+#      define WINAPI
+#    endif
+#  endif
 
-#if defined(_M_IX86) || defined(__i386__)
-#define WIN_SYM_PREFIX "_"
-#else
-#define WIN_SYM_PREFIX
-#endif
+#  if defined(_M_IX86) || defined(__i386__)
+#    define WIN_SYM_PREFIX "_"
+#  else
+#    define WIN_SYM_PREFIX
+#  endif
 
 // For MinGW, the /export: directives contain undecorated symbols, contrary to
 // link/lld-link. The GNU linker doesn't support /alternatename and /include
 // though, thus lld-link in MinGW mode interprets them in the same way as
 // in the default mode.
-#ifdef __MINGW32__
-#define WIN_EXPORT_PREFIX
-#else
-#define WIN_EXPORT_PREFIX WIN_SYM_PREFIX
-#endif
+#  if defined(__MINGW32__) || defined(__CYGWIN__)
+#    define WIN_EXPORT_PREFIX
+#  else
+#    define WIN_EXPORT_PREFIX WIN_SYM_PREFIX
+#  endif
 
 // Intermediate macro to ensure the parameter is expanded before stringified.
 #define STRINGIFY_(A) #A
@@ -45,6 +45,31 @@
 
 #if !SANITIZER_GO
 
+// Dummy name for default implementation of weak function.
+#    define WEAK_DEFAULT_NAME(Name) Name##__def
+// Name for exported implementation of weak function.
+#    define WEAK_EXPORT_NAME(Name) Name##__dll
+
+#    if SANITIZER_CYGWIN
+
+#      define WIN_WEAK_ALIAS(Name, Default)
+#      define WIN_FORCE_LINK(Name)                            \
+        asm(".section        .drectve,\"yni\"\n\t.ascii  \" " \
+            "/include:" WIN_SYM_PREFIX STRINGIFY(Name) "\"");
+
+#      define WIN_EXPORT(ExportedName, Name) \
+        __attribute__((__visibility__("default")))
+#      define WIN_WEAK_EXPORT_DEF(ReturnType, Name, ...)                      \
+        __attribute__((__visibility__("default"), __weak__,                   \
+                       __alias__(STRINGIFY(WEAK_DEFAULT_NAME(                 \
+                           Name))))) extern "C" ReturnType Name(__VA_ARGS__); \
+        extern "C"                                                            \
+            __attribute__((__visibility__("default"), __weak__)) ReturnType   \
+                WEAK_DEFAULT_NAME(Name)(__VA_ARGS__) __asm__(                 \
+                    STRINGIFY(WEAK_EXPORT_NAME(Name)));                       \
+        extern "C" ReturnType WEAK_DEFAULT_NAME(Name)(__VA_ARGS__)
+
+#    else
 // ----------------- A workaround for the absence of weak symbols --------------
 // We don't have a direct equivalent of weak symbols when using MSVC, but we can
 // use the /alternatename directive to tell the linker to default a specific
@@ -65,16 +90,18 @@
 // So, a workaround is to force linkage with the modules that include weak
 // definitions, with the following macro: WIN_FORCE_LINK()
 
-#define WIN_WEAK_ALIAS(Name, Default)                                          \
-  __pragma(comment(linker, "/alternatename:" WIN_SYM_PREFIX STRINGIFY(Name) "="\
-                                             WIN_SYM_PREFIX STRINGIFY(Default)))
+#      define WIN_WEAK_ALIAS(Name, Default)                             \
+        __pragma(                                                       \
+            comment(linker, "/alternatename:" WIN_SYM_PREFIX STRINGIFY( \
+                                Name) "=" WIN_SYM_PREFIX STRINGIFY(Default)))
 
-#define WIN_FORCE_LINK(Name)                                                   \
-  __pragma(comment(linker, "/include:" WIN_SYM_PREFIX STRINGIFY(Name)))
+#      define WIN_FORCE_LINK(Name) \
+        __pragma(comment(linker, "/include:" WIN_SYM_PREFIX STRINGIFY(Name)))
 
-#define WIN_EXPORT(ExportedName, Name)                                         \
-  __pragma(comment(linker, "/export:" WIN_EXPORT_PREFIX STRINGIFY(ExportedName)\
-                                  "=" WIN_EXPORT_PREFIX STRINGIFY(Name)))
+#      define WIN_EXPORT(ExportedName, Name)                \
+        __pragma(comment(                                   \
+            linker, "/export:" WIN_EXPORT_PREFIX STRINGIFY( \
+                        ExportedName) "=" WIN_EXPORT_PREFIX STRINGIFY(Name)))
 
 // We cannot define weak functions on Windows, but we can use WIN_WEAK_ALIAS()
 // which defines an alias to a default implementation, and only works when
@@ -85,25 +112,20 @@
 // We impose "extern "C"" because otherwise WIN_WEAK_ALIAS() will fail because
 // of name mangling.
 
-// Dummy name for default implementation of weak function.
-# define WEAK_DEFAULT_NAME(Name) Name##__def
-// Name for exported implementation of weak function.
-# define WEAK_EXPORT_NAME(Name) Name##__dll
-
 // Use this macro when you need to define and export a weak function from a
 // library. For example:
 //   WIN_WEAK_EXPORT_DEF(bool, compare, int a, int b) { return a > b; }
-# define WIN_WEAK_EXPORT_DEF(ReturnType, Name, ...)                            \
-  WIN_WEAK_ALIAS(Name, WEAK_DEFAULT_NAME(Name))                                \
-  WIN_EXPORT(WEAK_EXPORT_NAME(Name), Name)                                     \
-  extern "C" ReturnType Name(__VA_ARGS__);                                     \
-  extern "C" ReturnType WEAK_DEFAULT_NAME(Name)(__VA_ARGS__)
+#      define WIN_WEAK_EXPORT_DEF(ReturnType, Name, ...) \
+        WIN_WEAK_ALIAS(Name, WEAK_DEFAULT_NAME(Name))    \
+        WIN_EXPORT(WEAK_EXPORT_NAME(Name), Name)         \
+        extern "C" ReturnType Name(__VA_ARGS__);         \
+        extern "C" ReturnType WEAK_DEFAULT_NAME(Name)(__VA_ARGS__)
 
 // Use this macro when you need to import a weak function from a library. It
 // defines a weak alias to the imported function from the dll. For example:
 //   WIN_WEAK_IMPORT_DEF(compare)
-# define WIN_WEAK_IMPORT_DEF(Name)                                             \
-  WIN_WEAK_ALIAS(Name, WEAK_EXPORT_NAME(Name))
+#      define WIN_WEAK_IMPORT_DEF(Name) \
+        WIN_WEAK_ALIAS(Name, WEAK_EXPORT_NAME(Name))
 
 // So, for Windows we provide something similar to weak symbols in Linux, with
 // some differences:
@@ -161,14 +183,16 @@
 //   }
 //
 
-#else // SANITIZER_GO
+#    endif  // SANITIZER_CYGWIN
+
+#  else  // SANITIZER_GO
 
 // Go neither needs nor wants weak references.
 // The shenanigans above don't work for gcc.
-# define WIN_WEAK_EXPORT_DEF(ReturnType, Name, ...)                            \
-  extern "C" ReturnType Name(__VA_ARGS__)
+#    define WIN_WEAK_EXPORT_DEF(ReturnType, Name, ...) \
+      extern "C" ReturnType Name(__VA_ARGS__)
 
-#endif // SANITIZER_GO
+#  endif  // SANITIZER_GO
 
 #endif // SANITIZER_WINDOWS
 #endif // SANITIZER_WIN_DEFS_H

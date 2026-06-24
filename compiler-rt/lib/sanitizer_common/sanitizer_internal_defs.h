@@ -28,7 +28,7 @@
 #define SANITIZER_STRINGIFY(S) SANITIZER_STRINGIFY_(S)
 
 // Only use SANITIZER_*ATTRIBUTE* before the function return type!
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS  // not SANITIZER_CYGWIN
 #  if SANITIZER_IMPORT_INTERFACE
 #    define SANITIZER_INTERFACE_ATTRIBUTE __declspec(dllimport)
 #  else
@@ -36,6 +36,7 @@
 #  endif
 #  define SANITIZER_WEAK_ATTRIBUTE
 #  define SANITIZER_WEAK_IMPORT
+#  define SANITIZER_SECTION(sec) __declspec(allocate(sec))
 #else
 #  if SANITIZER_GO
 #    define SANITIZER_INTERFACE_ATTRIBUTE
@@ -52,6 +53,7 @@
 #  else
 #    define SANITIZER_WEAK_IMPORT extern "C" SANITIZER_WEAK_ATTRIBUTE
 #  endif  // SANITIZER_APPLE
+#  define SANITIZER_SECTION(sec) __attribute__((section(sec)))
 #endif    // SANITIZER_WINDOWS
 
 //--------------------------- WEAK FUNCTIONS ---------------------------------//
@@ -63,10 +65,16 @@
 // For example:
 //   SANITIZER_INTERFACE_WEAK_DEF(bool, compare, int a, int b) { return a > b; }
 //
-#if SANITIZER_WINDOWS
-#include "sanitizer_win_defs.h"
-# define SANITIZER_INTERFACE_WEAK_DEF(ReturnType, Name, ...)                   \
-  WIN_WEAK_EXPORT_DEF(ReturnType, Name, __VA_ARGS__)
+#if SANITIZER_CYGWIN
+#  include "sanitizer_win_defs.h"
+#  define SANITIZER_INTERFACE_WEAK_DEF(ReturnType, Name, ...)         \
+    extern "C" SANITIZER_INTERFACE_ATTRIBUTE SANITIZER_WEAK_ATTRIBUTE \
+        ReturnType                                                    \
+        Name(__VA_ARGS__)
+#elif SANITIZER_WINDOWS
+#  include "sanitizer_win_defs.h"
+#  define SANITIZER_INTERFACE_WEAK_DEF(ReturnType, Name, ...)       \
+    WIN_WEAK_EXPORT_DEF(ReturnType, Name, __VA_ARGS__)
 #else
 # define SANITIZER_INTERFACE_WEAK_DEF(ReturnType, Name, ...)                   \
   extern "C" SANITIZER_INTERFACE_ATTRIBUTE SANITIZER_WEAK_ATTRIBUTE            \
@@ -296,9 +304,13 @@ typedef ALIGNED(1) s16 us16;
 typedef ALIGNED(1) s32 us32;
 typedef ALIGNED(1) s64 us64;
 
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS  // || SANITIZER_CYGWIN
 }  // namespace __sanitizer
+#  if SANITIZER_CYGWIN64
+typedef unsigned int DWORD;
+#  else
 typedef unsigned long DWORD;
+#  endif
 namespace __sanitizer {
 typedef DWORD thread_return_t;
 # define THREAD_CALLING_CONV __stdcall

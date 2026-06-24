@@ -11,15 +11,15 @@
 //===----------------------------------------------------------------------===//
 
 #include "sanitizer_platform.h"
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 
-#define WIN32_LEAN_AND_MEAN
-#define NOGDI
-#include <windows.h>
+#  define WIN32_LEAN_AND_MEAN
+#  define NOGDI
+#  include <windows.h>
 
-#include "sanitizer_dbghelp.h"  // for StackWalk64
-#include "sanitizer_stacktrace.h"
-#include "sanitizer_symbolizer.h"  // for InitializeDbgHelpIfNeeded
+#  include "sanitizer_dbghelp.h"  // for StackWalk64
+#  include "sanitizer_stacktrace.h"
+#  include "sanitizer_symbolizer.h"  // for InitializeDbgHelpIfNeeded
 
 using namespace __sanitizer;
 
@@ -55,7 +55,7 @@ PVOID CALLBACK FallbackFunctionTableAccess(HANDLE hProcess,
   // Function registered with RtlAddFunctionTable is not necessarily registered
   // with DbgHelp, so this is required to cover some edge cases (e.g. JIT
   // compilers can use Rtl* functions).
-#    if SANITIZER_WINDOWS64
+#    if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   DWORD64 dw64ImageBase = 0;
   return RtlLookupFunctionEntry(dwAddrBase, &dw64ImageBase, nullptr);
 #    else
@@ -70,7 +70,7 @@ DWORD64 CALLBACK FallbackGetModuleBase(HANDLE hProcess, DWORD64 dwAddr) {
 
   // Both GetModuleBase and FunctionTableAccess must provide this fallback,
   // otherwise dynamic functions won't be properly unwound.
-#    if SANITIZER_WINDOWS64
+#    if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   DWORD64 dw64ImageBase = 0;
   if (RtlLookupFunctionEntry(dwAddr, &dw64ImageBase, nullptr)) {
     return dw64ImageBase;
@@ -94,7 +94,7 @@ void BufferedStackTrace::UnwindSlow(uptr pc, void *context, u32 max_depth) {
   InitializeDbgHelpIfNeeded();
 
   size = 0;
-#    if SANITIZER_WINDOWS64
+#    if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
 #      if SANITIZER_ARM64
   int machine_type = IMAGE_FILE_MACHINE_ARM64;
   stack_frame.AddrPC.Offset = ctx.Pc;

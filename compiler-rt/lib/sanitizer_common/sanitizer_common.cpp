@@ -99,7 +99,7 @@ const char *StripPathPrefix(const char *filepath,
 const char *StripModuleName(const char *module) {
   if (!module)
     return nullptr;
-  if (SANITIZER_WINDOWS) {
+  if (SANITIZER_WINDOWS || SANITIZER_CYGWIN) {
     // On Windows, both slash and backslash are possible.
     // Pick the one that goes last.
     if (const char *bslash_pos = internal_strrchr(module, '\\'))

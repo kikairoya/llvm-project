@@ -155,7 +155,10 @@ COMMON_FLAG(uptr, max_allocation_size_mb, 0,
             "nullptr (or crash if allocator_may_return_null=false).")
 COMMON_FLAG(bool, heap_profile, false, "Experimental heap profiler, asan-only")
 COMMON_FLAG(s32, allocator_release_to_os_interval_ms,
-            ((bool)SANITIZER_FUCHSIA || (bool)SANITIZER_WINDOWS) ? -1 : 5000,
+            ((bool)SANITIZER_FUCHSIA || (bool)SANITIZER_WINDOWS ||
+             (bool)SANITIZER_CYGWIN)
+                ? -1
+                : 5000,
             "Only affects a 64-bit allocator. If set, tries to release unused "
             "memory to the OS, but not more often than this interval (in "
             "milliseconds). Negative values mean do not attempt to release "

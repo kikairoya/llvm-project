@@ -166,7 +166,7 @@ bool SymbolizerProcess::StartSymbolizerSubprocess() {
   }
 
   if (use_posix_spawn_) {
-#  if SANITIZER_APPLE
+#  if SANITIZER_APPLE || SANITIZER_CYGWIN
     bool success = internal_spawn(argv, const_cast<const char**>(GetEnvP()),
                                   &pid, outfd[0], infd[1]);
     if (!success) {

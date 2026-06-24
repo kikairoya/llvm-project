@@ -17,7 +17,7 @@
 #define SANITIZER_WIN_INTERCEPTION_H
 
 #include "sanitizer_platform.h"
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 
 #  include "sanitizer_common.h"
 #  include "sanitizer_internal_defs.h"

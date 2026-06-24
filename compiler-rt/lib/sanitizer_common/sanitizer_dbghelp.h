@@ -14,8 +14,8 @@
 #ifndef SANITIZER_SYMBOLIZER_WIN_H
 #define SANITIZER_SYMBOLIZER_WIN_H
 
-#if !SANITIZER_WINDOWS
-#error "sanitizer_dbghelp.h is a Windows-only header"
+#if !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
+#  error "sanitizer_dbghelp.h is a Windows-only header"
 #endif
 
 #define WIN32_LEAN_AND_MEAN
