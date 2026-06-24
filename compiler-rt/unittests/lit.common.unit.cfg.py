@@ -32,7 +32,7 @@ config.suffixes = []
 llvm_tools_dir = config.llvm_tools_dir
 if (not llvm_tools_dir) or (not os.path.exists(llvm_tools_dir)):
     lit_config.fatal("Invalid llvm_tools_dir config attribute: %r" % llvm_tools_dir)
-path = os.path.pathsep.join((llvm_tools_dir, config.environment["PATH"]))
+path = os.path.pathsep.join((llvm_tools_dir, config.environment["PATH"], config.compiler_rt_libdir))
 config.environment["PATH"] = path
 
 # Propagate the temp directory. Windows requires this because it uses \Windows\
