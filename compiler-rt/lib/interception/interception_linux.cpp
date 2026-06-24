@@ -18,15 +18,15 @@
 
 #include "interception.h"
 
-#if !SANITIZER_WINDOWS
+#if !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
 
 #  include <dlfcn.h>
 
 #  pragma weak dlopen
 #  pragma weak dlsym
-#if SANITIZER_GLIBC || SANITIZER_FREEBSD || SANITIZER_NETBSD
-#  pragma weak dlvsym
-#endif
+#  if SANITIZER_GLIBC || SANITIZER_FREEBSD || SANITIZER_NETBSD
+#    pragma weak dlvsym
+#  endif
 
 namespace __interception {
 

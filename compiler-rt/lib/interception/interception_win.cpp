@@ -126,11 +126,18 @@
 
 #include "interception.h"
 
-#if SANITIZER_WINDOWS
-#include "sanitizer_common/sanitizer_platform.h"
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <psapi.h>
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
+#  include "sanitizer_common/sanitizer_platform.h"
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+#  include <psapi.h>
+
+#  if SANITIZER_CYGWIN
+#    include <sys/cygwin.h>
+
+#    include "sanitizer_common/sanitizer_common.h"
+#    define _stricmp lstrcmpiA
+#  endif
 
 namespace __interception {
 
@@ -193,7 +200,7 @@ static void InterceptionFailed() {
 }
 
 static bool DistanceIsWithin2Gig(uptr from, uptr target) {
-#if SANITIZER_WINDOWS64
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   if (from < target)
     return target - from <= (uptr)0x7FFFFFFFU;
   else
@@ -334,7 +341,7 @@ static void WriteShortJumpInstruction(uptr from, uptr target) {
   *(u8*)(from + 1) = (u8)offset;
 }
 
-#if SANITIZER_WINDOWS64
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
 static void WriteIndirectJumpInstruction(uptr from, uptr indirect_target) {
   // jmp [rip + <offset>] = FF 25 <offset> where <offset> is a relative
   // offset.
@@ -357,7 +364,7 @@ static void WriteIndirectJumpInstruction(uptr from, uptr indirect_target) {
 
 static void WriteBranch(
     uptr from, uptr indirect_target, uptr target) {
-#if SANITIZER_WINDOWS64
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   WriteIndirectJumpInstruction(from, indirect_target);
   *(u64*)indirect_target = target;
 #else
@@ -367,7 +374,7 @@ static void WriteBranch(
 }
 
 static void WriteDirectBranch(uptr from, uptr target) {
-#if SANITIZER_WINDOWS64
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   // Emit an indirect jump through immediately following bytes:
   //   jmp [rip + kBranchLength]
   //   .quad <target>
@@ -387,9 +394,9 @@ UNUSED static const uptr kTrampolineRangeLimit = 1ull << 31;  // 2 gig
 static const int kMaxTrampolineRegion = 1024;
 static TrampolineMemoryRegion TrampolineRegions[kMaxTrampolineRegion];
 
-static void *AllocateTrampolineRegion(uptr min_addr, uptr max_addr,
+static void* AllocateTrampolineRegion(uptr min_addr, uptr max_addr,
                                       uptr func_addr, size_t granularity) {
-#  if SANITIZER_WINDOWS64
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   // Clamp {min,max}_addr to the accessible address space.
   SYSTEM_INFO system_info;
   ::GetSystemInfo(&system_info);
@@ -432,14 +439,17 @@ static void *AllocateTrampolineRegion(uptr min_addr, uptr max_addr,
 
     // Check whether a region can be allocated at |addr|.
     if (info.State == MEM_FREE && info.RegionSize >= granularity) {
-      void *page =
-          ::VirtualAlloc((void *)addr, granularity, MEM_RESERVE | MEM_COMMIT,
+      void* page =
+          ::VirtualAlloc((void*)addr, granularity, MEM_RESERVE | MEM_COMMIT,
                          PAGE_EXECUTE_READWRITE);
       if (page == nullptr)
         ReportError(
             "interception_win: VirtualAlloc in AllocateTrampolineRegion failed "
             "for %p\n",
             (void *)addr);
+#    if SANITIZER_CYGWIN
+      __sanitizer::RegisterTrampolineBufferForFork(addr, granularity);
+#    endif
       return page;
     }
 
@@ -476,7 +486,7 @@ void TestOnlyReleaseTrampolineRegions() {
 }
 
 static uptr AllocateMemoryForTrampoline(uptr func_address, size_t size) {
-#  if SANITIZER_WINDOWS64
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   uptr min_addr = func_address - kTrampolineRangeLimit;
   uptr max_addr = func_address + kTrampolineRangeLimit - size;
 
@@ -554,7 +564,7 @@ static uptr AllocateMemoryForTrampoline(uptr func_address, size_t size) {
 // jumping to the patching region.
 
 // Short jump patterns  below are only for x86_64.
-#  if SANITIZER_WINDOWS_x64
+#  if SANITIZER_WINDOWS_x64 || SANITIZER_CYGWIN_x64
 // ntdll!wcslen in Win11
 //   488bc1          mov     rax,rcx
 //   0fb710          movzx   edx,word ptr [rax]
@@ -589,7 +599,7 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
   return 4;
 #endif
 
-#  if SANITIZER_WINDOWS_x64
+#  if SANITIZER_WINDOWS_x64 || SANITIZER_CYGWIN_x64
   if (memcmp((u8*)address, kPrologueWithShortJump1,
              sizeof(kPrologueWithShortJump1)) == 0 ||
       memcmp((u8*)address, kPrologueWithShortJump2,
@@ -683,6 +693,7 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
     case 0x4D8B:  // 8B 4D XX : mov XX(%ebp), ecx
     case 0x558B:  // 8B 55 XX : mov XX(%ebp), edx
     case 0x758B:  // 8B 75 XX : mov XX(%ebp), esp
+    case 0xE183:  // 83 E1 XX : and ecx, XX
     case 0xE483:  // 83 E4 XX : and esp, XX
     case 0xEC83:  // 83 EC XX : sub esp, XX
     case 0xC1F6:  // F6 C1 XX : test cl, XX
@@ -710,7 +721,7 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
       return 3;
   }
 
-#  if SANITIZER_WINDOWS_x64
+#  if SANITIZER_WINDOWS_x64 || SANITIZER_CYGWIN_x64
   switch (*(u8*)address) {
     case 0xA1:  // A1 XX XX XX XX XX XX XX XX :
                 //   movabs eax, dword ptr ds:[XXXXXXXX]
@@ -755,6 +766,7 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
     case 0x5741:  // push r15
     case 0xc084:  // test al, al
     case 0x018a:  // mov al, byte ptr [rcx]
+    case 0x2adb:  // fldt ptr [rdx]
       return 2;
 
     case 0x7E80:  // 80 7E YY XX  cmp BYTE PTR [rsi+YY], XX
@@ -771,6 +783,9 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
         *rel_offset = 2;
       FALLTHROUGH;
     case 0xB841:  // 41 B8 XX XX XX XX : mov r8d, XX XX XX XX
+      return 6;
+
+    case 0xB941:  // 41 B9 XX XX XX XX : mov r9d, XX XX XX XX
       return 6;
 
     case 0x7E81:  // 81 7E YY XX XX XX XX  cmp DWORD PTR [rsi+YY], XX XX XX XX
@@ -791,7 +806,9 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
   switch (0x00FFFFFF & *(u32 *)address) {
     case 0x10b70f:    // 0f b7 10 : movzx edx, WORD PTR [rax]
     case 0x02b70f:    // 0f b7 02 : movzx eax, WORD PTR [rdx]
+    case 0x28db41:    // 41 db 28 : fldt [r8]
     case 0xc00b4d:    // 4d 0b c0 : or r8, r8
+    case 0xc80948:    // 48 09 c8 : or rax, rcx
     case 0xc03345:    // 45 33 c0 : xor r8d, r8d
     case 0xc08548:    // 48 85 c0 : test rax, rax
     case 0xc0854d:    // 4d 85 c0 : test r8, r8
@@ -804,6 +821,10 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
     case 0xc1ff48:    // 48 ff c1 : inc rcx
     case 0xc1ff49:    // 49 ff c1 : inc r9
     case 0xc28b41:    // 41 8b c2 : mov eax, r10d
+    case 0xe08944:    // 44 89 e0 : mov eax, r12d
+    case 0xd18941:    // 41 89 d1 : mov r9d, edx
+    case 0xc18945:    // 45 89 c1 : mov r9d, r8d
+    case 0xd48941:    // 41 89 d4 : mov r12d, edx
     case 0x01b60f:    // 0f b6 01 : movzx eax, BYTE PTR [rcx]
     case 0x09b60f:    // 0f b6 09 : movzx ecx, BYTE PTR [rcx]
     case 0x11b60f:    // 0f b6 11 : movzx edx, BYTE PTR [rcx]
@@ -821,6 +842,7 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
     case 0xc6ff49:    // 49 ff c6 : inc r14
     case 0xc7ff48:    // 48 ff c7 : inc rdi
     case 0xc7ff49:    // 49 ff c7 : inc r15
+    case 0xc98941:    // 41 89 c9 : mov r9d, ecx
     case 0xc93345:    // 45 33 c9 : xor r9d, r9d
     case 0xc98548:    // 48 85 c9 : test rcx, rcx
     case 0xc9854d:    // 4d 85 c9 : test r9, r9
@@ -860,6 +882,7 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
     case 0xc88949:    // 49 89 c8 : mov r8, rcx
     case 0xc98949:    // 49 89 c9 : mov r9, rcx
     case 0xca8949:    // 49 89 ca : mov r10,rcx
+    case 0xcb8949:    // 49 89 cb : mov r11,rcx
     case 0xd08949:    // 49 89 d0 : mov r8, rdx
     case 0xd18949:    // 49 89 d1 : mov r9, rdx
     case 0xd28949:    // 49 89 d2 : mov r10, rdx
@@ -894,6 +917,8 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
 
     case 0xec8148:    // 48 81 EC XX XX XX XX : sub rsp, XXXXXXXX
     case 0xc0c748:    // 48 C7 C0 XX XX XX XX : mov rax, XX XX XX XX
+    case 0x93894d:  // 4d 89 93 XX XX XX XX : mov QWORD PTR [r11+XXXXXXXX], r10
+    case 0x818b44:  // 44 8b 81 XX XX XX XX : mov r8d, DWORD PTR [rcx+XXXXXXXX]
       return 7;
 
     // clang-format off
@@ -939,6 +964,7 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
     case 0x0ab60f44:  // 44 0f b6 0a : movzx r8d, BYTE PTR [rdx]
     case 0x11b60f44:  // 44 0f b6 11 : movzx r10d, BYTE PTR [rcx]
     case 0x1ab60f44:  // 44 0f b6 1a : movzx r11d, BYTE PTR [rdx]
+    case 0xc07e0f66:  // 66 0f 7e c0 : movd eax, xmm0
       return 4;
     case 0x24448b48:  // 48 8b 44 24 XX : mov rax, QWORD ptr [rsp + XX]
     case 0x246c8948:  // 48 89 6C 24 XX : mov QWORD ptr [rsp + XX], rbp
@@ -961,7 +987,12 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
 
   switch (0xFFFFFFFFFFULL & *(u64 *)(address)) {
     case 0xC07E0F4866:  // 66 48 0F 7E C0 : movq rax, xmm0
+    case 0xC27E0F4866:  // 66 48 0F 7E C2 : movq rdx, xmm0
+    case 0xC97E0F4166:  // 66 41 0F 7E C9 : movd r9d, xmm1
       return 5;
+    case 0x25048B4865:  // 65 48 8B 04 25 XX XX XX XX: mov rax, qword ptr
+                        // gs:[XXXXXXXX]
+      return 9;
   }
 
 #else
@@ -1046,7 +1077,7 @@ static bool CopyInstructions(uptr to, uptr from, size_t size) {
     _memcpy((void *)(to + cursor), (void *)(from + cursor),
             (size_t)instruction_size);
     if (rel_offset) {
-#  if SANITIZER_WINDOWS64
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
       // we want to make sure that the new relative offset still fits in 32-bits
       // this will be untrue if relocated_offset \notin [-2**31, 2**31)
       s64 delta = to - from;
@@ -1071,8 +1102,7 @@ static bool CopyInstructions(uptr to, uptr from, size_t size) {
   return true;
 }
 
-
-#if !SANITIZER_WINDOWS64
+#  if !SANITIZER_WINDOWS64 && !SANITIZER_CYGWIN64
 bool OverrideFunctionWithDetour(
     uptr old_func, uptr new_func, uptr *orig_old_func) {
   const int kDetourHeaderLen = 5;
@@ -1108,6 +1138,47 @@ bool OverrideFunctionWithDetour(
 }
 #endif
 
+bool OverrideImportedFunctionThunk(uptr old_func, uptr new_func,
+                                   uptr* orig_old_func) {
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
+  if (*(u16*)old_func != 0x25FF)
+    return false;
+  if (*(u16*)(old_func + 6) != 0x9090)
+    return false;
+  if (*(u64*)(old_func + 8) != 0x9090909090909090)
+    return false;
+#    if 0
+  sptr relative_offset = *(s32 *)(old_func + 2);
+  uptr absolute_target = *(uptr *)(old_func + relative_offset + kIndirectJumpInstructionLength);
+  if (!OverrideFunction(absolute_target, new_func, orig_old_func))
+    return false;
+  if (orig_old_func) {
+    //sptr relative_offset = *(s32 *)(old_func + 2);
+    //uptr absolute_target = old_func + relative_offset + kIndirectJumpInstructionLength;
+    *orig_old_func = absolute_target;
+  }
+  return true;
+#    endif
+  // Change memory protection to writable.
+  DWORD protection = 0;
+  if (!ChangeMemoryProtection(old_func, kIndirectJumpInstructionLength,
+                              &protection))
+    return false;
+
+  // Write a relative jump to the redirected function.
+  WriteIndirectJumpInstruction(old_func, new_func);
+
+  // Restore previous memory protection.
+  if (!RestoreMemoryProtection(old_func, kIndirectJumpInstructionLength,
+                               protection))
+    return false;
+
+  return true;
+#  else
+  return false;
+#  endif
+}
+
 bool OverrideFunctionWithRedirectJump(
     uptr old_func, uptr new_func, uptr *orig_old_func) {
   // Check whether the first instruction is a relative jump.
@@ -1120,7 +1191,7 @@ bool OverrideFunctionWithRedirectJump(
     *orig_old_func = absolute_target;
   }
 
-#if SANITIZER_WINDOWS64
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   // If needed, get memory space for a trampoline jump.
   uptr trampoline = AllocateMemoryForTrampoline(old_func, kDirectBranchLength);
   if (!trampoline)
@@ -1171,7 +1242,7 @@ bool OverrideFunctionWithHotPatch(
 
   // If needed, get memory space for indirect address.
   uptr indirect_address = 0;
-#if SANITIZER_WINDOWS64
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   indirect_address = AllocateMemoryForTrampoline(old_func, kAddressLength);
   if (!indirect_address)
     return false;
@@ -1219,7 +1290,7 @@ bool OverrideFunctionWithTrampoline(
     *orig_old_func = trampoline;
   }
 
-#if SANITIZER_WINDOWS64
+#  if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   // Check if the targeted address can be encoded in the function padding.
   // Otherwise, allocate it in the trampoline region.
   if (IsMemoryPadding(old_func - kAddressLength, kAddressLength)) {
@@ -1249,42 +1320,50 @@ bool OverrideFunctionWithTrampoline(
   return true;
 }
 
-bool OverrideFunction(
-    uptr old_func, uptr new_func, uptr *orig_old_func) {
-#if !SANITIZER_WINDOWS64
+bool OverrideFunction(uptr old_func, uptr new_func, uptr* orig_old_func) {
+#  if !SANITIZER_WINDOWS64 && !SANITIZER_CYGWIN64
   if (OverrideFunctionWithDetour(old_func, new_func, orig_old_func))
     return true;
-#endif
+#  endif
   if (OverrideFunctionWithRedirectJump(old_func, new_func, orig_old_func))
     return true;
   if (OverrideFunctionWithHotPatch(old_func, new_func, orig_old_func))
     return true;
   if (OverrideFunctionWithTrampoline(old_func, new_func, orig_old_func))
     return true;
+  if (OverrideImportedFunctionThunk(old_func, new_func, orig_old_func))
+    return true;
+  // ReportError(
+  //     "itnerception_win: OverrideFunction failed old=%llx new=%llx
+  //     orig=%p\n", old_func, new_func, orig_old_func);
   return false;
 }
 
 static void **InterestingDLLsAvailable() {
-  static const char *InterestingDLLs[] = {
-    "kernel32.dll",
-    "msvcr100d.dll",      // VS2010
-    "msvcr110d.dll",      // VS2012
-    "msvcr120d.dll",      // VS2013
-    "vcruntime140d.dll",  // VS2015
-    "ucrtbased.dll",      // Universal CRT
-    "msvcr100.dll",       // VS2010
-    "msvcr110.dll",       // VS2012
-    "msvcr120.dll",       // VS2013
-    "vcruntime140.dll",   // VS2015
-    "ucrtbase.dll",       // Universal CRT
-#  if (defined(__MINGW32__) && defined(__i386__))
-    "libc++.dll",     // libc++
-    "libunwind.dll",  // libunwind
+  static const char* InterestingDLLs[] = {
+#  ifdef __CYGWIN__
+      "cygwin1.dll", "kernel32.dll", "cygstdc++-6.dll",
+  //"msvcrt.dll",
+#  else
+      "kernel32.dll",
+      "msvcr100d.dll",      // VS2010
+      "msvcr110d.dll",      // VS2012
+      "msvcr120d.dll",      // VS2013
+      "vcruntime140d.dll",  // VS2015
+      "ucrtbased.dll",      // Universal CRT
+      "msvcr100.dll",       // VS2010
+      "msvcr110.dll",       // VS2012
+      "msvcr120.dll",       // VS2013
+      "vcruntime140.dll",   // VS2015
+      "ucrtbase.dll",       // Universal CRT
+#    if (defined(__MINGW32__) && defined(__i386__))
+      "libc++.dll",     // libc++
+      "libunwind.dll",  // libunwind
+#    endif
+      // NTDLL must go last as it gets special treatment in OverrideFunction.
+      "ntdll.dll",
 #  endif
-    // NTDLL must go last as it gets special treatment in OverrideFunction.
-    "ntdll.dll",
-    NULL
-  };
+      NULL};
   static void *result[ARRAY_SIZE(InterestingDLLs)] = { 0 };
   if (!result[0]) {
     for (size_t i = 0, j = 0; InterestingDLLs[i]; ++i) {
@@ -1382,8 +1461,15 @@ uptr InternalGetProcAddress(void *module, const char *func_name) {
   return 0;
 }
 
-bool OverrideFunction(
-    const char *func_name, uptr new_func, uptr *orig_old_func) {
+static bool OverrideCygwinFunction(const char* func_name, uptr new_func,
+                            uptr* orig_old_func);
+bool OverrideFunction(const char* func_name, uptr new_func,
+                      uptr* orig_old_func) {
+#  if SANITIZER_CYGWIN
+  if (orig_old_func && *orig_old_func)
+    return true;
+  return OverrideCygwinFunction(func_name, new_func, orig_old_func);
+#  endif
   static const char *kNtDllIgnore[] = {
     "memcmp", "memcpy", "memmove", "memset"
   };
@@ -1401,22 +1487,24 @@ bool OverrideFunction(
     }
 
     uptr func_addr = InternalGetProcAddress(DLLs[i], func_name);
+#  if SANITIZER_CYGWIN && 0
     if (func_addr &&
-        OverrideFunction(func_addr, new_func, orig_old_func)) {
+        OverrideImportedFunctionThunk(func_addr, new_func, orig_old_func)) {
       hooked = true;
     }
+#  else
+    if (func_addr && OverrideFunction(func_addr, new_func, orig_old_func)) {
+      hooked = true;
+    }
+#  endif
   }
   return hooked;
 }
 
-bool OverrideImportedFunction(const char *module_to_patch,
+static bool OverrideImportedFunctionByHandle(HMODULE module,
                               const char *imported_module,
                               const char *function_name, uptr new_function,
                               uptr *orig_old_func) {
-  HMODULE module = GetModuleHandleA(module_to_patch);
-  if (!module)
-    return false;
-
   // Check that the module header is full and present.
   RVAPtr<IMAGE_DOS_HEADER> dos_stub(module, 0);
   RVAPtr<IMAGE_NT_HEADERS> headers(module, dos_stub->e_lfanew);
@@ -1473,7 +1561,108 @@ bool OverrideImportedFunction(const char *module_to_patch,
     return false;  // Not clear if this failure bothers us.
   return true;
 }
+bool OverrideImportedFunction(const char *module_to_patch,
+                              const char *imported_module,
+                              const char *function_name, uptr new_function,
+                              uptr *orig_old_func) {
+  HMODULE module = GetModuleHandleA(module_to_patch);
+  return module && OverrideImportedFunctionByHandle(module, imported_module, function_name, new_function, orig_old_func);
+}
+
+static bool RewriteExportEntry(HMODULE module, uptr old_func, uptr new_func) {
+  RVAPtr<IMAGE_DOS_HEADER> dos_stub(module, 0);
+  RVAPtr<IMAGE_NT_HEADERS> headers(module, dos_stub->e_lfanew);
+  if (!module || dos_stub->e_magic != IMAGE_DOS_SIGNATURE ||  // "MZ"
+      headers->Signature != IMAGE_NT_SIGNATURE ||             // "PE\0\0"
+      headers->FileHeader.SizeOfOptionalHeader <
+          sizeof(IMAGE_OPTIONAL_HEADER)) {
+    return false;
+  }
+  IMAGE_DATA_DIRECTORY *export_directory =
+      &headers->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+  if (export_directory->Size == 0)
+    return 0;
+
+  RVAPtr<IMAGE_EXPORT_DIRECTORY> exports(module,
+                                         export_directory->VirtualAddress);
+  RVAPtr<DWORD> addrs(module, exports->AddressOfFunctions);
+
+  DWORD old_prot, unused_prot;
+  static uptr trampoline_base = 0;
+  if (trampoline_base == 0) {
+    uptr alloc_size = RoundUpTo(exports->NumberOfFunctions * 16, 65536);
+    void* image_end = RVAPtr<void>(module, headers->OptionalHeader.SizeOfImage);
+    MEMORY_BASIC_INFORMATION info;
+    info.BaseAddress = image_end;
+    info.RegionSize = 0;
+    do {
+      if (!VirtualQuery(
+              (void*)RoundUpTo((uptr)info.BaseAddress + info.RegionSize, 65536),
+              &info, sizeof(info)))
+        return false;
+    } while (info.BaseAddress < image_end || info.RegionSize < alloc_size || info.State != MEM_FREE);
+    if (!DistanceIsWithin2Gig((uptr)module, (uptr)info.BaseAddress))
+      return false;
+    trampoline_base =
+        (uptr)VirtualAlloc(info.BaseAddress, alloc_size,
+                           MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READ);
+    if (trampoline_base == 0)
+        return false;
+    __sanitizer::RegisterTrampolineBufferForFork(
+        trampoline_base, alloc_size);
+  }
+  return true;
+  for (unsigned i = 0; i < exports->NumberOfFunctions; ++i) {
+    DWORD &entry = ((DWORD*)addrs)[i];
+    RVAPtr<void> pfn(module, entry);
+    if ((uptr)(void *)pfn == old_func) {
+      uptr trampoline = trampoline_base + i * 16;
+      if (!VirtualProtect((void*)trampoline, 16, PAGE_EXECUTE_READWRITE, &old_prot))
+        return false;
+      WriteDirectBranch(trampoline, old_func);
+      if (!VirtualProtect((void*)trampoline, 16, old_prot, &unused_prot))
+        return false;
+      if (!VirtualProtect(&entry, 4, PAGE_EXECUTE_READWRITE, &old_prot))
+        return false;
+      entry = trampoline - reinterpret_cast<uptr>(module);
+      if (!VirtualProtect(&entry, 4, old_prot, &unused_prot))
+        return false;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool OverrideCygwinFunction(const char* func_name, uptr new_func,
+                            uptr* orig_old_func) {
+  HMODULE self = GetModuleHandleW(nullptr);
+  HMODULE cygwin1 = GetModuleHandleA("cygwin1.dll");
+  HMODULE modules[64];
+  DWORD n = sizeof(modules);
+  if (!EnumProcessModules(GetCurrentProcess(), modules, n, &n))
+    return false;
+  uptr old_func = cygwin_internal(CW_HOOK, func_name, new_func);
+  if (!old_func)
+    return false;
+  if (orig_old_func)
+    *orig_old_func = old_func;
+  for (DWORD i = 0; i < n / sizeof(HMODULE); ++i) {
+    HMODULE m = modules[i];
+    if (m == self || m == cygwin1)
+      continue;
+    OverrideImportedFunctionByHandle(m, "cygwin1.dll", func_name,
+                                     new_func, nullptr);
+  }
+  return RewriteExportEntry(cygwin1, old_func, new_func);
+}
 
 }  // namespace __interception
+
+#  if SANITIZER_CYGWIN
+namespace __sanitizer {
+__attribute__((weak)) void RegisterTrampolineBufferForFork(uptr addr,
+                                                           uptr granularity) {}
+}  // namespace __sanitizer
+#  endif
 
 #endif  // SANITIZER_WINDOWS

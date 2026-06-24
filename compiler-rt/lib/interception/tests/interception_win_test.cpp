@@ -17,7 +17,7 @@
 // Too slow for debug build
 // Disabling for ARM64 since testcases are x86/x64 assembly.
 #if !SANITIZER_DEBUG
-#if SANITIZER_WINDOWS
+#  if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 #    if !SANITIZER_WINDOWS_ARM64
 
 #      include <stdarg.h>
@@ -38,7 +38,7 @@ enum FunctionPrefixKind {
 typedef bool (*TestOverrideFunction)(uptr, uptr, uptr*);
 typedef int (*IdentityFunction)(int);
 
-#if SANITIZER_WINDOWS64
+#      if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
 
 const u8 kIdentityCodeWithPrologue[] = {
     0x55,                   // push        rbp
@@ -191,7 +191,7 @@ const u8 kPatchableCode5[] = {
     0x54,                                      // push    esp
 };
 
-#if SANITIZER_WINDOWS64
+#      if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
 u8 kLoadGlobalCode[] = {
   0x8B, 0x05, 0x00, 0x00, 0x00, 0x00, // mov    eax [rip + global]
   0xC3,                               // ret
@@ -230,7 +230,7 @@ const u8 kUnpatchableCode6[] = {
     0x90, 0x90, 0x90, 0x90,
 };
 
-#      if SANITIZER_WINDOWS64
+#      if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
 const u8 kUnpatchableCode7[] = {
     0x33, 0xc0,                     // xor     eax,eax
     0x48, 0x85, 0xd2,               // test    rdx,rdx
@@ -289,7 +289,7 @@ const u8 kPatchableCode11[] = {
 };
 #      endif
 
-#      if !SANITIZER_WINDOWS64
+#      if !SANITIZER_WINDOWS64 && !SANITIZER_CYGWIN64
 const u8 kPatchableCode12[] = {
     0x55,                           // push    ebp
     0x53,                           // push    ebx
@@ -380,7 +380,7 @@ static void LoadActiveCode(
 
   // Add the detour instruction (i.e. mov edi, edi)
   if (prefix_kind == FunctionPrefixDetour) {
-#if SANITIZER_WINDOWS64
+#      if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
     // Note that "mov edi,edi" is NOP in 32-bit only, in 64-bit it clears
     // higher bits of RDI.
     // Use 66,90H as NOP for Windows64.
@@ -468,7 +468,7 @@ static void TestIdentityFunctionPatching(
   TestOnlyReleaseTrampolineRegions();
 }
 
-#    if !SANITIZER_WINDOWS64
+#      if !SANITIZER_WINDOWS64 && !SANITIZER_CYGWIN64
 TEST(Interception, OverrideFunctionWithDetour) {
   TestOverrideFunction override = OverrideFunctionWithDetour;
   FunctionPrefixKind prefix = FunctionPrefixDetour;
@@ -556,7 +556,7 @@ static void TestIdentityFunctionMultiplePatching(
 }
 
 TEST(Interception, OverrideFunctionMultiplePatchingIsFailing) {
-#if !SANITIZER_WINDOWS64
+#      if !SANITIZER_WINDOWS64 && !SANITIZER_CYGWIN64
   TestIdentityFunctionMultiplePatching(kIdentityCodeWithPrologue,
                                        OverrideFunctionWithDetour,
                                        FunctionPrefixDetour);
@@ -618,14 +618,14 @@ TEST(Interception, PatchableFunction) {
   // Test without function padding.
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode1, override));
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode2, override));
-#if SANITIZER_WINDOWS64
+#      if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   EXPECT_FALSE(TestFunctionPatching(kPatchableCode3, override));
 #else
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode3, override));
 #endif
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode4, override));
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode5, override));
-#if SANITIZER_WINDOWS64
+#      if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   EXPECT_TRUE(TestFunctionPatching(kLoadGlobalCode, override));
 #endif
 
@@ -637,7 +637,7 @@ TEST(Interception, PatchableFunction) {
   EXPECT_FALSE(TestFunctionPatching(kUnpatchableCode6, override));
 }
 
-#if !SANITIZER_WINDOWS64
+#      if !SANITIZER_WINDOWS64 && !SANITIZER_CYGWIN64
 TEST(Interception, PatchableFunctionWithDetour) {
   TestOverrideFunction override = OverrideFunctionWithDetour;
   // Without the prefix, no function can be detoured.
@@ -689,7 +689,7 @@ TEST(Interception, PatchableFunctionWithHotPatch) {
   EXPECT_FALSE(TestFunctionPatching(kPatchableCode2, override, prefix));
   EXPECT_FALSE(TestFunctionPatching(kPatchableCode3, override, prefix));
   EXPECT_FALSE(TestFunctionPatching(kPatchableCode4, override, prefix));
-#if SANITIZER_WINDOWS64
+#      if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode6, override, prefix));
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode7, override, prefix));
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode8, override, prefix));
@@ -708,7 +708,7 @@ TEST(Interception, PatchableFunctionWithTrampoline) {
 
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode1, override, prefix));
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode2, override, prefix));
-#if SANITIZER_WINDOWS64
+#      if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   EXPECT_FALSE(TestFunctionPatching(kPatchableCode3, override, prefix));
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode9, override, prefix));
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode10, override, prefix));
@@ -775,7 +775,7 @@ TEST(Interception, PatchableFunctionPadding) {
 
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode1, override, prefix));
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode2, override, prefix));
-#if SANITIZER_WINDOWS64
+#      if SANITIZER_WINDOWS64 || SANITIZER_CYGWIN64
   EXPECT_FALSE(TestFunctionPatching(kPatchableCode3, override, prefix));
 #else
   EXPECT_TRUE(TestFunctionPatching(kPatchableCode3, override, prefix));
@@ -875,7 +875,7 @@ const struct InstructionSizeData {
     { 6, {0x81, 0xEC, 0x72, 0x73, 0x74, 0x75}, 0, "81 EC XX XX XX XX : sub esp, XX XX XX XX"},
     { 6, {0xFF, 0x89, 0x72, 0x73, 0x74, 0x75}, 0, "FF 89 XX XX XX XX : dec dword ptr [ecx + XX XX XX XX]"},
     { 7, {0x8D, 0xA4, 0x24, 0x73, 0x74, 0x75, 0x76}, 0, "8D A4 24 XX XX XX XX : lea esp, [esp + XX XX XX XX]"},
-#if SANITIZER_WINDOWS_x64
+#if SANITIZER_WINDOWS_x64 || SANITIZER_CYGWIN_x64
     // sorted list
     { 2, {0x40, 0x50}, 0, "40 50 : push rax"},
     { 2, {0x40, 0x51}, 0, "40 51 : push rcx"},

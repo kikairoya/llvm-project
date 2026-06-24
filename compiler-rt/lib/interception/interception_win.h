@@ -11,14 +11,15 @@
 // Windows-specific interception methods.
 //===----------------------------------------------------------------------===//
 
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 
-#if !defined(INCLUDED_FROM_INTERCEPTION_LIB)
-# error "interception_win.h should be included from interception library only"
-#endif
+#  if !defined(INCLUDED_FROM_INTERCEPTION_LIB)
+#    error \
+        "interception_win.h should be included from interception library only"
+#  endif
 
-#ifndef INTERCEPTION_WIN_H
-#define INTERCEPTION_WIN_H
+#  ifndef INTERCEPTION_WIN_H
+#    define INTERCEPTION_WIN_H
 
 namespace __interception {
 // All the functions in the OverrideFunction() family return true on success,
@@ -46,7 +47,7 @@ bool OverrideImportedFunction(const char *module_to_patch,
 // __sanitizer::Report. Pass nullptr to disable error reporting (default).
 void SetErrorReportCallback(void (*callback)(const char *format, ...));
 
-#if !SANITIZER_WINDOWS64
+#    if !SANITIZER_WINDOWS64 && !SANITIZER_CYGWIN64
 // Exposed for unittests
 bool OverrideFunctionWithDetour(
     uptr old_func, uptr new_func, uptr *orig_old_func);
@@ -55,6 +56,8 @@ bool OverrideFunctionWithDetour(
 // Exposed for unittests
 bool OverrideFunctionWithRedirectJump(
     uptr old_func, uptr new_func, uptr *orig_old_func);
+bool OverrideImportedFunctionThunk(uptr old_func, uptr new_func,
+                                   uptr* orig_old_func);
 bool OverrideFunctionWithHotPatch(
     uptr old_func, uptr new_func, uptr *orig_old_func);
 bool OverrideFunctionWithTrampoline(
@@ -68,24 +71,25 @@ SIZE_T TestOnlyGetInstructionSize(uptr address, SIZE_T *rel_offset);
 
 }  // namespace __interception
 
-#if defined(INTERCEPTION_DYNAMIC_CRT)
-#define INTERCEPT_FUNCTION_WIN(func)                                           \
-  ::__interception::OverrideFunction(#func,                                    \
-                                     (::__interception::uptr)WRAP(func),       \
-                                     (::__interception::uptr *)&REAL(func))
-#else
-#define INTERCEPT_FUNCTION_WIN(func)                                           \
-  ::__interception::OverrideFunction((::__interception::uptr)func,             \
-                                     (::__interception::uptr)WRAP(func),       \
-                                     (::__interception::uptr *)&REAL(func))
-#endif
+#    if defined(INTERCEPTION_DYNAMIC_CRT) || SANITIZER_CYGWIN
+#      define INTERCEPT_FUNCTION_WIN(func)             \
+        ::__interception::OverrideFunction(            \
+            #func, (::__interception::uptr)WRAP(func), \
+            (::__interception::uptr*)&REAL(func))
+#    else
+#      define INTERCEPT_FUNCTION_WIN(func)                                    \
+        ::__interception::OverrideFunction(                                   \
+            (::__interception::uptr)func, (::__interception::uptr)WRAP(func), \
+            (::__interception::uptr*)&REAL(func))
+#    endif
 
-#define INTERCEPT_FUNCTION_VER_WIN(func, symver) INTERCEPT_FUNCTION_WIN(func)
+#    define INTERCEPT_FUNCTION_VER_WIN(func, symver) \
+      INTERCEPT_FUNCTION_WIN(func)
 
-#define INTERCEPT_FUNCTION_DLLIMPORT(user_dll, provider_dll, func)       \
-  ::__interception::OverrideImportedFunction(                            \
-      user_dll, provider_dll, #func, (::__interception::uptr)WRAP(func), \
-      (::__interception::uptr *)&REAL(func))
+#    define INTERCEPT_FUNCTION_DLLIMPORT(user_dll, provider_dll, func)       \
+      ::__interception::OverrideImportedFunction(                            \
+          user_dll, provider_dll, #func, (::__interception::uptr)WRAP(func), \
+          (::__interception::uptr*)&REAL(func))
 
 #endif  // INTERCEPTION_WIN_H
 #endif  // SANITIZER_WINDOWS

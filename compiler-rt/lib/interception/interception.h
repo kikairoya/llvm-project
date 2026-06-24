@@ -19,7 +19,8 @@
 
 #if !SANITIZER_LINUX && !SANITIZER_FREEBSD && !SANITIZER_APPLE &&    \
     !SANITIZER_NETBSD && !SANITIZER_WINDOWS && !SANITIZER_FUCHSIA && \
-    !SANITIZER_SOLARIS && !SANITIZER_HAIKU && !SANITIZER_AIX
+    !SANITIZER_SOLARIS && !SANITIZER_HAIKU && !SANITIZER_AIX &&      \
+    !SANITIZER_CYGWIN
 #  error "Interception doesn't work on this operating system."
 #endif
 
@@ -31,7 +32,7 @@
 // redefinition by #defining SIZE_T instead of using a typedef.
 // TODO: We should be using __sanitizer::usize (and a new ssize) instead of
 // these new macros as long as we ensure they match the real system definitions.
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 // Ensure that (S)SIZE_T were already defined as we are about to override them.
 #  include <basetsd.h>
 #endif
@@ -160,11 +161,15 @@ const interpose_substitution substitution_##func_name[]             \
 # define INTERCEPTOR_ATTRIBUTE
 # define DECLARE_WRAPPER(ret_type, func, ...)
 
-#elif SANITIZER_WINDOWS
-# define WRAP(x) __asan_wrap_##x
-# define TRAMPOLINE(x) WRAP(x)
-# define INTERCEPTOR_ATTRIBUTE __declspec(dllexport)
-# define DECLARE_WRAPPER(ret_type, func, ...)         \
+#elif SANITIZER_WINDOWS || SANITIZER_CYGWIN
+#  define WRAP(x) __asan_wrap_##x
+#  define TRAMPOLINE(x) WRAP(x)
+#  if SANITIZER_CYGWIN
+#    define INTERCEPTOR_ATTRIBUTE __attribute__((visibility("default")))
+#  else
+#    define INTERCEPTOR_ATTRIBUTE __declspec(dllexport)
+#  endif
+#  define DECLARE_WRAPPER(ret_type, func, ...)         \
     extern "C" ret_type func(__VA_ARGS__);
 # define DECLARE_WRAPPER_WINAPI(ret_type, func, ...)  \
     extern "C" __declspec(dllimport) ret_type __stdcall func(__VA_ARGS__);
@@ -266,10 +271,11 @@ const interpose_substitution substitution_##func_name[]             \
 # define REAL(x) __interception::PTR_TO_REAL(x)
 # define FUNC_TYPE(x) x##_type
 
-# define DECLARE_REAL(ret_type, func, ...)            \
-    typedef ret_type (*FUNC_TYPE(func))(__VA_ARGS__); \
-    namespace __interception {                        \
-    extern FUNC_TYPE(func) PTR_TO_REAL(func);         \
+#  define DECLARE_REAL(ret_type, func, ...)                      \
+    typedef ret_type (*FUNC_TYPE(func))(__VA_ARGS__);            \
+    namespace __interception {                                   \
+    extern __attribute__((visibility("hidden"))) FUNC_TYPE(func) \
+        PTR_TO_REAL(func);                                       \
     }
 # define ASSIGN_REAL(dst, src) REAL(dst) = REAL(src)
 #else  // SANITIZER_APPLE
@@ -349,8 +355,8 @@ const interpose_substitution substitution_##func_name[]             \
   INTERPOSER_2(overridee, WRAP(overrider))
 #endif
 
-#if SANITIZER_WINDOWS
-# define INTERCEPTOR_WINAPI(ret_type, func, ...)                \
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
+#  define INTERCEPTOR_WINAPI(ret_type, func, ...)                \
     typedef ret_type (__stdcall *FUNC_TYPE(func))(__VA_ARGS__); \
     namespace __interception {                                  \
       FUNC_TYPE(func) PTR_TO_REAL(func);                        \
@@ -404,10 +410,10 @@ inline void DoesNotSupportStaticLinking() {}
 # define INTERCEPT_FUNCTION(func) INTERCEPT_FUNCTION_MAC(func)
 # define INTERCEPT_FUNCTION_VER(func, symver) \
     INTERCEPT_FUNCTION_VER_MAC(func, symver)
-#elif SANITIZER_WINDOWS
-# include "interception_win.h"
-# define INTERCEPT_FUNCTION(func) INTERCEPT_FUNCTION_WIN(func)
-# define INTERCEPT_FUNCTION_VER(func, symver) \
+#elif SANITIZER_WINDOWS || SANITIZER_CYGWIN
+#  include "interception_win.h"
+#  define INTERCEPT_FUNCTION(func) INTERCEPT_FUNCTION_WIN(func)
+#  define INTERCEPT_FUNCTION_VER(func, symver) \
     INTERCEPT_FUNCTION_VER_WIN(func, symver)
 #endif
 
