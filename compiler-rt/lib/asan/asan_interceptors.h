@@ -60,7 +60,7 @@ void InitializePlatformInterceptors();
 #  endif
 
 #  if SANITIZER_FREEBSD || SANITIZER_LINUX || SANITIZER_NETBSD || \
-      SANITIZER_SOLARIS
+      SANITIZER_SOLARIS || SANITIZER_CYGWIN
 #    define ASAN_USE_ALIAS_ATTRIBUTE_FOR_INDEX 1
 #  else
 #    define ASAN_USE_ALIAS_ATTRIBUTE_FOR_INDEX 0
@@ -88,6 +88,7 @@ void InitializePlatformInterceptors();
 #  endif
 
 #  if ASAN_HAS_EXCEPTIONS && !SANITIZER_SOLARIS && !SANITIZER_NETBSD && \
+      !SANITIZER_CYGWIN &&                                              \
       (!SANITIZER_WINDOWS || (defined(__MINGW32__) && defined(__i386__)))
 #    define ASAN_INTERCEPT___CXA_THROW 1
 #    define ASAN_INTERCEPT___CXA_RETHROW_PRIMARY_EXCEPTION 1

@@ -13,13 +13,13 @@
 
 #include "sanitizer_common/sanitizer_allocator_interface.h"
 #include "sanitizer_common/sanitizer_platform.h"
-#if SANITIZER_WINDOWS
-#include "asan_allocator.h"
-#include "asan_interceptors.h"
-#include "asan_internal.h"
-#include "asan_stack.h"
-#include "interception/interception.h"
-#include <stddef.h>
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
+#  include "asan_allocator.h"
+#  include "asan_interceptors.h"
+#  include "asan_internal.h"
+#  include "asan_stack.h"
+#  include "interception/interception.h"
+#  include <stddef.h>
 
 // Intentionally not including windows.h here, to avoid the risk of
 // pulling in conflicting declarations of these functions. (With mingw-w64,
@@ -29,19 +29,40 @@ typedef void *HANDLE;
 typedef const void *LPCVOID;
 typedef void *LPVOID;
 
+#  if SANITIZER_CYGWIN64
+typedef unsigned int DWORD;
+#    define DLLEXPORT __attribute__((visibility("default")))
+#    define EXTERN __attribute__((visibility("default")))
+#  else
 typedef unsigned long DWORD;
-constexpr unsigned long HEAP_ZERO_MEMORY = 0x00000008;
-constexpr unsigned long HEAP_REALLOC_IN_PLACE_ONLY = 0x00000010;
-constexpr unsigned long HEAP_ALLOCATE_SUPPORTED_FLAGS = (HEAP_ZERO_MEMORY);
-constexpr unsigned long HEAP_ALLOCATE_UNSUPPORTED_FLAGS =
+#    define DLLEXPORT __declspec(dllexport)
+#    define EXTERN
+#  endif
+constexpr DWORD HEAP_ZERO_MEMORY = 0x00000008;
+constexpr DWORD HEAP_REALLOC_IN_PLACE_ONLY = 0x00000010;
+constexpr DWORD HEAP_ALLOCATE_SUPPORTED_FLAGS = (HEAP_ZERO_MEMORY);
+constexpr DWORD HEAP_ALLOCATE_UNSUPPORTED_FLAGS =
     (~HEAP_ALLOCATE_SUPPORTED_FLAGS);
-constexpr unsigned long HEAP_FREE_UNSUPPORTED_FLAGS =
-    (~HEAP_ALLOCATE_SUPPORTED_FLAGS);
-constexpr unsigned long HEAP_REALLOC_UNSUPPORTED_FLAGS =
+constexpr DWORD HEAP_FREE_UNSUPPORTED_FLAGS = (~HEAP_ALLOCATE_SUPPORTED_FLAGS);
+constexpr DWORD HEAP_REALLOC_UNSUPPORTED_FLAGS =
     (~HEAP_ALLOCATE_SUPPORTED_FLAGS);
 
+constexpr DWORD MEM_COMMIT = 0x1000;
+constexpr DWORD MEM_RESERVE = 0x2000;
+constexpr DWORD PAGE_READWRITE = 0x04;
+
+#  if SANITIZER_CYGWIN
+#    define WINVER
+typedef void* HMODULE;
+constexpr DWORD MAX_PATH = 260;
+#    include <sys/cygwin.h>
+#  endif
 
 extern "C" {
+LPVOID WINAPI VirtualAlloc(LPVOID lpAddress, size_t dwSize,
+                           DWORD flAllocationType, DWORD flProtect);
+LPVOID WINAPI GetModuleHandleA(const char*);
+
 LPVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, size_t dwBytes);
 LPVOID WINAPI HeapReAlloc(HANDLE hHeap, DWORD dwFlags, LPVOID lpMem,
                          size_t dwBytes);
@@ -74,7 +95,7 @@ __declspec(noinline) size_t _msize(void *ptr) {
 
 __declspec(noinline) size_t _msize_base(void *ptr) { return _msize(ptr); }
 
-__declspec(noinline) void free(void *ptr) {
+EXTERN __declspec(noinline) void free(void* ptr) {
   GET_STACK_TRACE_FREE;
   return asan_free(ptr, &stack);
 }
@@ -83,10 +104,11 @@ __declspec(noinline) void _free_dbg(void *ptr, int) { free(ptr); }
 
 __declspec(noinline) void _free_base(void *ptr) { free(ptr); }
 
-__declspec(noinline) void *malloc(size_t size) {
+EXTERN __declspec(noinline) void* malloc(size_t size) {
   GET_STACK_TRACE_MALLOC;
   return asan_malloc(size, &stack);
 }
+extern "C" void* __asan_wrap_malloc(size_t size) { return malloc(size); }
 
 __declspec(noinline) void *_malloc_base(size_t size) { return malloc(size); }
 
@@ -94,7 +116,7 @@ __declspec(noinline) void *_malloc_dbg(size_t size, int, const char *, int) {
   return malloc(size);
 }
 
-__declspec(noinline) void *calloc(size_t nmemb, size_t size) {
+EXTERN __declspec(noinline) void* calloc(size_t nmemb, size_t size) {
   GET_STACK_TRACE_MALLOC;
   return asan_calloc(nmemb, size, &stack);
 }
@@ -113,7 +135,7 @@ __declspec(noinline) void *_calloc_impl(size_t nmemb, size_t size,
   return calloc(nmemb, size);
 }
 
-__declspec(noinline) void *realloc(void *ptr, size_t size) {
+EXTERN __declspec(noinline) void* realloc(void* ptr, size_t size) {
   GET_STACK_TRACE_MALLOC;
   return asan_realloc(ptr, size, &stack);
 }
@@ -159,26 +181,52 @@ __declspec(noinline) void *_expand_dbg(void *memblock, size_t size) {
   return _expand(memblock, size);
 }
 
-__declspec(dllexport) size_t __cdecl __asan_msize(void *ptr) {
-  return _msize(ptr);
-}
-__declspec(dllexport) void __cdecl __asan_free(void *const ptr) { free(ptr); }
-__declspec(dllexport) void *__cdecl __asan_malloc(const size_t size) {
+DLLEXPORT size_t __cdecl __asan_msize(void* ptr) { return _msize(ptr); }
+DLLEXPORT void __cdecl __asan_free(void* const ptr) { free(ptr); }
+DLLEXPORT void* __cdecl __asan_malloc(const size_t size) {
   return malloc(size);
 }
-__declspec(dllexport) void *__cdecl __asan_calloc(const size_t nmemb,
-                                                  const size_t size) {
+DLLEXPORT void* __cdecl __asan_calloc(const size_t nmemb, const size_t size) {
   return calloc(nmemb, size);
 }
-__declspec(dllexport) void *__cdecl __asan_realloc(void *const ptr,
-                                                   const size_t size) {
+DLLEXPORT void* __cdecl __asan_realloc(void* const ptr, const size_t size) {
   return realloc(ptr, size);
 }
-__declspec(dllexport) void *__cdecl __asan_recalloc(void *const ptr,
-                                                    const size_t nmemb,
-                                                    const size_t size) {
+DLLEXPORT void* __cdecl __asan_recalloc(void* const ptr, const size_t nmemb,
+                                        const size_t size) {
   return _recalloc(ptr, nmemb, size);
 }
+#  if SANITIZER_CYGWIN
+
+EXTERN __declspec(noinline) int posix_memalign(void** memptr, size_t alignment,
+                                               size_t size) {
+  GET_STACK_TRACE_MALLOC;
+  return asan_posix_memalign(memptr, alignment, size, &stack);
+}
+EXTERN __declspec(noinline) void* aligned_alloc(size_t alignment, size_t size) {
+  GET_STACK_TRACE_MALLOC;
+  return asan_aligned_alloc(alignment, size, &stack);
+}
+EXTERN __declspec(noinline) void* valloc(size_t size) {
+  GET_STACK_TRACE_MALLOC;
+  return asan_valloc(size, &stack);
+}
+EXTERN __declspec(noinline) void* memalign(size_t alignment, size_t size) {
+  GET_STACK_TRACE_MALLOC;
+  return asan_memalign(alignment, size, &stack);
+}
+DLLEXPORT int __cdecl __asan_posix_memalign(void** memptr, size_t alignment,
+                                            size_t size) {
+  return posix_memalign(memptr, alignment, size);
+}
+DLLEXPORT void* __cdecl __asan_aligned_alloc(size_t alignment, size_t size) {
+  return aligned_alloc(alignment, size);
+}
+DLLEXPORT void __cdecl* __asan_valloc(size_t size) { return valloc(size); }
+DLLEXPORT void* __cdecl __asan_memalign(size_t alignment, size_t size) {
+  return memalign(alignment, size);
+}
+#  endif
 
 // TODO(timurrrr): Might want to add support for _aligned_* allocation
 // functions to detect a bit more bugs.  Those functions seem to wrap malloc().
@@ -503,7 +551,54 @@ static void TryToOverrideFunction(const char *fname, uptr new_func) {
     VPrintf(2, "Failed to override function %s\n", fname);
 }
 
+#  if SANITIZER_CYGWIN && 0
+__attribute__((constructor, used)) void InitCygwin1DataSeg() {
+  return;
+  constexpr uptr cygwin_data_low = 0x1'8000'0000;
+  constexpr uptr cygwin_data_high = 0x2'0000'0000;
+  VirtualAlloc((void*)MEM_TO_SHADOW(cygwin_data_low),
+               MEM_TO_SHADOW(cygwin_data_high) - MEM_TO_SHADOW(cygwin_data_low),
+               MEM_COMMIT, PAGE_READWRITE);
+  __asan_unpoison_memory_region((void*)cygwin_data_low,
+                                cygwin_data_high - cygwin_data_low);
+  // internal_memset(
+  //     (void*)MEM_TO_SHADOW(cygwin_data_low),
+  //     MEM_TO_SHADOW(cygwin_data_high) - MEM_TO_SHADOW(cygwin_data_low), 0);
+}
+#  endif
+
 void ReplaceSystemMalloc() {
+#  if SANITIZER_CYGWIN
+  // #define TryToOverrideFunction(f, g)
+  // __interception::OverrideImportedFunction(nullptr, "cygwin1.dll", f, g,
+  // nullptr), __interception::OverrideImportedFunction("cygstdc++-6.dll",
+  // "cygwin1.dll", f, g, nullptr)
+  auto* ud = (per_process*)cygwin_internal(CW_USER_DATA);
+  auto m = GetModuleHandleA("cygwin1.dll");
+#    define TryToOverrideFunction(f, g)                                     \
+      do {                                                                  \
+        /*if (!  ::__interception::OverrideFunction(f, (uptr)g, nullptr))*/ \
+        if (uptr func_addr = __interception::InternalGetProcAddress(m, f);  \
+            !func_addr ||                                                   \
+            !__interception::OverrideFunction(func_addr, g, nullptr))       \
+          VReport(1, "AddressSanitizer: failed to intercept '%s'\n", f);    \
+      } while (0)
+  TryToOverrideFunction("free", (uptr)free);
+  ud->free = free;
+  TryToOverrideFunction("malloc", (uptr)malloc);
+  ud->malloc = malloc;
+  TryToOverrideFunction("calloc", (uptr)calloc);
+  ud->calloc = calloc;
+  TryToOverrideFunction("realloc", (uptr)realloc);
+  ud->realloc = realloc;
+  TryToOverrideFunction("posix_memalign", (uptr)posix_memalign);
+  ud->posix_memalign = posix_memalign;
+  TryToOverrideFunction("aligned_alloc", (uptr)aligned_alloc);
+  TryToOverrideFunction("valloc", (uptr)valloc);
+  TryToOverrideFunction("memalign", (uptr)memalign);
+  ReplaceSystemNewDelete();
+#    undef TryToOverrideFunction
+#  else
   TryToOverrideFunction("free", (uptr)free);
   TryToOverrideFunction("_free_base", (uptr)free);
   TryToOverrideFunction("malloc", (uptr)malloc);
@@ -541,16 +636,16 @@ void ReplaceSystemMalloc() {
                                      (uptr)WRAP(RtlAllocateHeap),
                                      (uptr *)&REAL(RtlAllocateHeap));
   } else {
-#define INTERCEPT_UCRT_FUNCTION(func)                                  \
-  if (!INTERCEPT_FUNCTION_DLLIMPORT(                                   \
-          "ucrtbase.dll", "api-ms-win-core-heap-l1-1-0.dll", func)) {  \
-    VPrintf(2, "Failed to intercept ucrtbase.dll import %s\n", #func); \
-  }
+#    define INTERCEPT_UCRT_FUNCTION(func)                                  \
+      if (!INTERCEPT_FUNCTION_DLLIMPORT(                                   \
+              "ucrtbase.dll", "api-ms-win-core-heap-l1-1-0.dll", func)) {  \
+        VPrintf(2, "Failed to intercept ucrtbase.dll import %s\n", #func); \
+      }
     INTERCEPT_UCRT_FUNCTION(HeapAlloc);
     INTERCEPT_UCRT_FUNCTION(HeapFree);
     INTERCEPT_UCRT_FUNCTION(HeapReAlloc);
     INTERCEPT_UCRT_FUNCTION(HeapSize);
-#undef INTERCEPT_UCRT_FUNCTION
+#    undef INTERCEPT_UCRT_FUNCTION
   }
   // Recent versions of ucrtbase.dll appear to be built with PGO and LTCG, which
   // enable cross-module inlining. This means our _malloc_base hook won't catch
@@ -559,6 +654,7 @@ void ReplaceSystemMalloc() {
   // allocation API will be directed to ASan's heap. We don't currently
   // intercept all calls to HeapAlloc. If we did, we would have to check on
   // HeapFree whether the pointer came from ASan of from the system.
+#  endif
 }
 }  // namespace __asan
 

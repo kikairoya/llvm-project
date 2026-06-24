@@ -20,7 +20,7 @@
 
 DECLARE_REAL(void *, memcpy, void *to, const void *from, SIZE_T size)
 DECLARE_REAL(void *, memset, void *block, int c, SIZE_T size)
-DECLARE_REAL(void *, memmove, void *to, const void *from, SIZE_T size)
+DECLARE_REAL(void*, memmove, void* to, const void* from, SIZE_T size)
 
 namespace __asan {
 
@@ -35,6 +35,9 @@ static inline bool QuickCheckForUnpoisonedRegion(uptr beg, uptr size) {
   uptr shadow_last = MEM_TO_SHADOW(last);
   uptr uptr_first = RoundDownTo(shadow_first, sizeof(uptr));
   uptr uptr_last = RoundDownTo(shadow_last, sizeof(uptr));
+#if SANITIZER_CYGWIN
+  CommitShadowMemoryPage(uptr_first, shadow_last);
+#endif
   if (LIKELY(((*reinterpret_cast<const uptr *>(uptr_first) |
                *reinterpret_cast<const uptr *>(uptr_last)) == 0)))
     return true;

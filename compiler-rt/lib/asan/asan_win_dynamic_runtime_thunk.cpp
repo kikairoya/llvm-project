@@ -20,6 +20,7 @@
 #  include "asan_win_common_runtime_thunk.h"
 #  include "sanitizer_common/sanitizer_win_defs.h"
 
+#  if !SANITIZER_CYGWIN
 ////////////////////////////////////////////////////////////////////////////////
 // For some reason, the MD CRT doesn't call the C/C++ terminators during on DLL
 // unload or on exit.  ASan relies on LLVM global_dtors to call
@@ -50,5 +51,7 @@ int ScheduleUnregisterGlobals() { return atexit(UnregisterGlobals); }
 extern "C" __declspec(allocate(".CRT$XID")) int (
     *__asan_schedule_unregister_globals)() = ScheduleUnregisterGlobals;
 WIN_FORCE_LINK(__asan_schedule_unregister_globals)
+
+#  endif
 
 #endif  // SANITIZER_DYNAMIC_RUNTIME_THUNK

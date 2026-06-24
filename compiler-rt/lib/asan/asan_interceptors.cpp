@@ -637,7 +637,9 @@ INTERCEPTOR(char*, strcpy, char* to, const char* from) {
 
   if (flags()->replace_str) {
     uptr from_size = internal_strlen(from) + 1;
-    CHECK_RANGES_OVERLAP("strcpy", to, from_size, from, from_size);
+    if (LIKELY(to != from)) {
+      CHECK_RANGES_OVERLAP("strcpy", to, from_size, from, from_size);
+    }
     ASAN_READ_RANGE(ctx, from, from_size);
     ASAN_WRITE_RANGE(ctx, to, from_size);
   }
@@ -651,7 +653,9 @@ INTERCEPTOR(wchar_t*, wcscpy, wchar_t* to, const wchar_t* from) {
     return REAL(wcscpy)(to, from);
   if (flags()->replace_str) {
     uptr size = (internal_wcslen(from) + 1) * sizeof(wchar_t);
-    CHECK_RANGES_OVERLAP("wcscpy", to, size, from, size);
+    if (LIKELY(to != from)) {
+      CHECK_RANGES_OVERLAP("wcscpy", to, size, from, size);
+    }
     ASAN_READ_RANGE(ctx, from, size);
     ASAN_WRITE_RANGE(ctx, to, size);
   }
@@ -897,10 +901,10 @@ DECLARE_EXTERN_INTERCEPTOR_AND_WRAPPER(int, vfork, )
 
 // ---------------------- InitializeAsanInterceptors ---------------- {{{1
 namespace __asan {
+static bool InitializeAsanInterceptors_was_called_once;
 void InitializeAsanInterceptors() {
-  static bool was_called_once;
-  CHECK(!was_called_once);
-  was_called_once = true;
+  CHECK(!InitializeAsanInterceptors_was_called_once);
+  InitializeAsanInterceptors_was_called_once = true;
   InitializePlatformInterceptors();
   InitializeCommonInterceptors();
   InitializeSignalInterceptors();

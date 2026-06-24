@@ -93,7 +93,7 @@ class ChunkHeader {
   atomic_uint8_t chunk_state;
   u8 alloc_type : 2;
   u8 lsan_tag : 2;
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
   // True if this was a zero-size allocation upgraded to size 1.
   // Used to report the original size (0) to the user via HeapSize/RtlSizeHeap.
   u8 from_zero_alloc : 1;
@@ -618,7 +618,7 @@ struct Allocator {
     uptr chunk_beg = user_beg - kChunkHeaderSize;
     AsanChunk* m = reinterpret_cast<AsanChunk*>(chunk_beg);
     m->alloc_type = alloc_type;
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
     m->from_zero_alloc = upgraded_from_zero;
 #endif
     CHECK(size);
@@ -741,7 +741,8 @@ struct Allocator {
 
     // On Windows, uninstrumented DLLs may allocate memory before ASan hooks
     // malloc. Don't report an invalid free in this case.
-    if (SANITIZER_WINDOWS && !get_allocator().PointerIsMine(ptr)) {
+    if ((SANITIZER_WINDOWS || SANITIZER_CYGWIN) &&
+        !get_allocator().PointerIsMine(ptr)) {
       if (!IsSystemHeapAddress(p))
         ReportFreeNotMalloced(p, stack);
       return;
@@ -900,7 +901,7 @@ struct Allocator {
     return m->UsedSize();
   }
 
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
   // Returns true if the allocation at p was a zero-size request that was
   // internally upgraded to size 1.
   bool FromZeroAllocation(uptr p) {
@@ -1190,7 +1191,7 @@ uptr asan_malloc_usable_size(const void* ptr, uptr pc, uptr bp) {
     GET_STACK_TRACE_FATAL(pc, bp);
     ReportMallocUsableSizeNotOwned((uptr)ptr, &stack);
   }
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
   // Zero-size allocations are internally upgraded to size 1 so that
   // malloc(0)/new(0) return unique non-NULL pointers as required by the
   // standard. Windows heap APIs (HeapSize, RtlSizeHeap, _msize) should still
@@ -1302,7 +1303,7 @@ void asan_delete_array_sized_aligned(void* ptr, uptr size, uptr alignment,
 uptr asan_mz_size(const void* ptr) {
   uptr size = instance.AllocationSize(reinterpret_cast<uptr>(ptr));
 
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
   if (size > 0 && instance.FromZeroAllocation(reinterpret_cast<uptr>(ptr))) {
     DCHECK(size == 1);
     return 0;
@@ -1312,7 +1313,7 @@ uptr asan_mz_size(const void* ptr) {
   return size;
 }
 
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 void asan_mark_zero_allocation(void* ptr) {
   instance.MarkAsZeroAllocation(reinterpret_cast<uptr>(ptr));
 }

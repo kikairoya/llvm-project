@@ -478,7 +478,7 @@ static bool AsanInitInternal() {
 
   DisableCoreDumperIfNecessary();
 
-#if SANITIZER_POSIX
+#if SANITIZER_POSIX && !SANITIZER_CYGWIN
   if (StackSizeIsUnlimited()) {
     VPrintf(1,
             "WARNING: Unlimited stack size detected. This may affect "

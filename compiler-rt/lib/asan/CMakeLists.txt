@@ -4,6 +4,7 @@ set(ASAN_SOURCES
   asan_aix.cpp
   asan_allocator.cpp
   asan_activation.cpp
+  asan_cygwin.cpp
   asan_debugging.cpp
   asan_descriptions.cpp
   asan_errors.cpp
@@ -52,7 +53,7 @@ if (CYGWIN)
     asan_win_common_runtime_thunk.cpp
     asan_win_dynamic_runtime_thunk.cpp
     )
-endif()
+endif()  
 
 if (NOT WIN32 AND NOT CYGWIN AND NOT APPLE)
   list(APPEND ASAN_SOURCES

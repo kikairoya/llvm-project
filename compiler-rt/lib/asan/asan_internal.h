@@ -65,6 +65,7 @@ void ApplyFlags();
 
 // asan_win.cpp
 void InitializePlatformExceptionHandlers();
+void CommitShadowMemoryPage(uptr shadow_first, uptr shadow_last);
 // Returns whether an address is a valid allocated system heap block.
 // 'addr' must point to the beginning of the block.
 bool IsSystemHeapAddress(uptr addr);
@@ -78,6 +79,7 @@ void InitializeShadowMemory();
 
 // asan_malloc_linux.cpp / asan_malloc_mac.cpp
 void ReplaceSystemMalloc();
+void ReplaceSystemNewDelete();
 
 // asan_linux.cpp / asan_mac.cpp / asan_win.cpp
 uptr FindDynamicShadowStart();

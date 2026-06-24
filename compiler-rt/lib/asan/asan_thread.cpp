@@ -98,7 +98,7 @@ AsanThread *AsanThread::Create(const void *start_data, uptr data_size,
                                bool detached) {
   uptr PageSize = GetPageSizeCached();
   uptr size = RoundUpTo(sizeof(AsanThread), PageSize);
-  AsanThread *thread = (AsanThread *)MmapOrDie(size, __func__);
+  AsanThread* thread = (AsanThread*)MmapOrDie(size, __func__);
   if (data_size) {
     uptr availible_size = (uptr)thread + size - (uptr)(thread->start_data_);
     CHECK_LE(data_size, availible_size);

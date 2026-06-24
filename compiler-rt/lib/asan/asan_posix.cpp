@@ -68,7 +68,7 @@ bool PlatformUnpoisonStacks() {
 
 // ---------------------- TSD ---------------- {{{1
 
-#if SANITIZER_NETBSD && !ASAN_DYNAMIC
+#  if (SANITIZER_NETBSD && !ASAN_DYNAMIC)
 // Thread Static Data cannot be used in early static ASan init on NetBSD.
 // Reuse the Asan TSD API for compatibility with existing code
 // with an alternative implementation.
@@ -112,7 +112,7 @@ void PlatformTSDDtor(void *tsd) {
   atomic_signal_fence(memory_order_seq_cst);
   AsanThread::TSDDtor(tsd);
 }
-#else
+#  elif !SANITIZER_CYGWIN
 static pthread_key_t tsd_key;
 static bool tsd_key_inited = false;
 void AsanTSDInit(void (*destructor)(void *tsd)) {
@@ -146,7 +146,6 @@ void PlatformTSDDtor(void *tsd) {
 #    endif
   AsanThread::TSDDtor(tsd);
 }
-#  endif
 
 static void BeforeFork() {
   VReport(2, "BeforeFork tid: %llu\n", GetTid());
@@ -179,17 +178,19 @@ static void AfterFork(bool fork_child) {
 }
 
 void InstallAtForkHandler() {
-#  if SANITIZER_SOLARIS || SANITIZER_NETBSD || SANITIZER_APPLE || \
-      (SANITIZER_LINUX && SANITIZER_SPARC) || SANITIZER_HAIKU || SANITIZER_AIX
+#    if SANITIZER_SOLARIS || SANITIZER_NETBSD || SANITIZER_APPLE || \
+        (SANITIZER_LINUX && SANITIZER_SPARC) || SANITIZER_HAIKU ||  \
+        SANITIZER_AIX || SANITIZER_CYGWIN
   // While other Linux targets use clone in internal_fork which doesn't
   // trigger pthread_atfork handlers, Linux/sparc64 uses __fork, causing a
   // hang.
   return;  // FIXME: Implement FutexWait.
-#  endif
+#    endif
   pthread_atfork(
       &BeforeFork, []() { AfterFork(/* fork_child= */ false); },
       []() { AfterFork(/* fork_child= */ true); });
 }
+#  endif
 
 void InstallAtExitCheckLeaks() {
   if (CAN_SANITIZE_LEAKS) {

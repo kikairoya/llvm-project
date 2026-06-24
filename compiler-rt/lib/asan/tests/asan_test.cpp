@@ -302,7 +302,6 @@ TEST(AddressSanitizer, SignalTest) {
   sigact.sa_sigaction = my_sigaction_sighandler;
   sigact.sa_flags = SA_SIGINFO;
   char *c = (char *)0x123;
-
   EXPECT_DEATH(*c = 0, kSEGVCrash);
 
   // ASan should allow to set sigaction()...
@@ -626,6 +625,7 @@ NOINLINE void SigLongJmpFunc1(sigjmp_buf buf) {
   int *A = Ident(&a);
   int *B = Ident(&b);
   *A = *B;
+#  undef siglongjmp
   siglongjmp(buf, 1);
 }
 
@@ -1186,7 +1186,7 @@ TEST(AddressSanitizer, DISABLED_StressStackReuseAndExceptionsTest) {
 }
 #endif
 
-#if !defined(_WIN32) && !defined(__HAIKU__)
+#if !defined(_WIN32) && !defined(__HAIKU__) && !defined(__CYGWIN__)
 TEST(AddressSanitizer, MlockTest) {
   EXPECT_EQ(0, mlockall(MCL_CURRENT));
   EXPECT_EQ(0, mlock((void *)0x12345, 0x5678));
@@ -1223,9 +1223,8 @@ TEST(AddressSanitizer, AttributeNoSanitizeAddressTest) {
 //   https://github.com/google/sanitizers/issues/131
 // Windows support is tracked here:
 //   https://github.com/google/sanitizers/issues/309
-#if !defined(__ANDROID__) && \
-    !defined(__APPLE__) && \
-    !defined(_WIN32)
+#if !defined(__ANDROID__) && !defined(__APPLE__) && !defined(_WIN32) && \
+    !defined(__CYGWIN__)
 static std::string MismatchStr(const std::string &str) {
   return std::string("AddressSanitizer: alloc-dealloc-mismatch \\(") + str;
 }

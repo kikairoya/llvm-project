@@ -222,7 +222,7 @@ void InitializeFlags() {
   InitializeDefaultFlags();
   ProcessFlags();
 
-#if SANITIZER_WINDOWS
+#if SANITIZER_WINDOWS || SANITIZER_CYGWIN
   // On Windows, weak symbols (such as the `__asan_default_options` function)
   // are emulated by having the user program register which weak functions are
   // defined. The ASAN DLL will initialize flags prior to user module
