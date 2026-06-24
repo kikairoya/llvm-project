@@ -52,7 +52,7 @@ using namespace __sanitizer;
 #if !SANITIZER_DEBUG
 
 #if SANITIZER_CAN_USE_ALLOCATOR64
-#if SANITIZER_WINDOWS
+#    if SANITIZER_WINDOWS || SANITIZER_CYGWIN
 // On Windows 64-bit there is no easy way to find a large enough fixed address
 // space that is always available. Thus, a dynamically allocated address space
 // is used instead (i.e. ~(uptr)0).
@@ -308,7 +308,7 @@ class ScopedPremappedHeap {
 
 // These tests can fail on Windows if memory is somewhat full and lit happens
 // to run them all at the same time. FIXME: Make them not flaky and reenable.
-#if !SANITIZER_WINDOWS
+#    if !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
 TEST(SanitizerCommon, SizeClassAllocator64) {
   TestSizeClassAllocator<Allocator64>();
 }
@@ -399,7 +399,7 @@ void SizeClassAllocatorMetadataStress(uptr premapped_heap = 0) {
 #if SANITIZER_CAN_USE_ALLOCATOR64
 // These tests can fail on Windows if memory is somewhat full and lit happens
 // to run them all at the same time. FIXME: Make them not flaky and reenable.
-#if !SANITIZER_WINDOWS
+#    if !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
 TEST(SanitizerCommon, SizeClassAllocator64MetadataStress) {
   SizeClassAllocatorMetadataStress<Allocator64>();
 }
@@ -452,7 +452,7 @@ void SizeClassAllocatorGetBlockBeginStress(u64 TotalSize,
 #if SANITIZER_CAN_USE_ALLOCATOR64
 // These tests can fail on Windows if memory is somewhat full and lit happens
 // to run them all at the same time. FIXME: Make them not flaky and reenable.
-#if !SANITIZER_WINDOWS
+#    if !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
 TEST(SanitizerCommon, SizeClassAllocator64GetBlockBegin) {
   SizeClassAllocatorGetBlockBeginStress<Allocator64>(
       1ULL << (SANITIZER_ANDROID ? 31 : 33));
@@ -499,7 +499,7 @@ int TestMapUnmapCallback::unmap_count;
 #if SANITIZER_CAN_USE_ALLOCATOR64
 // These tests can fail on Windows if memory is somewhat full and lit happens
 // to run them all at the same time. FIXME: Make them not flaky and reenable.
-#if !SANITIZER_WINDOWS
+#    if !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
 
 template <typename AddressSpaceViewTy = LocalAddressSpaceView>
 struct AP64WithCallback {
@@ -584,7 +584,8 @@ TEST(SanitizerCommon, LargeMmapAllocatorMapUnmapCallback) {
 
 // Don't test OOM conditions on Win64 because it causes other tests on the same
 // machine to OOM.
-#if SANITIZER_CAN_USE_ALLOCATOR64 && !SANITIZER_WINDOWS64
+#  if SANITIZER_CAN_USE_ALLOCATOR64 && !SANITIZER_WINDOWS64 && \
+      !SANITIZER_CYGWIN64
 TEST(SanitizerCommon, SizeClassAllocator64Overflow) {
   Allocator64 a;
   a.Init(kReleaseToOSIntervalNever);
@@ -662,7 +663,9 @@ TEST(SanitizerCommon, LargeMmapAllocator) {
   // Test alignments. Test with 512MB alignment on x64 non-Windows machines.
   // Windows doesn't overcommit, and many machines do not have 51.2GB of swap.
   uptr max_alignment =
-      (SANITIZER_WORDSIZE == 64 && !SANITIZER_WINDOWS) ? (1 << 28) : (1 << 24);
+      (SANITIZER_WORDSIZE == 64 && !SANITIZER_WINDOWS && !SANITIZER_CYGWIN)
+          ? (1 << 28)
+          : (1 << 24);
   for (uptr alignment = 8; alignment <= max_alignment; alignment *= 2) {
     const uptr kNumAlignedAllocs = 100;
     for (uptr i = 0; i < kNumAlignedAllocs; i++) {
@@ -764,7 +767,7 @@ TEST(SanitizerCommon, CombinedAllocator64Dynamic) {
 }
 
 #if !ALLOCATOR64_SMALL_SIZE
-#if !SANITIZER_WINDOWS
+#      if !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
 // Windows fails to map 1TB, so disable this test.
 TEST(SanitizerCommon, CombinedAllocator64DynamicPremapped) {
   ScopedPremappedHeap h;
@@ -823,7 +826,7 @@ void TestSizeClassAllocatorLocalCache(uptr premapped_heap = 0) {
 #if SANITIZER_CAN_USE_ALLOCATOR64
 // These tests can fail on Windows if memory is somewhat full and lit happens
 // to run them all at the same time. FIXME: Make them not flaky and reenable.
-#if !SANITIZER_WINDOWS
+#    if !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
 TEST(SanitizerCommon, SizeClassAllocator64LocalCache) {
   TestSizeClassAllocatorLocalCache<Allocator64>();
 }
@@ -1013,7 +1016,7 @@ void TestSizeClassAllocatorIteration(uptr premapped_heap = 0) {
 #if SANITIZER_CAN_USE_ALLOCATOR64
 // These tests can fail on Windows if memory is somewhat full and lit happens
 // to run them all at the same time. FIXME: Make them not flaky and reenable.
-#if !SANITIZER_WINDOWS
+#    if !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
 TEST(SanitizerCommon, SizeClassAllocator64Iteration) {
   TestSizeClassAllocatorIteration<Allocator64>();
 }
@@ -1100,7 +1103,8 @@ TEST(SanitizerCommon, LargeMmapAllocatorBlockBegin) {
 
 // Don't test OOM conditions on Win64 because it causes other tests on the same
 // machine to OOM.
-#if SANITIZER_CAN_USE_ALLOCATOR64 && !SANITIZER_WINDOWS64 && !ALLOCATOR64_SMALL_SIZE
+#  if SANITIZER_CAN_USE_ALLOCATOR64 && !SANITIZER_WINDOWS64 && \
+      !SANITIZER_CYGWIN64 && !ALLOCATOR64_SMALL_SIZE
 typedef __sanitizer::SizeClassMap<2, 22, 22, 34, 128, 16> SpecialSizeClassMap;
 template <typename AddressSpaceViewTy = LocalAddressSpaceView>
 struct AP64_SpecialSizeClassMap {

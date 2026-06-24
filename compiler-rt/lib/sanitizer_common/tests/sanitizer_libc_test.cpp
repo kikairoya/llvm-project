@@ -92,7 +92,7 @@ static void temp_file_name(char *buf, size_t bufsize, const char *prefix) {
   const char *tmpdir = "/tmp";
 #if SANITIZER_ANDROID
   tmpdir = GetEnv("TMPDIR");
-#endif
+#  endif
   internal_snprintf(buf, bufsize, "%s/%sXXXXXX", tmpdir, prefix);
   ASSERT_TRUE(mkstemp(buf));
 #endif

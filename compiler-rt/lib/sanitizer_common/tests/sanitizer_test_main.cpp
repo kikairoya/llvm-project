@@ -21,3 +21,13 @@ int main(int argc, char **argv) {
   __sanitizer::SetCommonFlagsDefaults();
   return RUN_ALL_TESTS();
 }
+
+#if SANITIZER_CYGWIN
+namespace __interception {
+const void* real_mmap = nullptr;
+const void* real_mprotect = nullptr;
+const void* real_munmap = nullptr;
+const void* real_read = nullptr;
+const void* real_write = nullptr;
+}  // namespace __interception
+#endif

@@ -511,7 +511,7 @@ TEST(SanitizerCommon, ReservedAddressRangeUnmap) {
   CHECK_EQ(base_addr, address_range.Map(base_addr, init_size));
 
   // Windows doesn't allow partial unmappings.
-  #if !SANITIZER_WINDOWS
+#if !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
 
   // Unmapping at the beginning should succeed.
   address_range.Unmap(base_addr, PageSize);
@@ -521,7 +521,7 @@ TEST(SanitizerCommon, ReservedAddressRangeUnmap) {
                    address_range.size() - PageSize;
   address_range.Unmap(new_start, PageSize);
 
-  #endif
+#endif
 
   // Unmapping in the middle of the ReservedAddressRange should fail.
   EXPECT_DEATH(address_range.Unmap(base_addr + (PageSize * 2), PageSize), ".*");

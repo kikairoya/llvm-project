@@ -9,7 +9,8 @@
 // This file is a part of ThreadSanitizer/AddressSanitizer runtime.
 //
 //===----------------------------------------------------------------------===//
-#if !defined(_WIN32)  // There are no /proc/maps on Windows.
+#if !defined(_WIN32) && \
+    !defined(__CYGWIN__)  // There are no /proc/maps on Windows.
 
 #  include "sanitizer_common/sanitizer_procmaps.h"
 

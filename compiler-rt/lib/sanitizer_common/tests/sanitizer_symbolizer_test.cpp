@@ -54,7 +54,7 @@ TEST(Symbolizer, ExtractTokenUpToDelimiter) {
   InternalFree(token);
 }
 
-#if !SANITIZER_WINDOWS
+#if !SANITIZER_WINDOWS && !SANITIZER_CYGWIN
 TEST(Symbolizer, DemangleSwiftAndCXX) {
   // Swift names are not demangled in default llvm build because Swift
   // runtime is not linked in.
