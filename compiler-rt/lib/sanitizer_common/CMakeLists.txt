@@ -316,7 +316,7 @@ add_compiler_rt_object_libraries(RTSanitizerCommonSymbolizerNoHooks
   CFLAGS ${SANITIZER_NO_WEAK_HOOKS_CFLAGS}
   DEFS ${SANITIZER_COMMON_DEFINITIONS})
 
-if(WIN32)
+if(WIN32 OR CYGWIN)
   set(RUNTIME_THUNK_CFLAGS -DSANITIZER_DYNAMIC_RUNTIME_THUNK -DSANITIZER_STATIC_RUNTIME_THUNK)
   append_list_if(MSVC /Zl RUNTIME_THUNK_CFLAGS)
   add_compiler_rt_object_libraries(SanitizerRuntimeThunk

@@ -46,8 +46,15 @@ if(WIN32)
     asan_win_static_runtime_thunk.cpp
     )
 endif()
+if (CYGWIN)
+  set(ASAN_DYNAMIC_RUNTIME_THUNK_SOURCES
+    asan_globals_win.cpp
+    asan_win_common_runtime_thunk.cpp
+    asan_win_dynamic_runtime_thunk.cpp
+    )
+endif()
 
-if (NOT WIN32 AND NOT APPLE)
+if (NOT WIN32 AND NOT CYGWIN AND NOT APPLE)
   list(APPEND ASAN_SOURCES
     asan_interceptors_vfork.S
     )
@@ -61,7 +68,7 @@ set(ASAN_STATIC_SOURCES
   asan_rtl_static.cpp
   )
 
-if ("x86_64" IN_LIST ASAN_SUPPORTED_ARCH AND NOT WIN32 AND NOT APPLE)
+if ("x86_64" IN_LIST ASAN_SUPPORTED_ARCH AND NOT WIN32 AND NOT CYGWIN AND NOT APPLE)
   list(APPEND ASAN_STATIC_SOURCES
     asan_rtl_x86_64.S
   )
@@ -138,6 +145,7 @@ endif()
 set(ASAN_DYNAMIC_DEFINITIONS
   ${ASAN_COMMON_DEFINITIONS} ASAN_DYNAMIC=1)
 append_list_if(WIN32 INTERCEPTION_DYNAMIC_CRT ASAN_DYNAMIC_DEFINITIONS)
+append_list_if(CYGWIN INTERCEPTION_DYNAMIC_CRT ASAN_DYNAMIC_DEFINITIONS)
 
 set(ASAN_DYNAMIC_CFLAGS ${ASAN_CFLAGS})
 append_list_if(COMPILER_RT_HAS_FTLS_MODEL_INITIAL_EXEC
@@ -214,6 +222,7 @@ append_list_if(COMPILER_RT_HAS_LIBM m ASAN_DYNAMIC_LIBS)
 append_list_if(COMPILER_RT_HAS_LIBPTHREAD pthread ASAN_DYNAMIC_LIBS)
 append_list_if(COMPILER_RT_HAS_LIBLOG log ASAN_DYNAMIC_LIBS)
 append_list_if(MINGW "${MINGW_LIBRARIES}" ASAN_DYNAMIC_LIBS)
+append_list_if(CYGWIN "${CYGWIN_LIBRARIES}" ASAN_DYNAMIC_LIBS)
 
 # Compile ASan sources into an object library.
 
@@ -317,7 +326,7 @@ else()
     RTSanitizerCommonSymbolizerInternal
     RTLSanCommon
     RTUbsan)
-  if (NOT WIN32)
+  if (NOT WIN32 AND NOT CYGWIN)
     add_compiler_rt_runtime(clang_rt.asan
       STATIC
       ARCHS ${ASAN_SUPPORTED_ARCH}
@@ -357,7 +366,7 @@ else()
   if (NOT "${CMAKE_SYSTEM_NAME}" MATCHES "AIX")
   foreach(arch ${ASAN_SUPPORTED_ARCH})
     if (COMPILER_RT_HAS_VERSION_SCRIPT)
-      if(WIN32)
+      if(WIN32 OR CYGWIN)
         set(SANITIZER_RT_VERSION_LIST_LIBS clang_rt.asan-${arch})
       else()
         set(SANITIZER_RT_VERSION_LIST_LIBS clang_rt.asan-${arch} clang_rt.asan_cxx-${arch})
@@ -456,7 +465,27 @@ else()
           PARENT_TARGET asan)
       endif()
     endif()
-  endforeach()
+    if (CYGWIN)
+      set(DYNAMIC_RUNTIME_THUNK_CFLAGS "-DSANITIZER_DYNAMIC_RUNTIME_THUNK")
+
+      add_compiler_rt_object_libraries(AsanDynamicRuntimeThunk
+        ${SANITIZER_COMMON_SUPPORTED_OS}
+        ARCHS ${arch}
+        SOURCES ${ASAN_DYNAMIC_RUNTIME_THUNK_SOURCES}
+        CFLAGS ${ASAN_CFLAGS} ${DYNAMIC_RUNTIME_THUNK_CFLAGS}
+        DEFS ${ASAN_COMMON_DEFINITIONS})
+
+      add_compiler_rt_runtime(clang_rt.asan_dynamic_runtime_thunk
+        STATIC
+        ARCHS ${arch}
+        OBJECT_LIBS AsanDynamicRuntimeThunk
+                    SancovRuntimeThunk
+                    SanitizerRuntimeThunk
+        CFLAGS ${ASAN_CFLAGS} ${DYNAMIC_RUNTIME_THUNK_CFLAGS}
+        DEFS ${ASAN_COMMON_DEFINITIONS}
+        PARENT_TARGET asan)
+      endif()
+    endforeach()
   endif()
 endif()
 

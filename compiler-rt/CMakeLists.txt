@@ -512,7 +512,7 @@ else()
   set(SANITIZER_LIMIT_FRAME_SIZE FALSE)
 endif()
 
-if(NOT COMPILER_RT_GPU_BUILD AND (FUCHSIA OR UNIX))
+if(NOT COMPILER_RT_GPU_BUILD AND (FUCHSIA OR (UNIX AND NOT CYGWIN)))
   set(SANITIZER_USE_SYMBOLS TRUE)
 else()
   set(SANITIZER_USE_SYMBOLS FALSE)
@@ -571,6 +571,7 @@ append_list_if(COMPILER_RT_HAS_WD4722_FLAG /wd4722 SANITIZER_COMMON_CFLAGS)
 append_list_if(COMPILER_RT_HAS_WD4800_FLAG /wd4800 SANITIZER_COMMON_CFLAGS)
 
 append_list_if(MINGW -fms-extensions SANITIZER_COMMON_CFLAGS)
+append_list_if(CYGWIN -fvisibility=hidden SANITIZER_COMMON_CFLAGS)
 
 # When lsan scans the stack for detecting reachable pointers, it's possible for
 # a leaked pointer, which was pushed to the stack on an earlier function call,

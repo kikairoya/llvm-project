@@ -309,7 +309,7 @@ function(get_dynamic_link_flags_for_arch arch out_var)
     message(FATAL_ERROR "Unsupported architecture: ${arch}")
   else()
     get_compiler_rt_output_dir(${arch} rtlib_dir)
-    if (NOT WIN32)
+    if (NOT WIN32 AND NOT CYGWIN)
       set(${out_var} "-Wl,-rpath,${rtlib_dir}" PARENT_SCOPE)
     endif()
   endif()
@@ -785,8 +785,8 @@ list_replace(COMPILER_RT_SANITIZERS_TO_BUILD all "${ALL_SANITIZERS}")
 
 if (SANITIZER_COMMON_SUPPORTED_ARCH AND NOT LLVM_USE_SANITIZER AND
     (OS_NAME MATCHES "Android|Darwin|Linux|FreeBSD|NetBSD|Fuchsia|SunOS|Haiku" OR
-    (OS_NAME MATCHES "Windows" AND NOT CYGWIN AND
-        (NOT MINGW OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"))))
+    (OS_NAME MATCHES "Windows|CYGWIN" AND
+        (NOT (MINGW OR CYGWIN) OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"))))
   set(COMPILER_RT_HAS_SANITIZER_COMMON TRUE)
 else()
   set(COMPILER_RT_HAS_SANITIZER_COMMON FALSE)
