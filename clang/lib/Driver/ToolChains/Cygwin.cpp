@@ -401,6 +401,12 @@ void cygwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
           CmdArgs.push_back(Args.MakeArgString(P));
         }
       }
+      if (!Args.hasArg(options::OPT_mdll, options::OPT_shared)) {
+        static constexpr const char *defmanifest = "default-manifest.o";
+        if (std::string O = ToolChain.GetFilePath(defmanifest);
+            O != defmanifest)
+          CmdArgs.push_back(Args.MakeArgString(std::move(O)));
+      }
       CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtend.o")));
     }
   }
