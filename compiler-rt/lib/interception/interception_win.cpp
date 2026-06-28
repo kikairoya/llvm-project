@@ -1465,11 +1465,11 @@ bool OverrideImportedFunction(const char *module_to_patch,
   if (orig_old_func)
     *orig_old_func = iat->u1.AddressOfData;
   DWORD old_prot, unused_prot;
-  if (!VirtualProtect(&iat->u1.AddressOfData, 4, PAGE_EXECUTE_READWRITE,
+  if (!VirtualProtect(&iat->u1.AddressOfData, 8, PAGE_EXECUTE_READWRITE,
                       &old_prot))
     return false;
   iat->u1.AddressOfData = new_function;
-  if (!VirtualProtect(&iat->u1.AddressOfData, 4, old_prot, &unused_prot))
+  if (!VirtualProtect(&iat->u1.AddressOfData, 8, old_prot, &unused_prot))
     return false;  // Not clear if this failure bothers us.
   return true;
 }
