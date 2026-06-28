@@ -114,6 +114,10 @@ features = [
         name="LLVM-LIBC-FIXME",
         when=lambda cfg: "__LLVM_LIBC__" in compilerMacros(cfg),
     ),
+    Feature(
+        name="LIBCXX-CYGWIN-FIXME",
+        when=lambda cfg: "__CYGWIN__" in compilerMacros(cfg),
+    ),
 ]
 
 # Add features representing the build host platform name.
