@@ -10570,9 +10570,10 @@ DeclResult Sema::ActOnExplicitInstantiation(
       DLLAttrAffected = true;
     }
 
-    if (!DLLAttrAffected && (NewlyDLLExported || NewlyDLLImported)) {
+    // Warn about adding dllimport which doesn't work while dllexport works fine.
+    if (!DLLAttrAffected && NewlyDLLImported) {
       if (Context.getTargetInfo().getTriple().isOSCygMing() &&
-          TSK == TSK_ExplicitInstantiationDeclaration && NewlyDLLImported) {
+          TSK == TSK_ExplicitInstantiationDeclaration) {
         // In MinGW mode, all undefined symbols are also searched from DLLs
         // even if they were not declared with dllimport, so doesn't warn
         // about ignoring dllimport.
